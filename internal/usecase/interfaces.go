@@ -4,26 +4,16 @@ package usecase
 import (
 	"context"
 
-	"github.com/evrone/go-clean-template/internal/entity"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test
 
 type (
-	// Translation -.
-	Translation interface {
-		Translate(context.Context, entity.Translation) (entity.Translation, error)
-		History(context.Context) ([]entity.Translation, error)
-	}
-
-	// TranslationRepo -.
-	TranslationRepo interface {
-		Store(context.Context, entity.Translation) error
-		GetHistory(context.Context) ([]entity.Translation, error)
-	}
-
-	// TranslationWebAPI -.
-	TranslationWebAPI interface {
-		Translate(entity.Translation) (entity.Translation, error)
+	LoginUseCase interface {
+		Login(context.Context, *useCaseModel.LoginInput) (*useCaseModel.JWTAuthenticatedPayload, error)
+		RefreshToken(context.Context, *useCaseModel.RefreshTokenInput) (string, error)
+		VerifyToken(context.Context, string) (*model.User, error)
 	}
 )
