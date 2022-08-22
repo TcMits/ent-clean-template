@@ -64,11 +64,14 @@ var (
 )
 
 type loginUseCase struct {
-	repository repository.LoginRepository
+	repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
 	secret     string
 }
 
-func NewLoginUseCase(repository repository.LoginRepository, secret string) LoginUseCase {
+func NewLoginUseCase(
+	repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput],
+	secret string,
+) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
 	return &loginUseCase{repository: repository, secret: secret}
 }
 
@@ -93,7 +96,7 @@ func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jw
 	if err != nil {
 		return nil, err
 	}
-	key, ok := jwtMapClaims["jwt_token_key"].(string)
+	key, ok := jwtMapClaims["key"].(string)
 	if !ok || user.JwtTokenKey != key {
 		return nil, errors.New("loginUseCase - getUserFromMapClaims: Invalid token key")
 	}

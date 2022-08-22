@@ -7,8 +7,10 @@ import (
 
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/ent/user"
+	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +27,7 @@ func TestNewLoginRepository(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want LoginRepository
+		want LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
 	}{
 		{
 			name: "Success",
@@ -56,23 +58,9 @@ func Test_loginRepository_Get(t *testing.T) {
 	require.NoError(t, err)
 	defer client.Close()
 	require.NoError(t, client.Schema.Create(ctx))
-
-	userA, err := client.
-		User.
-		Create().
-		SetUsername("userA").
-		SetFirstName("user").
-		SetLastName("A").
-		Save(ctx)
+	userA, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
-
-	_, err = client.
-		User.
-		Create().
-		SetUsername("userB").
-		SetFirstName("user").
-		SetLastName("B").
-		Save(ctx)
+	_, err = factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -103,7 +91,7 @@ func Test_loginRepository_Get(t *testing.T) {
 			name:   "ManyRecords",
 			fields: fields{client: client},
 			args: args{ctx: ctx, predicateUsers: []model.PredicateUser{
-				user.FirstNameEQ("user"),
+				user.IsActiveEQ(true),
 			}},
 			want:    nil,
 			wantErr: true,
@@ -118,7 +106,7 @@ func Test_loginRepository_Get(t *testing.T) {
 			t.Errorf("%q. loginRepository.Get() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			continue
 		}
-		if !reflect.DeepEqual(got, tt.want) {
+		if got != nil && tt.want != nil && !reflect.DeepEqual(got.ID, tt.want.ID) {
 			t.Errorf("%q. loginRepository.Get() = %v, want %v", tt.name, got, tt.want)
 		}
 	}
@@ -138,23 +126,7 @@ func Test_loginRepository_Login(t *testing.T) {
 	require.NoError(t, err)
 	defer client.Close()
 	require.NoError(t, client.Schema.Create(ctx))
-
-	userA, err := client.
-		User.
-		Create().
-		SetUsername("userA").
-		SetFirstName("user").
-		SetLastName("A").
-		Save(ctx)
-	require.NoError(t, err)
-
-	_, err = client.
-		User.
-		Create().
-		SetUsername("userB").
-		SetFirstName("user").
-		SetLastName("B").
-		Save(ctx)
+	userA, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -168,10 +140,30 @@ func Test_loginRepository_Login(t *testing.T) {
 			name:   "Success",
 			fields: fields{client: client},
 			args: args{ctx: ctx, loginInput: &useCaseModel.LoginInput{
-				Username: "",
-				Password: "",
+				Username: userA.Username,
+				Password: "12345678",
 			}},
 			want: userA,
+		},
+		{
+			name:   "WrongUsername",
+			fields: fields{client: client},
+			args: args{ctx: ctx, loginInput: &useCaseModel.LoginInput{
+				Username: userA.Username + "wrong",
+				Password: "12345678",
+			}},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:   "WrongPassword",
+			fields: fields{client: client},
+			args: args{ctx: ctx, loginInput: &useCaseModel.LoginInput{
+				Username: userA.Username,
+				Password: "123456789",
+			}},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -183,8 +175,8 @@ func Test_loginRepository_Login(t *testing.T) {
 			t.Errorf("%q. loginRepository.Login() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			continue
 		}
-		if !reflect.DeepEqual(got, tt.want) {
-			t.Errorf("%q. loginRepository.Login() = %v, want %v", tt.name, got, tt.want)
+		if got != nil && tt.want != nil && !reflect.DeepEqual(got.ID, tt.want.ID) {
+			t.Errorf("%q. loginRepository.Get() = %v, want %v", tt.name, got, tt.want)
 		}
 	}
 }

@@ -7,5 +7,6 @@ import (
 
 // User is the model entity for the User schema.
 type User = ent.User
-
 type PredicateUser = predicate.User
+type UserMutation = ent.UserMutation
+type UserCreate = ent.UserCreate

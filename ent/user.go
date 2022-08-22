@@ -25,7 +25,7 @@ type User struct {
 	JwtTokenKey string `json:"-"`
 	// Password holds the value of the "password" field.
 	Password string `json:"-"`
-	// Required. 128 characters or fewer. Letters, digits and ./-/_ only.
+	// Required. 128 characters or fewer. Letters, digits only.
 	Username string `json:"username,omitempty"`
 	// FirstName holds the value of the "first_name" field.
 	FirstName string `json:"first_name,omitempty"`

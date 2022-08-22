@@ -45,8 +45,8 @@ func (User) Fields() []ent.Field {
 		field.String("username").
 			Unique().
 			MaxLen(128).
-			Match(regexp.MustCompile("^[a-zA-Z0-9._-]$")).
-			Comment("Required. 128 characters or fewer. Letters, digits and ./-/_ only."),
+			Match(regexp.MustCompile("^[a-zA-Z0-9]{6,128}$")).
+			Comment("Required. 128 characters or fewer. Letters, digits only."),
 		field.String("first_name").
 			Default("").MaxLen(128),
 		field.String("last_name").
