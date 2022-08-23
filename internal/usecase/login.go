@@ -64,14 +64,14 @@ var (
 )
 
 type loginUseCase struct {
-	repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
+	repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
 	secret     string
 }
 
 func NewLoginUseCase(
-	repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput],
+	repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput],
 	secret string,
-) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
+) LoginUseCase[useCaseModel.LoginInput, useCaseModel.JWTAuthenticatedPayload, useCaseModel.RefreshTokenInput, model.User] {
 	return &loginUseCase{repository: repository, secret: secret}
 }
 

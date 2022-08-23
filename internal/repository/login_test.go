@@ -27,7 +27,7 @@ func TestNewLoginRepository(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
+		want LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
 	}{
 		{
 			name: "Success",

@@ -16,7 +16,7 @@ type loginRepository struct {
 }
 
 func NewLoginRepository(client *ent.Client) LoginRepository[
-	*model.User, model.PredicateUser, *useCaseModel.LoginInput] {
+	model.User, model.PredicateUser, useCaseModel.LoginInput] {
 	return &loginRepository{client: client}
 }
 

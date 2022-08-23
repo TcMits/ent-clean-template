@@ -9,8 +9,8 @@ import (
 
 type (
 	LoginUseCase[LoginInputType, JWTAuthenticatedPayloadType, RefreshTokenInputType, UserType any] interface {
-		Login(context.Context, LoginInputType) (JWTAuthenticatedPayloadType, error)
-		RefreshToken(context.Context, RefreshTokenInputType) (string, error)
-		VerifyToken(context.Context, string) (UserType, error)
+		Login(context.Context, *LoginInputType) (*JWTAuthenticatedPayloadType, error)
+		RefreshToken(context.Context, *RefreshTokenInputType) (string, error)
+		VerifyToken(context.Context, string) (*UserType, error)
 	}
 )

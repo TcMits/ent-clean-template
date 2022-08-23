@@ -18,7 +18,7 @@ import (
 
 func TestNewLoginUseCase(t *testing.T) {
 	type args struct {
-		repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
+		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
 		secret     string
 	}
 	// Create an SQLite memory database and generate the schema.
@@ -38,7 +38,7 @@ func TestNewLoginUseCase(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User]
+		want LoginUseCase[useCaseModel.LoginInput, useCaseModel.JWTAuthenticatedPayload, useCaseModel.RefreshTokenInput, model.User]
 	}{
 		{
 			name: "Success",
@@ -60,7 +60,7 @@ func TestNewLoginUseCase(t *testing.T) {
 
 func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
+		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -114,7 +114,7 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 
 func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, model.PredicateUser, *useCaseModel.LoginInput]
+		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {

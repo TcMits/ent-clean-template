@@ -13,9 +13,7 @@ const (
 )
 
 func getCodeFromError(err error) string {
-	haveCodeErr, ok := err.(interface {
-		Code() string
-	})
+	haveCodeErr, ok := err.(interface{ Code() string })
 	if !ok {
 		return UnknownCode
 	}
@@ -41,9 +39,26 @@ func getStatusCodeFromCode(code string) int {
 	}
 }
 
+func logError(err error, code string, l logger.Interface) {
+	switch code {
+	case usecase.PermissionDeniedError,
+		usecase.AuthenticationError,
+		usecase.ValidationError,
+		usecase.NotFoundError:
+		l.Info(err.Error())
+	case usecase.DBError:
+		l.Warn(err.Error())
+	case usecase.InternalServerError, UnknownCode:
+		l.Error(err)
+	default:
+		l.Info(err.Error())
+	}
+}
+
 func HandleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
+	logError(err, code, l)
 
 	switch foundedError := err.(type) {
 	case *modelUseCase.UseCaseError:

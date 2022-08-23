@@ -1,17 +1,13 @@
 app:
-  name: 'go-clean-template'
+  name: 'ent-clean-template'
   version: '1.0.0'
 
 http:
   port: '8080'
 
 logger:
-  log_level: 'debug'
-  rollbar_env: 'go-clean-template'
+  log_level: 'info'
 
 postgres:
-  pool_max: 2
+  pool_max: 90
 
-rabbitmq:
-  rpc_server_exchange: 'rpc_server'
-  rpc_client_exchange: 'rpc_client'

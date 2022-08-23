@@ -1,8 +1,8 @@
 package usecase
 
 type LoginInput struct {
-	Username string `json:"username" validate:"alphanum,required,min:1,max:128"`
-	Password string `json:"password" validate:"required,min:1"`
+	Username string `json:"username" validate:"alphanum,required,min=1,max=128"`
+	Password string `json:"password" validate:"required,min=1"`
 }
 
 type RefreshTokenInput struct {

@@ -46,6 +46,10 @@ func New(handler http.Handler, opts ...Option) *Server {
 	return s
 }
 
+func (s *Server) Addr() string {
+	return s.server.Addr
+}
+
 func (s *Server) start() {
 	go func() {
 		s.notify <- s.server.ListenAndServe()

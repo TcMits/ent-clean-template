@@ -7,7 +7,7 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
-var UserFactory = NewFactory[*model.User, *model.UserMutation, *model.UserCreate](NewUserGenerator[*model.User, *model.UserMutation])
+var UserFactory = newFactory[*model.User, *model.UserMutation, *model.UserCreate](newUserGenerator[*model.User, *model.UserMutation])
 
 type getGeneratorFunc[ModelType any, MutationType ent.Mutation] func() Generator[ModelType, MutationType]
 
@@ -17,7 +17,7 @@ type modelFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType Mod
 	generator Generator[ModelType, MutationType]
 }
 
-func NewFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType ModelCreator[ModelType, MutationType]](
+func newFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType ModelCreator[ModelType, MutationType]](
 	genFunc getGeneratorFunc[ModelType, MutationType],
 ) ModelFactory[ModelType, MutationType, ModelCreatorType] {
 	return &modelFactory[ModelType, MutationType, ModelCreatorType]{getGeneratorFunc: genFunc}

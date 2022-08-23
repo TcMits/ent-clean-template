@@ -13,6 +13,7 @@ type (
 		HTTP `yaml:"http"`
 		Log  `yaml:"logger"`
 		PG   `yaml:"postgres"`
+		LoginUseCase
 	}
 
 	// App -.
@@ -33,8 +34,13 @@ type (
 
 	// PG -.
 	PG struct {
-		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
+		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX" env-default:"90"`
 		URL     string `env-required:"true"                 env:"PG_URL"`
+	}
+
+	// Usecases
+	LoginUseCase struct {
+		Secret string `env-required:"true"                 env:"LOGIN_USECASE_SECRET"`
 	}
 )
 
