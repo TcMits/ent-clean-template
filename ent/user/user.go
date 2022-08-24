@@ -31,6 +31,8 @@ const (
 	FieldEmail = "email"
 	// FieldIsStaff holds the string denoting the is_staff field in the database.
 	FieldIsStaff = "is_staff"
+	// FieldIsSuperuser holds the string denoting the is_superuser field in the database.
+	FieldIsSuperuser = "is_superuser"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
 	// FieldJoinTime holds the string denoting the join_time field in the database.
@@ -51,6 +53,7 @@ var Columns = []string{
 	FieldLastName,
 	FieldEmail,
 	FieldIsStaff,
+	FieldIsSuperuser,
 	FieldIsActive,
 	FieldJoinTime,
 }
@@ -86,6 +89,10 @@ var (
 	LastNameValidator func(string) error
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
+	// DefaultIsStaff holds the default value on creation for the "is_staff" field.
+	DefaultIsStaff bool
+	// DefaultIsSuperuser holds the default value on creation for the "is_superuser" field.
+	DefaultIsSuperuser bool
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
 	// DefaultJoinTime holds the default value on creation for the "join_time" field.

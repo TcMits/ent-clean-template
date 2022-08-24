@@ -56,7 +56,8 @@ func (User) Fields() []ent.Field {
 			Validate(func(s string) error {
 				return validation.Validate(s, is.Email)
 			}),
-		field.Bool("is_staff"),
+		field.Bool("is_staff").Default(false),
+		field.Bool("is_superuser").Default(false),
 		field.Bool("is_active").Default(true),
 		field.Time("join_time").
 			Default(time.Now),

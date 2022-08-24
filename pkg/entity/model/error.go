@@ -31,7 +31,8 @@ func (e *TranslatableError) Error() string {
 func (e *TranslatableError) Unwrap() error { return e.err }
 
 func NewTranslatableError(
-	err error, key string,
+	err error,
+	key string,
 	translateFunc TranslateFunc,
 	defaultError string,
 	code string,

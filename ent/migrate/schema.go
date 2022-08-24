@@ -20,7 +20,8 @@ var (
 		{Name: "first_name", Type: field.TypeString, Size: 128, Default: ""},
 		{Name: "last_name", Type: field.TypeString, Size: 128, Default: ""},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "is_staff", Type: field.TypeBool},
+		{Name: "is_staff", Type: field.TypeBool, Default: false},
+		{Name: "is_superuser", Type: field.TypeBool, Default: false},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
 		{Name: "join_time", Type: field.TypeTime},
 	}

@@ -144,6 +144,13 @@ func IsStaff(v bool) predicate.User {
 	})
 }
 
+// IsSuperuser applies equality check predicate on the "is_superuser" field. It's identical to IsSuperuserEQ.
+func IsSuperuser(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldIsSuperuser), v))
+	})
+}
+
 // IsActive applies equality check predicate on the "is_active" field. It's identical to IsActiveEQ.
 func IsActive(v bool) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -905,6 +912,20 @@ func IsStaffEQ(v bool) predicate.User {
 func IsStaffNEQ(v bool) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldIsStaff), v))
+	})
+}
+
+// IsSuperuserEQ applies the EQ predicate on the "is_superuser" field.
+func IsSuperuserEQ(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldIsSuperuser), v))
+	})
+}
+
+// IsSuperuserNEQ applies the NEQ predicate on the "is_superuser" field.
+func IsSuperuserNEQ(v bool) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldIsSuperuser), v))
 	})
 }
 

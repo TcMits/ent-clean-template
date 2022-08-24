@@ -1,21 +1,30 @@
 package v1
 
 import (
+	"errors"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	modelUseCase "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
+	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 )
 
 const (
-	UnknownCode = "UNKNOWN"
+	UnknownError               = "UNKNOWN"
+	UscaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
+)
+
+const (
+	defaultInvalidErrorTranslateKey = "internal.controller.http.v1.error.InvalidError"
+	defaultInvalidErrorMessage      = "One or more fields failed to be validated"
 )
 
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
 	if !ok {
-		return UnknownCode
+		return UnknownError
 	}
 	return haveCodeErr.Code()
 }
@@ -26,9 +35,9 @@ func getStatusCodeFromCode(code string) int {
 		return iris.StatusForbidden
 	case usecase.AuthenticationError:
 		return iris.StatusUnauthorized
-	case usecase.InternalServerError, UnknownCode:
+	case usecase.InternalServerError, UnknownError:
 		return iris.StatusInternalServerError
-	case usecase.ValidationError:
+	case usecase.ValidationError, UscaseInputValidationError:
 		return iris.StatusBadRequest
 	case usecase.NotFoundError:
 		return iris.StatusNotFound
@@ -44,18 +53,19 @@ func logError(err error, code string, l logger.Interface) {
 	case usecase.PermissionDeniedError,
 		usecase.AuthenticationError,
 		usecase.ValidationError,
-		usecase.NotFoundError:
-		l.Info(err.Error())
+		usecase.NotFoundError,
+		UscaseInputValidationError:
+		l.Info(errors.Unwrap(err).Error())
 	case usecase.DBError:
-		l.Warn(err.Error())
-	case usecase.InternalServerError, UnknownCode:
+		l.Warn(errors.Unwrap(err).Error())
+	case usecase.InternalServerError, UnknownError:
 		l.Error(err)
 	default:
-		l.Info(err.Error())
+		l.Info(errors.Unwrap(err).Error())
 	}
 }
 
-func HandleError(ctx iris.Context, err error, l logger.Interface) {
+func handleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
 	logError(err, code, l)
@@ -73,4 +83,27 @@ func HandleError(ctx iris.Context, err error, l logger.Interface) {
 			"message": foundedError.Error(),
 		})
 	}
+}
+
+func translatableErrorFromValidationErrors(
+	inputStructure any, errs validator.ValidationErrors, tr model.TranslateFunc,
+) *model.TranslatableError {
+	verboser, ok := inputStructure.(interface {
+		GetErrorMessageFromStructField(string) (string, string)
+	})
+	var err error = errs
+	translateKey := defaultInvalidErrorTranslateKey
+	defaultErrorMessage := defaultInvalidErrorMessage
+	if ok {
+		for _, validationErr := range errs {
+			err = validationErr
+			translateKey, defaultErrorMessage = verboser.GetErrorMessageFromStructField(
+				validationErr.StructField(),
+			)
+			break
+		}
+	}
+	return model.NewTranslatableError(
+		err, translateKey, tr, defaultErrorMessage, UscaseInputValidationError,
+	)
 }

@@ -114,6 +114,28 @@ func (uu *UserUpdate) SetIsStaff(b bool) *UserUpdate {
 	return uu
 }
 
+// SetNillableIsStaff sets the "is_staff" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableIsStaff(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetIsStaff(*b)
+	}
+	return uu
+}
+
+// SetIsSuperuser sets the "is_superuser" field.
+func (uu *UserUpdate) SetIsSuperuser(b bool) *UserUpdate {
+	uu.mutation.SetIsSuperuser(b)
+	return uu
+}
+
+// SetNillableIsSuperuser sets the "is_superuser" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableIsSuperuser(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetIsSuperuser(*b)
+	}
+	return uu
+}
+
 // SetIsActive sets the "is_active" field.
 func (uu *UserUpdate) SetIsActive(b bool) *UserUpdate {
 	uu.mutation.SetIsActive(b)
@@ -321,6 +343,13 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldIsStaff,
 		})
 	}
+	if value, ok := uu.mutation.IsSuperuser(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldIsSuperuser,
+		})
+	}
 	if value, ok := uu.mutation.IsActive(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
@@ -437,6 +466,28 @@ func (uuo *UserUpdateOne) SetEmail(s string) *UserUpdateOne {
 // SetIsStaff sets the "is_staff" field.
 func (uuo *UserUpdateOne) SetIsStaff(b bool) *UserUpdateOne {
 	uuo.mutation.SetIsStaff(b)
+	return uuo
+}
+
+// SetNillableIsStaff sets the "is_staff" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableIsStaff(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetIsStaff(*b)
+	}
+	return uuo
+}
+
+// SetIsSuperuser sets the "is_superuser" field.
+func (uuo *UserUpdateOne) SetIsSuperuser(b bool) *UserUpdateOne {
+	uuo.mutation.SetIsSuperuser(b)
+	return uuo
+}
+
+// SetNillableIsSuperuser sets the "is_superuser" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableIsSuperuser(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetIsSuperuser(*b)
+	}
 	return uuo
 }
 
@@ -675,6 +726,13 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Type:   field.TypeBool,
 			Value:  value,
 			Column: user.FieldIsStaff,
+		})
+	}
+	if value, ok := uuo.mutation.IsSuperuser(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldIsSuperuser,
 		})
 	}
 	if value, ok := uuo.mutation.IsActive(); ok {

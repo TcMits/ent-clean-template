@@ -123,6 +123,28 @@ func (uc *UserCreate) SetIsStaff(b bool) *UserCreate {
 	return uc
 }
 
+// SetNillableIsStaff sets the "is_staff" field if the given value is not nil.
+func (uc *UserCreate) SetNillableIsStaff(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetIsStaff(*b)
+	}
+	return uc
+}
+
+// SetIsSuperuser sets the "is_superuser" field.
+func (uc *UserCreate) SetIsSuperuser(b bool) *UserCreate {
+	uc.mutation.SetIsSuperuser(b)
+	return uc
+}
+
+// SetNillableIsSuperuser sets the "is_superuser" field if the given value is not nil.
+func (uc *UserCreate) SetNillableIsSuperuser(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetIsSuperuser(*b)
+	}
+	return uc
+}
+
 // SetIsActive sets the "is_active" field.
 func (uc *UserCreate) SetIsActive(b bool) *UserCreate {
 	uc.mutation.SetIsActive(b)
@@ -262,6 +284,14 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultLastName
 		uc.mutation.SetLastName(v)
 	}
+	if _, ok := uc.mutation.IsStaff(); !ok {
+		v := user.DefaultIsStaff
+		uc.mutation.SetIsStaff(v)
+	}
+	if _, ok := uc.mutation.IsSuperuser(); !ok {
+		v := user.DefaultIsSuperuser
+		uc.mutation.SetIsSuperuser(v)
+	}
 	if _, ok := uc.mutation.IsActive(); !ok {
 		v := user.DefaultIsActive
 		uc.mutation.SetIsActive(v)
@@ -321,6 +351,9 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.IsStaff(); !ok {
 		return &ValidationError{Name: "is_staff", err: errors.New(`ent: missing required field "User.is_staff"`)}
+	}
+	if _, ok := uc.mutation.IsSuperuser(); !ok {
+		return &ValidationError{Name: "is_superuser", err: errors.New(`ent: missing required field "User.is_superuser"`)}
 	}
 	if _, ok := uc.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "User.is_active"`)}
@@ -435,6 +468,14 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldIsStaff,
 		})
 		_node.IsStaff = value
+	}
+	if value, ok := uc.mutation.IsSuperuser(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Value:  value,
+			Column: user.FieldIsSuperuser,
+		})
+		_node.IsSuperuser = value
 	}
 	if value, ok := uc.mutation.IsActive(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

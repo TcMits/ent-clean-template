@@ -67,12 +67,20 @@ func init() {
 	userDescEmail := userFields[6].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
+	// userDescIsStaff is the schema descriptor for is_staff field.
+	userDescIsStaff := userFields[7].Descriptor()
+	// user.DefaultIsStaff holds the default value on creation for the is_staff field.
+	user.DefaultIsStaff = userDescIsStaff.Default.(bool)
+	// userDescIsSuperuser is the schema descriptor for is_superuser field.
+	userDescIsSuperuser := userFields[8].Descriptor()
+	// user.DefaultIsSuperuser holds the default value on creation for the is_superuser field.
+	user.DefaultIsSuperuser = userDescIsSuperuser.Default.(bool)
 	// userDescIsActive is the schema descriptor for is_active field.
-	userDescIsActive := userFields[8].Descriptor()
+	userDescIsActive := userFields[9].Descriptor()
 	// user.DefaultIsActive holds the default value on creation for the is_active field.
 	user.DefaultIsActive = userDescIsActive.Default.(bool)
 	// userDescJoinTime is the schema descriptor for join_time field.
-	userDescJoinTime := userFields[9].Descriptor()
+	userDescJoinTime := userFields[10].Descriptor()
 	// user.DefaultJoinTime holds the default value on creation for the join_time field.
 	user.DefaultJoinTime = userDescJoinTime.Default.(func() time.Time)
 	// userDescID is the schema descriptor for id field.

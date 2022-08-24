@@ -35,6 +35,8 @@ type User struct {
 	Email string `json:"email,omitempty"`
 	// IsStaff holds the value of the "is_staff" field.
 	IsStaff bool `json:"is_staff,omitempty"`
+	// IsSuperuser holds the value of the "is_superuser" field.
+	IsSuperuser bool `json:"is_superuser,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
 	// JoinTime holds the value of the "join_time" field.
@@ -46,7 +48,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldIsStaff, user.FieldIsActive:
+		case user.FieldIsStaff, user.FieldIsSuperuser, user.FieldIsActive:
 			values[i] = new(sql.NullBool)
 		case user.FieldJwtTokenKey, user.FieldPassword, user.FieldUsername, user.FieldFirstName, user.FieldLastName, user.FieldEmail:
 			values[i] = new(sql.NullString)
@@ -129,6 +131,12 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				u.IsStaff = value.Bool
 			}
+		case user.FieldIsSuperuser:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field is_superuser", values[i])
+			} else if value.Valid {
+				u.IsSuperuser = value.Bool
+			}
 		case user.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
@@ -193,6 +201,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_staff=")
 	builder.WriteString(fmt.Sprintf("%v", u.IsStaff))
+	builder.WriteString(", ")
+	builder.WriteString("is_superuser=")
+	builder.WriteString(fmt.Sprintf("%v", u.IsSuperuser))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", u.IsActive))

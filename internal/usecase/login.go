@@ -20,6 +20,12 @@ const (
 	_defaultRefreshTokenTimeOut = time.Hour * 24 * 7
 )
 
+const (
+	idFieldName         = "id"
+	keyFieldName        = "key"
+	refreshKeyFieldName = "refresh_key"
+)
+
 var (
 	_wrapInvalidLoginInputError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
@@ -77,14 +83,14 @@ func NewLoginUseCase(
 
 func (*loginUseCase) getUserMapClaims(user *model.User) jwtKit.MapClaims {
 	return jwtKit.MapClaims{
-		"id":    user.ID.String(),
-		"email": user.Email,
-		"key":   user.JwtTokenKey,
+		idFieldName:  user.ID.String(),
+		"email":      user.Email,
+		keyFieldName: user.JwtTokenKey,
 	}
 }
 
 func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jwtKit.MapClaims) (*model.User, error) {
-	strId, ok := jwtMapClaims["id"].(string)
+	strId, ok := jwtMapClaims[idFieldName].(string)
 	if !ok {
 		strId = ""
 	}
@@ -96,7 +102,7 @@ func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jw
 	if err != nil {
 		return nil, err
 	}
-	key, ok := jwtMapClaims["key"].(string)
+	key, ok := jwtMapClaims[keyFieldName].(string)
 	if !ok || user.JwtTokenKey != key {
 		return nil, errors.New("loginUseCase - getUserFromMapClaims: Invalid token key")
 	}
@@ -114,7 +120,10 @@ func (l *loginUseCase) createRefreshToken(user *model.User) (*useCaseModel.Refre
 	if err != nil {
 		return nil, err
 	}
-	refreshToken, err := jwt.NewToken(l.getUserMapClaims(user), refreshKey+l.secret, _defaultRefreshTokenTimeOut)
+	userMapClaims := l.getUserMapClaims(user)
+	userMapClaims[refreshKeyFieldName] = refreshKey
+	refreshToken, err := jwt.NewToken(
+		userMapClaims, l.secret, _defaultRefreshTokenTimeOut)
 	if err != nil {
 		return nil, err
 	}
@@ -136,10 +145,14 @@ func (l *loginUseCase) parseRefreshToken(
 	ctx context.Context, refreshTokenInput *useCaseModel.RefreshTokenInput) (*model.User, error) {
 	jwtMapClaims, err := jwt.ParseJWT(
 		refreshTokenInput.RefreshToken,
-		refreshTokenInput.RefreshKey+l.secret,
+		l.secret,
 	)
 	if err != nil {
 		return nil, err
+	}
+	key, ok := jwtMapClaims[refreshKeyFieldName].(string)
+	if !ok || refreshTokenInput.RefreshKey != key {
+		return nil, errors.New("loginUseCase - parseRefreshToken: Invalid token key")
 	}
 	return l.getUserFromMapClaims(ctx, jwtMapClaims)
 }
