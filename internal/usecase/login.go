@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/TcMits/ent-clean-template/ent/user"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
@@ -70,14 +69,14 @@ var (
 )
 
 type loginUseCase struct {
-	repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+	repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 	secret     string
 }
 
 func NewLoginUseCase(
-	repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput],
+	repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput],
 	secret string,
-) LoginUseCase[useCaseModel.LoginInput, useCaseModel.JWTAuthenticatedPayload, useCaseModel.RefreshTokenInput, model.User] {
+) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
 	return &loginUseCase{repository: repository, secret: secret}
 }
 
@@ -98,7 +97,7 @@ func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jw
 	if err != nil {
 		return nil, err
 	}
-	user, err := l.repository.Get(ctx, user.IDEQ(id))
+	user, err := l.repository.Get(ctx, &model.UserWhereInput{ID: &id})
 	if err != nil {
 		return nil, err
 	}

@@ -158,13 +158,6 @@ func IsActive(v bool) predicate.User {
 	})
 }
 
-// JoinTime applies equality check predicate on the "join_time" field. It's identical to JoinTimeEQ.
-func JoinTime(v time.Time) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldJoinTime), v))
-	})
-}
-
 // CreateTimeEQ applies the EQ predicate on the "create_time" field.
 func CreateTimeEQ(v time.Time) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -375,6 +368,20 @@ func JwtTokenKeyHasPrefix(v string) predicate.User {
 func JwtTokenKeyHasSuffix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldJwtTokenKey), v))
+	})
+}
+
+// JwtTokenKeyIsNil applies the IsNil predicate on the "jwt_token_key" field.
+func JwtTokenKeyIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldJwtTokenKey)))
+	})
+}
+
+// JwtTokenKeyNotNil applies the NotNil predicate on the "jwt_token_key" field.
+func JwtTokenKeyNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldJwtTokenKey)))
 	})
 }
 
@@ -689,6 +696,20 @@ func FirstNameHasSuffix(v string) predicate.User {
 	})
 }
 
+// FirstNameIsNil applies the IsNil predicate on the "first_name" field.
+func FirstNameIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldFirstName)))
+	})
+}
+
+// FirstNameNotNil applies the NotNil predicate on the "first_name" field.
+func FirstNameNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldFirstName)))
+	})
+}
+
 // FirstNameEqualFold applies the EqualFold predicate on the "first_name" field.
 func FirstNameEqualFold(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -785,6 +806,20 @@ func LastNameHasPrefix(v string) predicate.User {
 func LastNameHasSuffix(v string) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.HasSuffix(s.C(FieldLastName), v))
+	})
+}
+
+// LastNameIsNil applies the IsNil predicate on the "last_name" field.
+func LastNameIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldLastName)))
+	})
+}
+
+// LastNameNotNil applies the NotNil predicate on the "last_name" field.
+func LastNameNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldLastName)))
 	})
 }
 
@@ -915,6 +950,20 @@ func IsStaffNEQ(v bool) predicate.User {
 	})
 }
 
+// IsStaffIsNil applies the IsNil predicate on the "is_staff" field.
+func IsStaffIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldIsStaff)))
+	})
+}
+
+// IsStaffNotNil applies the NotNil predicate on the "is_staff" field.
+func IsStaffNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldIsStaff)))
+	})
+}
+
 // IsSuperuserEQ applies the EQ predicate on the "is_superuser" field.
 func IsSuperuserEQ(v bool) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -926,6 +975,20 @@ func IsSuperuserEQ(v bool) predicate.User {
 func IsSuperuserNEQ(v bool) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldIsSuperuser), v))
+	})
+}
+
+// IsSuperuserIsNil applies the IsNil predicate on the "is_superuser" field.
+func IsSuperuserIsNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldIsSuperuser)))
+	})
+}
+
+// IsSuperuserNotNil applies the NotNil predicate on the "is_superuser" field.
+func IsSuperuserNotNil() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldIsSuperuser)))
 	})
 }
 
@@ -943,67 +1006,17 @@ func IsActiveNEQ(v bool) predicate.User {
 	})
 }
 
-// JoinTimeEQ applies the EQ predicate on the "join_time" field.
-func JoinTimeEQ(v time.Time) predicate.User {
+// IsActiveIsNil applies the IsNil predicate on the "is_active" field.
+func IsActiveIsNil() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldJoinTime), v))
+		s.Where(sql.IsNull(s.C(FieldIsActive)))
 	})
 }
 
-// JoinTimeNEQ applies the NEQ predicate on the "join_time" field.
-func JoinTimeNEQ(v time.Time) predicate.User {
+// IsActiveNotNil applies the NotNil predicate on the "is_active" field.
+func IsActiveNotNil() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldJoinTime), v))
-	})
-}
-
-// JoinTimeIn applies the In predicate on the "join_time" field.
-func JoinTimeIn(vs ...time.Time) predicate.User {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.In(s.C(FieldJoinTime), v...))
-	})
-}
-
-// JoinTimeNotIn applies the NotIn predicate on the "join_time" field.
-func JoinTimeNotIn(vs ...time.Time) predicate.User {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.NotIn(s.C(FieldJoinTime), v...))
-	})
-}
-
-// JoinTimeGT applies the GT predicate on the "join_time" field.
-func JoinTimeGT(v time.Time) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldJoinTime), v))
-	})
-}
-
-// JoinTimeGTE applies the GTE predicate on the "join_time" field.
-func JoinTimeGTE(v time.Time) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldJoinTime), v))
-	})
-}
-
-// JoinTimeLT applies the LT predicate on the "join_time" field.
-func JoinTimeLT(v time.Time) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldJoinTime), v))
-	})
-}
-
-// JoinTimeLTE applies the LTE predicate on the "join_time" field.
-func JoinTimeLTE(v time.Time) predicate.User {
-	return predicate.User(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldJoinTime), v))
+		s.Where(sql.NotNull(s.C(FieldIsActive)))
 	})
 }
 

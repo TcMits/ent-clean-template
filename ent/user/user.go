@@ -35,10 +35,8 @@ const (
 	FieldIsSuperuser = "is_superuser"
 	// FieldIsActive holds the string denoting the is_active field in the database.
 	FieldIsActive = "is_active"
-	// FieldJoinTime holds the string denoting the join_time field in the database.
-	FieldJoinTime = "join_time"
 	// Table holds the table name of the user in the database.
-	Table = "User"
+	Table = "users"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -55,7 +53,6 @@ var Columns = []string{
 	FieldIsStaff,
 	FieldIsSuperuser,
 	FieldIsActive,
-	FieldJoinTime,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -95,8 +92,6 @@ var (
 	DefaultIsSuperuser bool
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
-	// DefaultJoinTime holds the default value on creation for the "join_time" field.
-	DefaultJoinTime func() time.Time
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

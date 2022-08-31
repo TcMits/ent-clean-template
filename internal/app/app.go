@@ -9,13 +9,12 @@ import (
 
 	"github.com/TcMits/ent-clean-template/config"
 	v1 "github.com/TcMits/ent-clean-template/internal/controller/http/v1"
+	"github.com/TcMits/ent-clean-template/internal/controller/http/v1/middleware"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/datastore"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/httpserver"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/go-playground/validator/v10"
-	"github.com/kataras/iris/v12"
 )
 
 // Run creates objects via constructors.
@@ -23,7 +22,7 @@ func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	// Repository
-	client, err := datastore.NewClient(cfg)
+	client, err := datastore.NewClient(cfg.PG.URL, cfg.PG.PoolMax)
 	if err != nil {
 		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
@@ -36,12 +35,10 @@ func Run(cfg *config.Config) {
 	)
 
 	// HTTP Server
-	handler := iris.New()
-	handler.Validator = validator.New()
-	handler.I18n.Load("./locales/*/*")
-	handler.I18n.SetDefault("en-US")
-
+	handler := v1.NewHandler()
+	handler.UseRouter(middleware.Logger(l))
 	v1.RegisterLoginController(handler, loginUseCase, l)
+
 	if err := handler.Build(); err != nil {
 		l.Fatal(fmt.Errorf("app - Run - handler.Build: %w", err))
 	}

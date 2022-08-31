@@ -5,7 +5,6 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/TcMits/ent-clean-template/config"
 	"github.com/TcMits/ent-clean-template/ent"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
@@ -24,9 +23,9 @@ func Open(databaseUrl string, maxPoolSize int) (*ent.Client, error) {
 }
 
 // NewClient returns an orm client
-func NewClient(cfg *config.Config) (*ent.Client, error) {
+func NewClient(url string, poolMax int) (*ent.Client, error) {
 	var entOptions []ent.Option
 	entOptions = append(entOptions, ent.Debug())
 
-	return Open(cfg.PG.URL, cfg.PG.PoolMax)
+	return Open(url, poolMax)
 }

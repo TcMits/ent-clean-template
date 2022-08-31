@@ -48,6 +48,12 @@ func (uu *UserUpdate) SetNillableJwtTokenKey(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearJwtTokenKey clears the value of the "jwt_token_key" field.
+func (uu *UserUpdate) ClearJwtTokenKey() *UserUpdate {
+	uu.mutation.ClearJwtTokenKey()
+	return uu
+}
+
 // SetPassword sets the "password" field.
 func (uu *UserUpdate) SetPassword(s string) *UserUpdate {
 	uu.mutation.SetPassword(s)
@@ -88,6 +94,12 @@ func (uu *UserUpdate) SetNillableFirstName(s *string) *UserUpdate {
 	return uu
 }
 
+// ClearFirstName clears the value of the "first_name" field.
+func (uu *UserUpdate) ClearFirstName() *UserUpdate {
+	uu.mutation.ClearFirstName()
+	return uu
+}
+
 // SetLastName sets the "last_name" field.
 func (uu *UserUpdate) SetLastName(s string) *UserUpdate {
 	uu.mutation.SetLastName(s)
@@ -99,6 +111,12 @@ func (uu *UserUpdate) SetNillableLastName(s *string) *UserUpdate {
 	if s != nil {
 		uu.SetLastName(*s)
 	}
+	return uu
+}
+
+// ClearLastName clears the value of the "last_name" field.
+func (uu *UserUpdate) ClearLastName() *UserUpdate {
+	uu.mutation.ClearLastName()
 	return uu
 }
 
@@ -122,6 +140,12 @@ func (uu *UserUpdate) SetNillableIsStaff(b *bool) *UserUpdate {
 	return uu
 }
 
+// ClearIsStaff clears the value of the "is_staff" field.
+func (uu *UserUpdate) ClearIsStaff() *UserUpdate {
+	uu.mutation.ClearIsStaff()
+	return uu
+}
+
 // SetIsSuperuser sets the "is_superuser" field.
 func (uu *UserUpdate) SetIsSuperuser(b bool) *UserUpdate {
 	uu.mutation.SetIsSuperuser(b)
@@ -133,6 +157,12 @@ func (uu *UserUpdate) SetNillableIsSuperuser(b *bool) *UserUpdate {
 	if b != nil {
 		uu.SetIsSuperuser(*b)
 	}
+	return uu
+}
+
+// ClearIsSuperuser clears the value of the "is_superuser" field.
+func (uu *UserUpdate) ClearIsSuperuser() *UserUpdate {
+	uu.mutation.ClearIsSuperuser()
 	return uu
 }
 
@@ -150,17 +180,9 @@ func (uu *UserUpdate) SetNillableIsActive(b *bool) *UserUpdate {
 	return uu
 }
 
-// SetJoinTime sets the "join_time" field.
-func (uu *UserUpdate) SetJoinTime(t time.Time) *UserUpdate {
-	uu.mutation.SetJoinTime(t)
-	return uu
-}
-
-// SetNillableJoinTime sets the "join_time" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableJoinTime(t *time.Time) *UserUpdate {
-	if t != nil {
-		uu.SetJoinTime(*t)
-	}
+// ClearIsActive clears the value of the "is_active" field.
+func (uu *UserUpdate) ClearIsActive() *UserUpdate {
+	uu.mutation.ClearIsActive()
 	return uu
 }
 
@@ -295,6 +317,12 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldJwtTokenKey,
 		})
 	}
+	if uu.mutation.JwtTokenKeyCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldJwtTokenKey,
+		})
+	}
 	if value, ok := uu.mutation.Password(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -322,10 +350,22 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldFirstName,
 		})
 	}
+	if uu.mutation.FirstNameCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldFirstName,
+		})
+	}
 	if value, ok := uu.mutation.LastName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
+			Column: user.FieldLastName,
+		})
+	}
+	if uu.mutation.LastNameCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
 			Column: user.FieldLastName,
 		})
 	}
@@ -343,10 +383,22 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldIsStaff,
 		})
 	}
+	if uu.mutation.IsStaffCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: user.FieldIsStaff,
+		})
+	}
 	if value, ok := uu.mutation.IsSuperuser(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  value,
+			Column: user.FieldIsSuperuser,
+		})
+	}
+	if uu.mutation.IsSuperuserCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
 			Column: user.FieldIsSuperuser,
 		})
 	}
@@ -357,11 +409,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: user.FieldIsActive,
 		})
 	}
-	if value, ok := uu.mutation.JoinTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: user.FieldJoinTime,
+	if uu.mutation.IsActiveCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: user.FieldIsActive,
 		})
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
@@ -400,6 +451,12 @@ func (uuo *UserUpdateOne) SetNillableJwtTokenKey(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetJwtTokenKey(*s)
 	}
+	return uuo
+}
+
+// ClearJwtTokenKey clears the value of the "jwt_token_key" field.
+func (uuo *UserUpdateOne) ClearJwtTokenKey() *UserUpdateOne {
+	uuo.mutation.ClearJwtTokenKey()
 	return uuo
 }
 
@@ -443,6 +500,12 @@ func (uuo *UserUpdateOne) SetNillableFirstName(s *string) *UserUpdateOne {
 	return uuo
 }
 
+// ClearFirstName clears the value of the "first_name" field.
+func (uuo *UserUpdateOne) ClearFirstName() *UserUpdateOne {
+	uuo.mutation.ClearFirstName()
+	return uuo
+}
+
 // SetLastName sets the "last_name" field.
 func (uuo *UserUpdateOne) SetLastName(s string) *UserUpdateOne {
 	uuo.mutation.SetLastName(s)
@@ -454,6 +517,12 @@ func (uuo *UserUpdateOne) SetNillableLastName(s *string) *UserUpdateOne {
 	if s != nil {
 		uuo.SetLastName(*s)
 	}
+	return uuo
+}
+
+// ClearLastName clears the value of the "last_name" field.
+func (uuo *UserUpdateOne) ClearLastName() *UserUpdateOne {
+	uuo.mutation.ClearLastName()
 	return uuo
 }
 
@@ -477,6 +546,12 @@ func (uuo *UserUpdateOne) SetNillableIsStaff(b *bool) *UserUpdateOne {
 	return uuo
 }
 
+// ClearIsStaff clears the value of the "is_staff" field.
+func (uuo *UserUpdateOne) ClearIsStaff() *UserUpdateOne {
+	uuo.mutation.ClearIsStaff()
+	return uuo
+}
+
 // SetIsSuperuser sets the "is_superuser" field.
 func (uuo *UserUpdateOne) SetIsSuperuser(b bool) *UserUpdateOne {
 	uuo.mutation.SetIsSuperuser(b)
@@ -488,6 +563,12 @@ func (uuo *UserUpdateOne) SetNillableIsSuperuser(b *bool) *UserUpdateOne {
 	if b != nil {
 		uuo.SetIsSuperuser(*b)
 	}
+	return uuo
+}
+
+// ClearIsSuperuser clears the value of the "is_superuser" field.
+func (uuo *UserUpdateOne) ClearIsSuperuser() *UserUpdateOne {
+	uuo.mutation.ClearIsSuperuser()
 	return uuo
 }
 
@@ -505,17 +586,9 @@ func (uuo *UserUpdateOne) SetNillableIsActive(b *bool) *UserUpdateOne {
 	return uuo
 }
 
-// SetJoinTime sets the "join_time" field.
-func (uuo *UserUpdateOne) SetJoinTime(t time.Time) *UserUpdateOne {
-	uuo.mutation.SetJoinTime(t)
-	return uuo
-}
-
-// SetNillableJoinTime sets the "join_time" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableJoinTime(t *time.Time) *UserUpdateOne {
-	if t != nil {
-		uuo.SetJoinTime(*t)
-	}
+// ClearIsActive clears the value of the "is_active" field.
+func (uuo *UserUpdateOne) ClearIsActive() *UserUpdateOne {
+	uuo.mutation.ClearIsActive()
 	return uuo
 }
 
@@ -680,6 +753,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldJwtTokenKey,
 		})
 	}
+	if uuo.mutation.JwtTokenKeyCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldJwtTokenKey,
+		})
+	}
 	if value, ok := uuo.mutation.Password(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -707,10 +786,22 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldFirstName,
 		})
 	}
+	if uuo.mutation.FirstNameCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: user.FieldFirstName,
+		})
+	}
 	if value, ok := uuo.mutation.LastName(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
+			Column: user.FieldLastName,
+		})
+	}
+	if uuo.mutation.LastNameCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
 			Column: user.FieldLastName,
 		})
 	}
@@ -728,10 +819,22 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldIsStaff,
 		})
 	}
+	if uuo.mutation.IsStaffCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: user.FieldIsStaff,
+		})
+	}
 	if value, ok := uuo.mutation.IsSuperuser(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeBool,
 			Value:  value,
+			Column: user.FieldIsSuperuser,
+		})
+	}
+	if uuo.mutation.IsSuperuserCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
 			Column: user.FieldIsSuperuser,
 		})
 	}
@@ -742,11 +845,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Column: user.FieldIsActive,
 		})
 	}
-	if value, ok := uuo.mutation.JoinTime(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: user.FieldJoinTime,
+	if uuo.mutation.IsActiveCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeBool,
+			Column: user.FieldIsActive,
 		})
 	}
 	_node = &User{config: uuo.config}

@@ -159,20 +159,6 @@ func (uc *UserCreate) SetNillableIsActive(b *bool) *UserCreate {
 	return uc
 }
 
-// SetJoinTime sets the "join_time" field.
-func (uc *UserCreate) SetJoinTime(t time.Time) *UserCreate {
-	uc.mutation.SetJoinTime(t)
-	return uc
-}
-
-// SetNillableJoinTime sets the "join_time" field if the given value is not nil.
-func (uc *UserCreate) SetNillableJoinTime(t *time.Time) *UserCreate {
-	if t != nil {
-		uc.SetJoinTime(*t)
-	}
-	return uc
-}
-
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -296,10 +282,6 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultIsActive
 		uc.mutation.SetIsActive(v)
 	}
-	if _, ok := uc.mutation.JoinTime(); !ok {
-		v := user.DefaultJoinTime()
-		uc.mutation.SetJoinTime(v)
-	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -314,9 +296,6 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "User.update_time"`)}
 	}
-	if _, ok := uc.mutation.JwtTokenKey(); !ok {
-		return &ValidationError{Name: "jwt_token_key", err: errors.New(`ent: missing required field "User.jwt_token_key"`)}
-	}
 	if _, ok := uc.mutation.Username(); !ok {
 		return &ValidationError{Name: "username", err: errors.New(`ent: missing required field "User.username"`)}
 	}
@@ -325,16 +304,10 @@ func (uc *UserCreate) check() error {
 			return &ValidationError{Name: "username", err: fmt.Errorf(`ent: validator failed for field "User.username": %w`, err)}
 		}
 	}
-	if _, ok := uc.mutation.FirstName(); !ok {
-		return &ValidationError{Name: "first_name", err: errors.New(`ent: missing required field "User.first_name"`)}
-	}
 	if v, ok := uc.mutation.FirstName(); ok {
 		if err := user.FirstNameValidator(v); err != nil {
 			return &ValidationError{Name: "first_name", err: fmt.Errorf(`ent: validator failed for field "User.first_name": %w`, err)}
 		}
-	}
-	if _, ok := uc.mutation.LastName(); !ok {
-		return &ValidationError{Name: "last_name", err: errors.New(`ent: missing required field "User.last_name"`)}
 	}
 	if v, ok := uc.mutation.LastName(); ok {
 		if err := user.LastNameValidator(v); err != nil {
@@ -348,18 +321,6 @@ func (uc *UserCreate) check() error {
 		if err := user.EmailValidator(v); err != nil {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
-	}
-	if _, ok := uc.mutation.IsStaff(); !ok {
-		return &ValidationError{Name: "is_staff", err: errors.New(`ent: missing required field "User.is_staff"`)}
-	}
-	if _, ok := uc.mutation.IsSuperuser(); !ok {
-		return &ValidationError{Name: "is_superuser", err: errors.New(`ent: missing required field "User.is_superuser"`)}
-	}
-	if _, ok := uc.mutation.IsActive(); !ok {
-		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "User.is_active"`)}
-	}
-	if _, ok := uc.mutation.JoinTime(); !ok {
-		return &ValidationError{Name: "join_time", err: errors.New(`ent: missing required field "User.join_time"`)}
 	}
 	return nil
 }
@@ -484,14 +445,6 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Column: user.FieldIsActive,
 		})
 		_node.IsActive = value
-	}
-	if value, ok := uc.mutation.JoinTime(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
-			Value:  value,
-			Column: user.FieldJoinTime,
-		})
-		_node.JoinTime = value
 	}
 	return _node, _spec
 }

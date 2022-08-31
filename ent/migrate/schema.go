@@ -3,42 +3,49 @@
 package migrate
 
 import (
-	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
-	// UserColumns holds the columns for the "User" table.
-	UserColumns = []*schema.Column{
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "create_time", Type: field.TypeTime},
 		{Name: "update_time", Type: field.TypeTime},
-		{Name: "jwt_token_key", Type: field.TypeString},
+		{Name: "jwt_token_key", Type: field.TypeString, Nullable: true},
 		{Name: "password", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"mysql": "char(32)"}},
 		{Name: "username", Type: field.TypeString, Unique: true, Size: 128},
-		{Name: "first_name", Type: field.TypeString, Size: 128, Default: ""},
-		{Name: "last_name", Type: field.TypeString, Size: 128, Default: ""},
+		{Name: "first_name", Type: field.TypeString, Nullable: true, Size: 128, Default: ""},
+		{Name: "last_name", Type: field.TypeString, Nullable: true, Size: 128, Default: ""},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "is_staff", Type: field.TypeBool, Default: false},
-		{Name: "is_superuser", Type: field.TypeBool, Default: false},
-		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "join_time", Type: field.TypeTime},
+		{Name: "is_staff", Type: field.TypeBool, Nullable: true, Default: false},
+		{Name: "is_superuser", Type: field.TypeBool, Nullable: true, Default: false},
+		{Name: "is_active", Type: field.TypeBool, Nullable: true, Default: true},
 	}
-	// UserTable holds the schema information for the "User" table.
-	UserTable = &schema.Table{
-		Name:       "User",
-		Columns:    UserColumns,
-		PrimaryKey: []*schema.Column{UserColumns[0]},
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_username",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[5]},
+			},
+			{
+				Name:    "user_create_time",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[1]},
+			},
+		},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		UserTable,
+		UsersTable,
 	}
 )
 
 func init() {
-	UserTable.Annotation = &entsql.Annotation{
-		Table: "User",
-	}
 }

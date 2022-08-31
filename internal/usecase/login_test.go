@@ -5,28 +5,25 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
+	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	jwtKit "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewLoginUseCase(t *testing.T) {
 	type args struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 
 	loginRepository := repository.NewLoginRepository(client)
 
@@ -38,7 +35,7 @@ func TestNewLoginUseCase(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want LoginUseCase[useCaseModel.LoginInput, useCaseModel.JWTAuthenticatedPayload, useCaseModel.RefreshTokenInput, model.User]
+		want LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User]
 	}{
 		{
 			name: "Success",
@@ -60,7 +57,7 @@ func TestNewLoginUseCase(t *testing.T) {
 
 func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -68,10 +65,8 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -114,7 +109,7 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 
 func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -123,10 +118,8 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -243,7 +236,7 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 
 func Test_loginUseCase_createAccessToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -252,10 +245,8 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -301,7 +292,7 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 
 func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -310,10 +301,8 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -356,7 +345,7 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -366,10 +355,8 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -421,7 +408,7 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 
 func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -431,10 +418,8 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -486,7 +471,7 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_Login(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -495,10 +480,8 @@ func Test_loginUseCase_Login(t *testing.T) {
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -571,7 +554,7 @@ func Test_loginUseCase_Login(t *testing.T) {
 
 func Test_loginUseCase_RefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -580,10 +563,8 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
@@ -635,7 +616,7 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 
 func Test_loginUseCase_VerifyToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		secret     string
 	}
 	type args struct {
@@ -645,10 +626,8 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 

@@ -1,0 +1,84 @@
+{{ define "order_input" }}
+    {{- /*gotype: entgo.io/ent/entc/gen.Graph*/ -}}
+
+    {{ $pkg := base $.Config.Package }}
+    {{- with extend $ "Package" $pkg }}
+        {{ template "header" . }}
+    {{- end }}
+
+    {{ template "import" $ }}
+
+    const (
+      OrderDirectionAsc        = "ASC"
+      OrderDirectionDesc       = "DESC"
+      OrderDirectionAscPrefix  = ""
+      OrderDirectionDescPrefix = "-"
+    )
+
+    var _ OrderField = &orderField{}
+
+    type OrderField interface {
+      GetOrderFunc() OrderFunc
+      FieldName() string
+      Direction() string
+    }
+
+    type orderField struct {
+      direction string
+      fieldName string
+    }
+
+    {{- range $n := $.Nodes }}
+        {{ $input := print $n.Name "OrderInput" }}
+        type {{ $input }} []OrderField
+
+        func (i *{{ $input }}) Order(q *{{ $n.QueryName }}) *{{ $n.QueryName }} {
+            orderFucntions := make([]OrderFunc, 0, len(*i))
+            for _, field := range *i {
+              orderFucntions = append(orderFucntions, field.GetOrderFunc())
+            }
+            return q.Order(orderFucntions...)
+        }
+    {{- end }}
+
+    func (f *orderField) isAsc() bool {
+      return f.direction == OrderDirectionAsc
+    }
+
+    func (f *orderField) isDesc() bool {
+      return f.direction == OrderDirectionDesc
+    }
+
+    func (f *orderField) FieldName() string {
+      return f.fieldName
+    }
+
+    func (f *orderField) Direction() string {
+      return f.direction
+    }
+
+    func (f *orderField) GetOrderFunc() OrderFunc {
+      directionFunc := Asc
+      if f.isDesc() {
+        directionFunc = Desc
+      }
+      return directionFunc(f.fieldName)
+    }
+
+    func ParseOrderField(s string) (OrderField, error) {
+      if strings.HasPrefix(s, OrderDirectionDescPrefix) {
+        return &orderField{
+          direction: OrderDirectionDesc,
+          fieldName: strings.TrimPrefix(s, OrderDirectionDescPrefix),
+        }, nil
+      }
+      if strings.HasPrefix(s, OrderDirectionAscPrefix) {
+        return &orderField{
+          direction: OrderDirectionAsc,
+          fieldName: strings.TrimPrefix(s, OrderDirectionAscPrefix),
+        }, nil
+      }
+      return nil, fmt.Errorf("model - ParseOrderField: Unknown direction")
+    }
+
+{{ end }}

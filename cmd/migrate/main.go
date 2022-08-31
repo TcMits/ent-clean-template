@@ -17,7 +17,7 @@ func main() {
 		log.Fatalf("Config error: %s", err)
 	}
 
-	client, err := datastore.NewClient(cfg)
+	client, err := datastore.NewClient(cfg.PG.URL, cfg.PG.PoolMax)
 	if err != nil {
 		log.Fatalf("failed opening postgres client: %v", err)
 	}

@@ -6,5 +6,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+type FilterFunc func(*sql.Selector)
+
 // User is the predicate function for user builders.
-type User func(*sql.Selector)
+type User = FilterFunc

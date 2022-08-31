@@ -7,38 +7,30 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
-var UserFactory = newFactory[*model.User, *model.UserMutation, *model.UserCreate](newUserGenerator[*model.User, *model.UserMutation])
+var UserFactory = modelFactory[
+	*model.User,
+	*model.UserMutation,
+	*model.UserCreateInput,
+	*model.UserCreate,
+]{generator: newUserGenerator[*model.UserMutation, *model.UserCreateInput]()}
 
-type getGeneratorFunc[ModelType any, MutationType ent.Mutation] func() Generator[ModelType, MutationType]
-
-type modelFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType ModelCreator[ModelType, MutationType]] struct {
-	getGeneratorFunc[ModelType, MutationType]
-
-	generator Generator[ModelType, MutationType]
+type modelFactory[
+	ModelType any,
+	MutationType ent.Mutation,
+	MutationInputType model.MutationInput[MutationType],
+	ModelCreatorType model.Creator[ModelType, MutationType],
+] struct {
+	generator Generator[MutationType, MutationInputType]
 }
 
-func newFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType ModelCreator[ModelType, MutationType]](
-	genFunc getGeneratorFunc[ModelType, MutationType],
-) ModelFactory[ModelType, MutationType, ModelCreatorType] {
-	return &modelFactory[ModelType, MutationType, ModelCreatorType]{getGeneratorFunc: genFunc}
-}
-
-func (f *modelFactory[ModelType, MutationType, _]) Build(
-	ctx context.Context, mutation MutationType, opt map[string]any) ModelType {
-	f.ensureGenerator(mutation)
+func (f *modelFactory[_, _, MutationInputType, _]) Build(
+	ctx context.Context, opt map[string]any) MutationInputType {
 	return f.generator.Generate(ctx, opt)
 }
 
-func (f *modelFactory[ModelType, _, ModelCreatorType]) Create(
+func (f *modelFactory[ModelType, _, _, ModelCreatorType]) Create(
 	ctx context.Context, creator ModelCreatorType, opt map[string]any) (ModelType, error) {
-	f.ensureGenerator(creator.Mutation())
-	f.generator.Generate(ctx, opt)
+	mutaitonInput := f.generator.Generate(ctx, opt)
+	mutaitonInput.Mutate(creator.Mutation())
 	return creator.Save(ctx)
-}
-
-func (f *modelFactory[_, MutationType, _]) ensureGenerator(mutation MutationType) {
-	if f.generator == nil {
-		f.generator = f.getGeneratorFunc()
-	}
-	f.generator.SetMutation(mutation)
 }

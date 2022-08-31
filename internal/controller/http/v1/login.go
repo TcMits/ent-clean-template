@@ -5,9 +5,16 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
+)
+
+const (
+	loginSubPath        = "/login"
+	refreshTokenSubPath = "/refresh-token"
+	verifyTokenSubPath  = "/verify-token"
 )
 
 var (
@@ -40,26 +47,6 @@ var (
 	}
 )
 
-type loginController[
-	LoginInputType, AuthenticatedPayloadType, RefreshTokenInputType, UserType any] struct {
-	useCase usecase.LoginUseCase[LoginInputType, AuthenticatedPayloadType, RefreshTokenInputType, UserType]
-	logger  logger.Interface
-}
-
-func RegisterLoginController[
-	LoginInputType, AuthenticatedPayloadType, RefreshTokenInputType, UserType any](
-	handler iris.Party,
-	useCase usecase.LoginUseCase[LoginInputType, AuthenticatedPayloadType, RefreshTokenInputType, UserType],
-	logger logger.Interface,
-) {
-	controller := &loginController[
-		LoginInputType, AuthenticatedPayloadType, RefreshTokenInputType, UserType,
-	]{useCase: useCase, logger: logger}
-	handler.Post("/login", controller.Login)
-	handler.Post("/refresh-token", controller.RefreshToken)
-	handler.Post("/verify-token", controller.VerifyToken)
-}
-
 type refreshTokenResponse struct {
 	Token string `json:"token"`
 }
@@ -68,8 +55,34 @@ type verifyTokenRequest struct {
 	Token string `json:"token" validate:"required"`
 }
 
-func (c *loginController[LoginInputType, _, _, _]) Login(ctx iris.Context) {
-	loginInput := new(LoginInputType)
+type loginController struct {
+	useCase usecase.LoginUseCase[
+		*useCaseModel.LoginInput,
+		*useCaseModel.JWTAuthenticatedPayload,
+		*useCaseModel.RefreshTokenInput,
+		*model.User,
+	]
+	logger logger.Interface
+}
+
+func RegisterLoginController(
+	handler iris.Party,
+	useCase usecase.LoginUseCase[
+		*useCaseModel.LoginInput,
+		*useCaseModel.JWTAuthenticatedPayload,
+		*useCaseModel.RefreshTokenInput,
+		*model.User,
+	],
+	logger logger.Interface,
+) {
+	controller := &loginController{useCase: useCase, logger: logger}
+	handler.Post(loginSubPath, controller.Login)
+	handler.Post(refreshTokenSubPath, controller.RefreshToken)
+	handler.Post(verifyTokenSubPath, controller.VerifyToken)
+}
+
+func (c *loginController) Login(ctx iris.Context) {
+	loginInput := new(useCaseModel.LoginInput)
 	if err := ctx.ReadBody(loginInput); err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {
 			err = translatableErrorFromValidationErrors(
@@ -89,8 +102,8 @@ func (c *loginController[LoginInputType, _, _, _]) Login(ctx iris.Context) {
 	ctx.JSON(authenticatedPayload)
 }
 
-func (c *loginController[_, _, RefreshTokenInputType, _]) RefreshToken(ctx iris.Context) {
-	refreshTokenInput := new(RefreshTokenInputType)
+func (c *loginController) RefreshToken(ctx iris.Context) {
+	refreshTokenInput := new(useCaseModel.RefreshTokenInput)
 	if err := ctx.ReadJSON(refreshTokenInput); err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {
 			err = translatableErrorFromValidationErrors(
@@ -110,7 +123,7 @@ func (c *loginController[_, _, RefreshTokenInputType, _]) RefreshToken(ctx iris.
 	ctx.JSON(refreshTokenResponse{Token: token})
 }
 
-func (c *loginController[_, _, _, _]) VerifyToken(ctx iris.Context) {
+func (c *loginController) VerifyToken(ctx iris.Context) {
 	verifyTokenInput := new(verifyTokenRequest)
 	if err := ctx.ReadBody(verifyTokenInput); err != nil {
 		if errs, ok := err.(validator.ValidationErrors); ok {

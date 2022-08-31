@@ -1,0 +1,97 @@
+{{ define "create_repository" }}
+    {{- /*gotype: entgo.io/ent/entc/gen.Graph*/ -}}
+
+    {{ $pkg := base $.Config.Package }}
+    {{- with extend $ "Package" $pkg }}
+        {{ template "header" . }}
+    {{- end }}
+
+    {{ template "import" $ }}
+
+    {{- range $n := $.Nodes }}
+        {{ $repository := print $n.Name "CreateRepository" }}
+        {{ $createInput := print $n.Name "CreateInput" }}
+        type {{ $repository }} struct {
+            client *Client
+            postCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error
+            preCreateFunctions []func(context.Context, *Client, *{{ $n.Name }}) error
+            isAtomic bool
+        }
+
+        func New{{ $repository }}(
+            client *Client, 
+            postCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error,
+            preCreateFunctions []func(context.Context, *Client, *{{ $n.Name }}) error,
+            isAtomic bool,
+        ) *{{ $repository }} {
+            return &{{ $repository }}{
+                client: client,
+                postCreateFunctions: postCreateFunctions,
+                preCreateFunctions: preCreateFunctions,
+                isAtomic: isAtomic,
+            }
+        }
+
+        func (r *{{ $repository }}) runPostCreate(ctx context.Context, client *Client, i *{{ $createInput }}) error {
+          for _, function := range r.postCreateFunctions {
+            err := function(ctx, client, i)
+            if err != nil {
+              return err
+            }
+          }
+          return nil
+        }
+
+        func (r *{{ $repository }}) runPreCreate(ctx context.Context, client *Client, instance *{{ $n.Name }}) error {
+          for _, function := range r.preCreateFunctions {
+            err := function(ctx, client, instance)
+            if err != nil {
+              return err
+            }
+          }
+          return nil
+        }
+
+        // using in Tx
+        func (r *{{ $repository }}) CreateWithClient(
+            ctx context.Context, client *Client, input *{{ $createInput }},
+        ) (*{{ $n.Name }}, error) {
+            err := r.runPostCreate(ctx, client, input)
+            if err != nil {
+              return nil, err
+            }
+            instance, err := client.{{ $n.Name }}.Create().SetInput(input).Save(ctx)
+            if err != nil {
+              return nil, err
+            }
+            err = r.runPreCreate(ctx, client, instance)
+            if err != nil {
+              return nil, err
+            }
+            return instance, nil
+        }
+
+        func (r *{{ $repository }}) Create(
+            ctx context.Context, input *{{ $createInput }},
+        ) (*{{ $n.Name }}, error) {
+            if !r.isAtomic {
+              return r.CreateWithClient(ctx, r.client, input)
+            }
+            tx, err := r.client.Tx(ctx)
+            if err != nil {
+                return nil, err
+            }
+            instance, err := r.CreateWithClient(ctx, tx.Client(), input)
+            if err != nil {
+                if rerr := tx.Rollback(); rerr != nil {
+                    err = fmt.Errorf("rolling back transaction: %w", rerr)
+                }
+                return nil, err
+            }
+            if err := tx.Commit(); err != nil {
+                return nil, fmt.Errorf("committing transaction: %w", err) 
+            }
+            return instance, nil
+        }
+    {{- end }}
+{{ end }}

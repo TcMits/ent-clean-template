@@ -6,11 +6,10 @@ import (
 	"testing"
 
 	"github.com/TcMits/ent-clean-template/ent"
-	"github.com/TcMits/ent-clean-template/ent/user"
+	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,15 +18,14 @@ func TestNewLoginRepository(t *testing.T) {
 		client *ent.Client
 	}
 	// Create an SQLite memory database and generate the schema.
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	ctx := context.Background()
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(context.Background()))
 
 	tests := []struct {
 		name string
 		args args
-		want LoginRepository[model.User, model.PredicateUser, useCaseModel.LoginInput]
+		want LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 	}{
 		{
 			name: "Success",
@@ -49,19 +47,19 @@ func Test_loginRepository_Get(t *testing.T) {
 
 	type args struct {
 		ctx            context.Context
-		predicateUsers []model.PredicateUser
+		userWhereInput *model.UserWhereInput
 	}
 
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client, err := ent.Open("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
-	require.NoError(t, err)
+	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	require.NoError(t, client.Schema.Create(ctx))
 	userA, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 	_, err = factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
+	testFirstName := "test"
+	testIsActive := true
 
 	tests := []struct {
 		name    string
@@ -73,16 +71,16 @@ func Test_loginRepository_Get(t *testing.T) {
 		{
 			name:   "Success",
 			fields: fields{client: client},
-			args: args{ctx: ctx, predicateUsers: []model.PredicateUser{
-				user.IDEQ(userA.ID),
+			args: args{ctx: ctx, userWhereInput: &model.UserWhereInput{
+				ID: &userA.ID,
 			}},
 			want: userA,
 		},
 		{
 			name:   "NotFound",
 			fields: fields{client: client},
-			args: args{ctx: ctx, predicateUsers: []model.PredicateUser{
-				user.FirstNameEQ("test"),
+			args: args{ctx: ctx, userWhereInput: &model.UserWhereInput{
+				FirstName: &testFirstName,
 			}},
 			want:    nil,
 			wantErr: true,
@@ -90,8 +88,8 @@ func Test_loginRepository_Get(t *testing.T) {
 		{
 			name:   "ManyRecords",
 			fields: fields{client: client},
-			args: args{ctx: ctx, predicateUsers: []model.PredicateUser{
-				user.IsActiveEQ(true),
+			args: args{ctx: ctx, userWhereInput: &model.UserWhereInput{
+				IsActive: &testIsActive,
 			}},
 			want:    nil,
 			wantErr: true,
@@ -101,7 +99,7 @@ func Test_loginRepository_Get(t *testing.T) {
 		repo := &loginRepository{
 			client: tt.fields.client,
 		}
-		got, err := repo.Get(tt.args.ctx, tt.args.predicateUsers...)
+		got, err := repo.Get(tt.args.ctx, tt.args.userWhereInput)
 		if (err != nil) != tt.wantErr {
 			t.Errorf("%q. loginRepository.Get() error = %v, wantErr %v", tt.name, err, tt.wantErr)
 			continue

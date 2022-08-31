@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/TcMits/ent-clean-template/copygen"
 	"github.com/TcMits/ent-clean-template/ent"
-	"github.com/TcMits/ent-clean-template/ent/user"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/password"
@@ -16,26 +16,33 @@ type loginRepository struct {
 }
 
 func NewLoginRepository(client *ent.Client) LoginRepository[
-	model.User, model.PredicateUser, useCaseModel.LoginInput] {
+	*model.User, *model.UserWhereInput, *useCaseModel.LoginInput,
+] {
 	return &loginRepository{client: client}
 }
 
 func (repo *loginRepository) Get(
-	ctx context.Context, predicateUsers ...model.PredicateUser) (*model.User, error) {
-	u, err := repo.client.User.Query().Where(predicateUsers...).Only(ctx)
+	ctx context.Context, userWhereInput *model.UserWhereInput) (*model.User, error) {
+
+	query, err := userWhereInput.Filter(repo.client.User.Query())
 	if err != nil {
 		return nil, fmt.Errorf(
-			"loginRepository - Login - repo.client.User.Query.Where.Only: %w", err,
+			"loginRepository - Login - userWhereInput.Filter: %w", err,
 		)
+	}
+	u, err := query.Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("loginRepository - Login - query.Only: %w", err)
 	}
 	return u, nil
 }
 
 func (repo *loginRepository) Login(
 	ctx context.Context, loginInput *useCaseModel.LoginInput) (*model.User, error) {
-	user, err := repo.Get(
-		ctx, user.UsernameEQ(loginInput.Username), user.IsActiveEQ(true),
-	)
+	isActive := true
+	userWhereInput := &model.UserWhereInput{IsActive: &isActive}
+	copygen.LoginInputToUserWhereInput(userWhereInput, loginInput)
+	user, err := repo.Get(ctx, userWhereInput)
 	if err != nil {
 		return nil, fmt.Errorf("loginRepository - Login - repo.Get: %w", err)
 	}

@@ -1,0 +1,101 @@
+{{ define "update_repository" }}
+    {{- /*gotype: entgo.io/ent/entc/gen.Graph*/ -}}
+
+    {{ $pkg := base $.Config.Package }}
+    {{- with extend $ "Package" $pkg }}
+        {{ template "header" . }}
+    {{- end }}
+
+    {{ template "import" $ }}
+
+    {{- range $n := $.Nodes }}
+        {{ $repository := print $n.Name "UpdateRepository" }}
+        {{ $updateInput := print $n.Name "UpdateInput" }}
+        type {{ $repository }} struct {
+            client *Client
+            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error
+            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error
+            isAtomic bool
+        }
+
+        func New{{ $repository }}(
+            client *Client,
+            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error,
+            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error,
+            isAtomic bool,
+        ) *{{ $repository }} {
+            return &{{ $repository }}{
+                client: client,
+                postUpdateFunctions: postUpdateFunctions,
+                preUpdateFunctions: preUpdateFunctions,
+                isAtomic: isAtomic,
+            }
+        }
+
+        func (r *{{ $repository }}) runPostUpdate(
+            ctx context.Context, client *Client, instance *{{ $n.Name }}, i *{{ $updateInput }},
+        ) error {
+            for _, function := range r.postUpdateFunctions {
+              err := function(ctx, client, instance, i)
+              if err != nil {
+                return err
+              }
+            }
+            return nil
+        }
+
+        func (r *{{ $repository }}) runPreUpdate(
+            ctx context.Context, client *Client, oldInstance *{{ $n.Name }}, newInstance *{{ $n.Name }},
+        ) error {
+            for _, function := range r.preUpdateFunctions {
+              err := function(ctx, client, oldInstance, newInstance)
+              if err != nil {
+                return err
+              }
+            }
+            return nil
+        }
+
+        // using in Tx
+        func (r *{{ $repository }}) UpdateWithClient(
+            ctx context.Context, client *Client, instance *{{ $n.Name }}, input *{{ $updateInput }},
+        ) (*{{ $n.Name }}, error) {
+            err := r.runPostUpdate(ctx, client, instance, input)
+            if err != nil {
+              return nil, err
+            }
+            newInstance, err := client.{{ $n.Name }}.UpdateOne(instance).SetInput(input).Save(ctx)
+            if err != nil {
+              return nil, err
+            }
+            err = r.runPreUpdate(ctx, client, instance, newInstance)
+            if err != nil {
+              return nil, err
+            }
+            return newInstance, nil
+        }
+ 
+        func (r *{{ $repository }}) Update(
+            ctx context.Context, instance *{{ $n.Name }}, input *{{ $updateInput }},
+        ) (*{{ $n.Name }}, error) {
+            if !r.isAtomic {
+                return r.UpdateWithClient(ctx, r.client, instance, input)
+            }
+            tx, err := r.client.Tx(ctx)
+            if err != nil {
+                return nil, err
+            }
+            instance, err = r.UpdateWithClient(ctx, tx.Client(), instance, input)
+            if err != nil {
+                if rerr := tx.Rollback(); rerr != nil {
+                    err = fmt.Errorf("rolling back transaction: %w", rerr)
+                }
+                return nil, err
+            }
+            if err := tx.Commit(); err != nil {
+                return nil, fmt.Errorf("committing transaction: %w", err) 
+            }
+            return instance, nil
+        }
+    {{- end }}
+{{ end }}

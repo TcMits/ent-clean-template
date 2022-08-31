@@ -4,19 +4,19 @@ import (
 	"context"
 
 	"github.com/TcMits/ent-clean-template/ent"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
-type Generator[ModelType any, MutationType ent.Mutation] interface {
-	Generate(context.Context, map[string]any) ModelType
-	SetMutation(MutationType)
+type Generator[MutationType ent.Mutation, MutationInputType model.MutationInput[MutationType]] interface {
+	Generate(context.Context, map[string]any) MutationInputType
 }
 
-type ModelCreator[ModelType any, MutationType ent.Mutation] interface {
-	Mutation() MutationType
-	Save(context.Context) (ModelType, error)
-}
-
-type ModelFactory[ModelType any, MutationType ent.Mutation, ModelCreatorType ModelCreator[ModelType, MutationType]] interface {
-	Build(context.Context, MutationType, map[string]any) ModelType
+type ModelFactory[
+	ModelType any,
+	MutationType ent.Mutation,
+	MutationInputType model.MutationInput[MutationType],
+	ModelCreatorType model.Creator[ModelType, MutationType],
+] interface {
+	Build(context.Context, map[string]any) MutationInputType
 	Create(context.Context, ModelCreatorType, map[string]any) (ModelType, error)
 }

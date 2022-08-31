@@ -45,7 +45,6 @@ type UserMutation struct {
 	is_staff      *bool
 	is_superuser  *bool
 	is_active     *bool
-	join_time     *time.Time
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*User, error)
@@ -259,9 +258,22 @@ func (m *UserMutation) OldJwtTokenKey(ctx context.Context) (v string, err error)
 	return oldValue.JwtTokenKey, nil
 }
 
+// ClearJwtTokenKey clears the value of the "jwt_token_key" field.
+func (m *UserMutation) ClearJwtTokenKey() {
+	m.jwt_token_key = nil
+	m.clearedFields[user.FieldJwtTokenKey] = struct{}{}
+}
+
+// JwtTokenKeyCleared returns if the "jwt_token_key" field was cleared in this mutation.
+func (m *UserMutation) JwtTokenKeyCleared() bool {
+	_, ok := m.clearedFields[user.FieldJwtTokenKey]
+	return ok
+}
+
 // ResetJwtTokenKey resets all changes to the "jwt_token_key" field.
 func (m *UserMutation) ResetJwtTokenKey() {
 	m.jwt_token_key = nil
+	delete(m.clearedFields, user.FieldJwtTokenKey)
 }
 
 // SetPassword sets the "password" field.
@@ -380,9 +392,22 @@ func (m *UserMutation) OldFirstName(ctx context.Context) (v string, err error) {
 	return oldValue.FirstName, nil
 }
 
+// ClearFirstName clears the value of the "first_name" field.
+func (m *UserMutation) ClearFirstName() {
+	m.first_name = nil
+	m.clearedFields[user.FieldFirstName] = struct{}{}
+}
+
+// FirstNameCleared returns if the "first_name" field was cleared in this mutation.
+func (m *UserMutation) FirstNameCleared() bool {
+	_, ok := m.clearedFields[user.FieldFirstName]
+	return ok
+}
+
 // ResetFirstName resets all changes to the "first_name" field.
 func (m *UserMutation) ResetFirstName() {
 	m.first_name = nil
+	delete(m.clearedFields, user.FieldFirstName)
 }
 
 // SetLastName sets the "last_name" field.
@@ -416,9 +441,22 @@ func (m *UserMutation) OldLastName(ctx context.Context) (v string, err error) {
 	return oldValue.LastName, nil
 }
 
+// ClearLastName clears the value of the "last_name" field.
+func (m *UserMutation) ClearLastName() {
+	m.last_name = nil
+	m.clearedFields[user.FieldLastName] = struct{}{}
+}
+
+// LastNameCleared returns if the "last_name" field was cleared in this mutation.
+func (m *UserMutation) LastNameCleared() bool {
+	_, ok := m.clearedFields[user.FieldLastName]
+	return ok
+}
+
 // ResetLastName resets all changes to the "last_name" field.
 func (m *UserMutation) ResetLastName() {
 	m.last_name = nil
+	delete(m.clearedFields, user.FieldLastName)
 }
 
 // SetEmail sets the "email" field.
@@ -488,9 +526,22 @@ func (m *UserMutation) OldIsStaff(ctx context.Context) (v bool, err error) {
 	return oldValue.IsStaff, nil
 }
 
+// ClearIsStaff clears the value of the "is_staff" field.
+func (m *UserMutation) ClearIsStaff() {
+	m.is_staff = nil
+	m.clearedFields[user.FieldIsStaff] = struct{}{}
+}
+
+// IsStaffCleared returns if the "is_staff" field was cleared in this mutation.
+func (m *UserMutation) IsStaffCleared() bool {
+	_, ok := m.clearedFields[user.FieldIsStaff]
+	return ok
+}
+
 // ResetIsStaff resets all changes to the "is_staff" field.
 func (m *UserMutation) ResetIsStaff() {
 	m.is_staff = nil
+	delete(m.clearedFields, user.FieldIsStaff)
 }
 
 // SetIsSuperuser sets the "is_superuser" field.
@@ -524,9 +575,22 @@ func (m *UserMutation) OldIsSuperuser(ctx context.Context) (v bool, err error) {
 	return oldValue.IsSuperuser, nil
 }
 
+// ClearIsSuperuser clears the value of the "is_superuser" field.
+func (m *UserMutation) ClearIsSuperuser() {
+	m.is_superuser = nil
+	m.clearedFields[user.FieldIsSuperuser] = struct{}{}
+}
+
+// IsSuperuserCleared returns if the "is_superuser" field was cleared in this mutation.
+func (m *UserMutation) IsSuperuserCleared() bool {
+	_, ok := m.clearedFields[user.FieldIsSuperuser]
+	return ok
+}
+
 // ResetIsSuperuser resets all changes to the "is_superuser" field.
 func (m *UserMutation) ResetIsSuperuser() {
 	m.is_superuser = nil
+	delete(m.clearedFields, user.FieldIsSuperuser)
 }
 
 // SetIsActive sets the "is_active" field.
@@ -560,45 +624,22 @@ func (m *UserMutation) OldIsActive(ctx context.Context) (v bool, err error) {
 	return oldValue.IsActive, nil
 }
 
+// ClearIsActive clears the value of the "is_active" field.
+func (m *UserMutation) ClearIsActive() {
+	m.is_active = nil
+	m.clearedFields[user.FieldIsActive] = struct{}{}
+}
+
+// IsActiveCleared returns if the "is_active" field was cleared in this mutation.
+func (m *UserMutation) IsActiveCleared() bool {
+	_, ok := m.clearedFields[user.FieldIsActive]
+	return ok
+}
+
 // ResetIsActive resets all changes to the "is_active" field.
 func (m *UserMutation) ResetIsActive() {
 	m.is_active = nil
-}
-
-// SetJoinTime sets the "join_time" field.
-func (m *UserMutation) SetJoinTime(t time.Time) {
-	m.join_time = &t
-}
-
-// JoinTime returns the value of the "join_time" field in the mutation.
-func (m *UserMutation) JoinTime() (r time.Time, exists bool) {
-	v := m.join_time
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldJoinTime returns the old "join_time" field's value of the User entity.
-// If the User object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldJoinTime(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldJoinTime is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldJoinTime requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldJoinTime: %w", err)
-	}
-	return oldValue.JoinTime, nil
-}
-
-// ResetJoinTime resets all changes to the "join_time" field.
-func (m *UserMutation) ResetJoinTime() {
-	m.join_time = nil
+	delete(m.clearedFields, user.FieldIsActive)
 }
 
 // Where appends a list predicates to the UserMutation builder.
@@ -620,7 +661,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 11)
 	if m.create_time != nil {
 		fields = append(fields, user.FieldCreateTime)
 	}
@@ -654,9 +695,6 @@ func (m *UserMutation) Fields() []string {
 	if m.is_active != nil {
 		fields = append(fields, user.FieldIsActive)
 	}
-	if m.join_time != nil {
-		fields = append(fields, user.FieldJoinTime)
-	}
 	return fields
 }
 
@@ -687,8 +725,6 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.IsSuperuser()
 	case user.FieldIsActive:
 		return m.IsActive()
-	case user.FieldJoinTime:
-		return m.JoinTime()
 	}
 	return nil, false
 }
@@ -720,8 +756,6 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldIsSuperuser(ctx)
 	case user.FieldIsActive:
 		return m.OldIsActive(ctx)
-	case user.FieldJoinTime:
-		return m.OldJoinTime(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -808,13 +842,6 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetIsActive(v)
 		return nil
-	case user.FieldJoinTime:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetJoinTime(v)
-		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
 }
@@ -845,8 +872,26 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
 	var fields []string
+	if m.FieldCleared(user.FieldJwtTokenKey) {
+		fields = append(fields, user.FieldJwtTokenKey)
+	}
 	if m.FieldCleared(user.FieldPassword) {
 		fields = append(fields, user.FieldPassword)
+	}
+	if m.FieldCleared(user.FieldFirstName) {
+		fields = append(fields, user.FieldFirstName)
+	}
+	if m.FieldCleared(user.FieldLastName) {
+		fields = append(fields, user.FieldLastName)
+	}
+	if m.FieldCleared(user.FieldIsStaff) {
+		fields = append(fields, user.FieldIsStaff)
+	}
+	if m.FieldCleared(user.FieldIsSuperuser) {
+		fields = append(fields, user.FieldIsSuperuser)
+	}
+	if m.FieldCleared(user.FieldIsActive) {
+		fields = append(fields, user.FieldIsActive)
 	}
 	return fields
 }
@@ -862,8 +907,26 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
 	switch name {
+	case user.FieldJwtTokenKey:
+		m.ClearJwtTokenKey()
+		return nil
 	case user.FieldPassword:
 		m.ClearPassword()
+		return nil
+	case user.FieldFirstName:
+		m.ClearFirstName()
+		return nil
+	case user.FieldLastName:
+		m.ClearLastName()
+		return nil
+	case user.FieldIsStaff:
+		m.ClearIsStaff()
+		return nil
+	case user.FieldIsSuperuser:
+		m.ClearIsSuperuser()
+		return nil
+	case user.FieldIsActive:
+		m.ClearIsActive()
 		return nil
 	}
 	return fmt.Errorf("unknown User nullable field %s", name)
@@ -905,9 +968,6 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldIsActive:
 		m.ResetIsActive()
-		return nil
-	case user.FieldJoinTime:
-		m.ResetJoinTime()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

@@ -39,8 +39,6 @@ type User struct {
 	IsSuperuser bool `json:"is_superuser,omitempty"`
 	// IsActive holds the value of the "is_active" field.
 	IsActive bool `json:"is_active,omitempty"`
-	// JoinTime holds the value of the "join_time" field.
-	JoinTime time.Time `json:"join_time,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -52,7 +50,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullBool)
 		case user.FieldJwtTokenKey, user.FieldPassword, user.FieldUsername, user.FieldFirstName, user.FieldLastName, user.FieldEmail:
 			values[i] = new(sql.NullString)
-		case user.FieldCreateTime, user.FieldUpdateTime, user.FieldJoinTime:
+		case user.FieldCreateTime, user.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
 		case user.FieldID:
 			values[i] = new(uuid.UUID)
@@ -143,12 +141,6 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				u.IsActive = value.Bool
 			}
-		case user.FieldJoinTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field join_time", values[i])
-			} else if value.Valid {
-				u.JoinTime = value.Time
-			}
 		}
 	}
 	return nil
@@ -207,9 +199,6 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", u.IsActive))
-	builder.WriteString(", ")
-	builder.WriteString("join_time=")
-	builder.WriteString(u.JoinTime.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }
