@@ -3,96 +3,97 @@ package usecase
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
-	"github.com/TcMits/ent-clean-template/internal/testutils"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
+	"github.com/golang/mock/gomock"
 )
 
 func Test_getModelUseCase_Get(t *testing.T) {
 	type fields struct {
-		repository           repository.GetModelRepository[*model.User, *model.UserWhereInput]
-		toRepoWhereInputFunc ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
+		repository           repository.GetModelRepository[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
 		wrapGetErrorFunc     func(error) error
 	}
 	type args struct {
 		ctx   context.Context
-		input *model.UserWhereInput
+		input *struct{}
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	repository := repository.NewUserRepository(client)
-	newUUID := uuid.New()
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := repository.NewMockGetModelRepository[*struct{}, *struct{}](ctrl)
+
+	repo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	repo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *model.User
+		want    *struct{}
 		wantErr bool
 	}{
 		{
 			name: "Success",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
-					return uwi, nil
-				},
-				wrapGetErrorFunc: func(err error) error { return err },
-			},
-			args: args{
-				ctx: ctx,
-				input: &model.UserWhereInput{
-					ID: &u.ID,
-				},
-			},
-			want: u,
-		},
-		{
-			name: "WhereInputFuncError",
-			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
-					return nil, errors.New("test")
-				},
-				wrapGetErrorFunc: func(err error) error { return err },
-			},
-			args: args{
-				ctx: ctx,
-				input: &model.UserWhereInput{
-					ID: &u.ID,
-				},
-			},
-			wantErr: true,
-		},
-		{
-			name: "GetError",
-			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc: func(err error) error { return err },
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &newUUID},
+				input: new(struct{}),
+			},
+			want: new(struct{}),
+		},
+		{
+			name: "WhereInputFuncError",
+			fields: fields{
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+					return nil, errors.New("test")
+				},
+				wrapGetErrorFunc: func(err error) error { return err },
+			},
+			args: args{
+				ctx:   ctx,
+				input: new(struct{}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "GetError",
+			fields: fields{
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+					return uwi, nil
+				},
+				wrapGetErrorFunc: func(err error) error { return err },
+			},
+			args: args{
+				ctx:   ctx,
+				input: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &getModelUseCase[*model.User, *model.UserWhereInput, *model.UserWhereInput]{
+			l := &getModelUseCase[*struct{}, *struct{}, *struct{}]{
 				repository:           tt.fields.repository,
 				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
 				wrapGetErrorFunc:     tt.fields.wrapGetErrorFunc,
@@ -103,7 +104,7 @@ func Test_getModelUseCase_Get(t *testing.T) {
 				return
 			}
 
-			if got != nil && tt.want != nil && got.ID != tt.want.ID {
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getModelUseCase.Get() = %v, want %v", got, tt.want)
 			}
 		})
@@ -112,22 +113,31 @@ func Test_getModelUseCase_Get(t *testing.T) {
 
 func Test_countModelUseCase_Count(t *testing.T) {
 	type fields struct {
-		repository           repository.CountModelRepository[*model.UserWhereInput]
-		toRepoWhereInputFunc ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
+		repository           repository.CountModelRepository[*struct{}]
+		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
 		wrapCountErrorFunc   func(error) error
 	}
 	type args struct {
 		ctx   context.Context
-		input *model.UserWhereInput
+		input *struct{}
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	repository := repository.NewUserRepository(client)
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := repository.NewMockCountModelRepository[*struct{}](ctrl)
+
+	repo.EXPECT().Count(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})),
+	).Return(
+		1, nil,
+	).AnyTimes()
+
+	repo.EXPECT().Count(
+		gomock.Eq(ctx), gomock.Nil(),
+	).Return(
+		0, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -139,41 +149,52 @@ func Test_countModelUseCase_Count(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapCountErrorFunc: func(err error) error { return err },
 			},
 			args: args{
-				ctx: ctx,
-				input: &model.UserWhereInput{
-					ID: &u.ID,
-				},
+				ctx:   ctx,
+				input: new(struct{}),
 			},
 			want: 1,
 		},
 		{
 			name: "WhereInputFuncError",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapCountErrorFunc: func(err error) error { return err },
 			},
 			args: args{
-				ctx: ctx,
-				input: &model.UserWhereInput{
-					ID: &u.ID,
+				ctx:   ctx,
+				input: new(struct{}),
+			},
+			wantErr: true,
+		},
+		{
+			name: "CountError",
+			fields: fields{
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+					return uwi, nil
 				},
+				wrapCountErrorFunc: func(err error) error { return err },
+			},
+			args: args{
+				ctx:   ctx,
+				input: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &countModelUseCase[*model.UserWhereInput, *model.UserWhereInput]{
+			l := &countModelUseCase[*struct{}, *struct{}]{
 				repository:           tt.fields.repository,
 				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
 				wrapCountErrorFunc:   tt.fields.wrapCountErrorFunc,
@@ -193,73 +214,81 @@ func Test_countModelUseCase_Count(t *testing.T) {
 
 func Test_listModelUseCase_List(t *testing.T) {
 	type fields struct {
-		repository           repository.ListModelRepository[*model.User, *model.UserOrderInput, *model.UserWhereInput]
-		toRepoWhereInputFunc ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
-		toRepoOrderInputFunc ConverFunc[*model.UserOrderInput, *model.UserOrderInput]
+		repository           repository.ListModelRepository[*struct{}, *struct{}, *struct{}]
+		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
+		toRepoOrderInputFunc ConverFunc[*struct{}, *struct{}]
 		wrapListErrorFunc    func(error) error
 	}
 	type args struct {
 		ctx        context.Context
 		limit      int
 		offset     int
-		orderInput *model.UserOrderInput
-		whereInput *model.UserWhereInput
+		orderInput *struct{}
+		whereInput *struct{}
 	}
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	repo := repository.NewMockListModelRepository[*struct{}, *struct{}, *struct{}](ctrl)
 
-	repository := repository.NewUserRepository(client)
+	repo.EXPECT().List(
+		gomock.Eq(ctx), 10, 0, gomock.Eq(new(struct{})), gomock.Eq(new(struct{})),
+	).Return(
+		make([]*struct{}, 10), nil,
+	).AnyTimes()
+
+	repo.EXPECT().List(
+		gomock.Eq(ctx), 10, 0, gomock.Eq(new(struct{})), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    []*model.User
+		want    []*struct{}
 		wantErr bool
 	}{
 		{
 			name: "Success",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				toRepoOrderInputFunc: func(uoi *model.UserOrderInput) (*model.UserOrderInput, error) {
+				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
 					return uoi, nil
 				},
 				wrapListErrorFunc: func(err error) error { return err },
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      1,
+				limit:      10,
 				offset:     0,
-				orderInput: model.DefaultUserOrderInput,
-				whereInput: model.DefaultUserWhereInput,
+				orderInput: new(struct{}),
+				whereInput: new(struct{}),
 			},
-			want: []*model.User{u},
+			want: make([]*struct{}, 10),
 		},
 		{
 			name: "WhereInputFuncError",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				toRepoOrderInputFunc: func(uoi *model.UserOrderInput) (*model.UserOrderInput, error) {
+				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
 					return uoi, nil
 				},
 				wrapListErrorFunc: func(err error) error { return err },
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      1,
+				limit:      10,
 				offset:     0,
-				orderInput: model.DefaultUserOrderInput,
-				whereInput: model.DefaultUserWhereInput,
+				orderInput: new(struct{}),
+				whereInput: new(struct{}),
 			},
 			want:    nil,
 			wantErr: true,
@@ -267,21 +296,43 @@ func Test_listModelUseCase_List(t *testing.T) {
 		{
 			name: "OrderInputFuncError",
 			fields: fields{
-				repository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				toRepoOrderInputFunc: func(uoi *model.UserOrderInput) (*model.UserOrderInput, error) {
+				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapListErrorFunc: func(err error) error { return err },
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      1,
+				limit:      10,
 				offset:     0,
-				orderInput: model.DefaultUserOrderInput,
-				whereInput: model.DefaultUserWhereInput,
+				orderInput: new(struct{}),
+				whereInput: new(struct{}),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "ListError",
+			fields: fields{
+				repository: repo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+					return uwi, nil
+				},
+				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
+					return uoi, nil
+				},
+				wrapListErrorFunc: func(err error) error { return err },
+			},
+			args: args{
+				ctx:        ctx,
+				limit:      10,
+				offset:     0,
+				orderInput: new(struct{}),
+				whereInput: nil,
 			},
 			want:    nil,
 			wantErr: true,
@@ -289,7 +340,7 @@ func Test_listModelUseCase_List(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &listModelUseCase[*model.User, *model.UserOrderInput, *model.UserWhereInput, *model.UserOrderInput, *model.UserWhereInput]{
+			l := &listModelUseCase[*struct{}, *struct{}, *struct{}, *struct{}, *struct{}]{
 				repository:           tt.fields.repository,
 				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
 				toRepoOrderInputFunc: tt.fields.toRepoOrderInputFunc,
@@ -301,12 +352,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 				return
 			}
 
-			if got != nil && tt.want != nil {
-				for i, gotItem := range got {
-					if gotItem.ID != tt.want[i].ID {
-						t.Errorf("listModelUseCase.List() = %v, want %v", gotItem, tt.want[i])
-					}
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("listModelUseCase.List() = %v, want %v", got, tt.want)
 			}
 		})
 	}

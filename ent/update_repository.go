@@ -9,29 +9,29 @@ import (
 
 type UserUpdateRepository struct {
 	client              *Client
-	postUpdateFunctions []func(context.Context, *Client, *User, *UserUpdateInput) error
-	preUpdateFunctions  []func(context.Context, *Client, *User, *User) error
+	preUpdateFunctions  []func(context.Context, *Client, *User, *UserUpdateInput) error
+	postUpdateFunctions []func(context.Context, *Client, *User, *User) error
 	isAtomic            bool
 }
 
 func NewUserUpdateRepository(
 	client *Client,
-	postUpdateFunctions []func(context.Context, *Client, *User, *UserUpdateInput) error,
-	preUpdateFunctions []func(context.Context, *Client, *User, *User) error,
+	preUpdateFunctions []func(context.Context, *Client, *User, *UserUpdateInput) error,
+	postUpdateFunctions []func(context.Context, *Client, *User, *User) error,
 	isAtomic bool,
 ) *UserUpdateRepository {
 	return &UserUpdateRepository{
 		client:              client,
-		postUpdateFunctions: postUpdateFunctions,
 		preUpdateFunctions:  preUpdateFunctions,
+		postUpdateFunctions: postUpdateFunctions,
 		isAtomic:            isAtomic,
 	}
 }
 
-func (r *UserUpdateRepository) runPostUpdate(
+func (r *UserUpdateRepository) runPreUpdate(
 	ctx context.Context, client *Client, instance *User, i *UserUpdateInput,
 ) error {
-	for _, function := range r.postUpdateFunctions {
+	for _, function := range r.preUpdateFunctions {
 		err := function(ctx, client, instance, i)
 		if err != nil {
 			return err
@@ -40,10 +40,10 @@ func (r *UserUpdateRepository) runPostUpdate(
 	return nil
 }
 
-func (r *UserUpdateRepository) runPreUpdate(
+func (r *UserUpdateRepository) runPostUpdate(
 	ctx context.Context, client *Client, oldInstance *User, newInstance *User,
 ) error {
-	for _, function := range r.preUpdateFunctions {
+	for _, function := range r.postUpdateFunctions {
 		err := function(ctx, client, oldInstance, newInstance)
 		if err != nil {
 			return err
@@ -56,7 +56,7 @@ func (r *UserUpdateRepository) runPreUpdate(
 func (r *UserUpdateRepository) UpdateWithClient(
 	ctx context.Context, client *Client, instance *User, input *UserUpdateInput,
 ) (*User, error) {
-	err := r.runPostUpdate(ctx, client, instance, input)
+	err := r.runPreUpdate(ctx, client, instance, input)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (r *UserUpdateRepository) UpdateWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPreUpdate(ctx, client, instance, newInstance)
+	err = r.runPostUpdate(ctx, client, instance, newInstance)
 	if err != nil {
 		return nil, err
 	}

@@ -2,124 +2,156 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/ent"
-	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
-	"github.com/stretchr/testify/require"
 )
 
-func newLoginUseCase(client *ent.Client) usecase.LoginUseCase[
-	*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
-	return usecase.NewLoginUseCase(
-		repository.NewLoginRepository(client),
-		"Dummy",
-	)
-}
-
-func Test_loginController_Login(t *testing.T) {
+func Test_LoginHandler(t *testing.T) {
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	loginUseCase := newLoginUseCase(client)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	u := usecase.NewMockLoginUseCase[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](ctrl)
+
+	u.EXPECT().Login(
+		gomock.Eq(ctx), gomock.Eq(&useCaseModel.LoginInput{
+			Username: "tsolution",
+			Password: "12345678",
+		}),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	u.EXPECT().Login(
+		gomock.Eq(ctx), gomock.Eq(&useCaseModel.LoginInput{
+			Username: "tsolution",
+			Password: "1234567",
+		}),
+	).Return(
+		nil, useCaseModel.NewUseCaseError(
+			errors.New(""), "test", "test", usecase.AuthenticationError,
+		),
+	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController(handler, loginUseCase, l)
+	RegisterLoginController[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](handler, u, l)
 	handler.Build()
 
 	e := httptest.New(t, handler)
 	e.POST(loginSubPath).WithForm(
 		useCaseModel.LoginInput{
-			Username: u.Username,
+			Username: "tsolution",
 			Password: "12345678",
 		},
 	).Expect().Status(iris.StatusOK)
 	e.POST(loginSubPath).WithForm(
 		useCaseModel.LoginInput{
-			Username: u.Username,
+			Username: "tsolution",
 			Password: "1234567",
 		},
 	).Expect().Status(iris.StatusUnauthorized)
-	e.POST(loginSubPath).WithForm(
-		useCaseModel.LoginInput{
-			Username: u.Username + "wrong",
-			Password: "12345678",
-		},
-	).Expect().Status(iris.StatusUnauthorized)
 }
 
-func Test_loginController_RefreshToken(t *testing.T) {
+func Test_RefreshTokenHandler(t *testing.T) {
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	loginUseCase := newLoginUseCase(client)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	jwtPayload, err := loginUseCase.Login(ctx, &useCaseModel.LoginInput{
-		Username: u.Username,
-		Password: "12345678",
-	})
-	require.NoError(t, err)
+	u := usecase.NewMockLoginUseCase[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](ctrl)
+
+	u.EXPECT().RefreshToken(
+		gomock.Eq(ctx), gomock.Eq(&useCaseModel.RefreshTokenInput{
+			RefreshToken: "test",
+			RefreshKey:   "test",
+		}),
+	).Return(
+		"token", nil,
+	).AnyTimes()
+
+	u.EXPECT().RefreshToken(
+		gomock.Eq(ctx), gomock.Eq(&useCaseModel.RefreshTokenInput{
+			RefreshToken: "tes",
+			RefreshKey:   "test",
+		}),
+	).Return(
+		"", useCaseModel.NewUseCaseError(
+			errors.New(""), "test", "test", usecase.AuthenticationError,
+		),
+	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController(handler, loginUseCase, l)
+	RegisterLoginController[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](handler, u, l)
+	handler.Build()
+
 	e := httptest.New(t, handler)
+
 	e.POST(refreshTokenSubPath).WithJSON(
 		useCaseModel.RefreshTokenInput{
-			RefreshToken: jwtPayload.RefreshToken,
-			RefreshKey:   jwtPayload.RefreshKey,
+			RefreshToken: "test",
+			RefreshKey:   "test",
 		},
 	).Expect().Status(iris.StatusOK)
 	e.POST(refreshTokenSubPath).WithJSON(
 		useCaseModel.RefreshTokenInput{
-			RefreshToken: jwtPayload.RefreshToken + "wrong",
-			RefreshKey:   jwtPayload.RefreshKey,
-		},
-	).Expect().Status(iris.StatusUnauthorized)
-	e.POST(refreshTokenSubPath).WithJSON(
-		useCaseModel.RefreshTokenInput{
-			RefreshToken: jwtPayload.RefreshToken,
-			RefreshKey:   jwtPayload.RefreshKey + "wrong",
+			RefreshToken: "tes",
+			RefreshKey:   "test",
 		},
 	).Expect().Status(iris.StatusUnauthorized)
 }
 
-func Test_loginController_VerifyToken(t *testing.T) {
+func Test_VerifyTokenHandler(t *testing.T) {
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	loginUseCase := newLoginUseCase(client)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	jwtPayload, err := loginUseCase.Login(ctx, &useCaseModel.LoginInput{
-		Username: u.Username,
-		Password: "12345678",
-	})
-	require.NoError(t, err)
+	u := usecase.NewMockLoginUseCase[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](ctrl)
+
+	u.EXPECT().VerifyToken(
+		gomock.Eq(ctx), gomock.Eq("test"),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	u.EXPECT().VerifyToken(
+		gomock.Eq(ctx), gomock.Eq("tes"),
+	).Return(
+		nil, useCaseModel.NewUseCaseError(
+			errors.New(""), "test", "test", usecase.AuthenticationError,
+		),
+	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController(handler, loginUseCase, l)
+	RegisterLoginController[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](handler, u, l)
+
+	handler.Build()
 	e := httptest.New(t, handler)
 	e.POST(verifyTokenSubPath).WithForm(
 		verifyTokenRequest{
-			Token: jwtPayload.AccessToken,
+			Token: "test",
 		},
 	).Expect().Status(iris.StatusOK)
 	e.POST(verifyTokenSubPath).WithForm(
 		verifyTokenRequest{
-			Token: jwtPayload.AccessToken + "wrong",
+			Token: "tes",
 		},
 	).Expect().Status(iris.StatusUnauthorized)
 }

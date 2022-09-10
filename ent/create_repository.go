@@ -9,27 +9,27 @@ import (
 
 type UserCreateRepository struct {
 	client              *Client
-	postCreateFunctions []func(context.Context, *Client, *UserCreateInput) error
-	preCreateFunctions  []func(context.Context, *Client, *User) error
+	preCreateFunctions  []func(context.Context, *Client, *UserCreateInput) error
+	postCreateFunctions []func(context.Context, *Client, *User) error
 	isAtomic            bool
 }
 
 func NewUserCreateRepository(
 	client *Client,
-	postCreateFunctions []func(context.Context, *Client, *UserCreateInput) error,
-	preCreateFunctions []func(context.Context, *Client, *User) error,
+	preCreateFunctions []func(context.Context, *Client, *UserCreateInput) error,
+	postCreateFunctions []func(context.Context, *Client, *User) error,
 	isAtomic bool,
 ) *UserCreateRepository {
 	return &UserCreateRepository{
 		client:              client,
-		postCreateFunctions: postCreateFunctions,
 		preCreateFunctions:  preCreateFunctions,
+		postCreateFunctions: postCreateFunctions,
 		isAtomic:            isAtomic,
 	}
 }
 
-func (r *UserCreateRepository) runPostCreate(ctx context.Context, client *Client, i *UserCreateInput) error {
-	for _, function := range r.postCreateFunctions {
+func (r *UserCreateRepository) runPreCreate(ctx context.Context, client *Client, i *UserCreateInput) error {
+	for _, function := range r.preCreateFunctions {
 		err := function(ctx, client, i)
 		if err != nil {
 			return err
@@ -38,8 +38,8 @@ func (r *UserCreateRepository) runPostCreate(ctx context.Context, client *Client
 	return nil
 }
 
-func (r *UserCreateRepository) runPreCreate(ctx context.Context, client *Client, instance *User) error {
-	for _, function := range r.preCreateFunctions {
+func (r *UserCreateRepository) runPostCreate(ctx context.Context, client *Client, instance *User) error {
+	for _, function := range r.postCreateFunctions {
 		err := function(ctx, client, instance)
 		if err != nil {
 			return err
@@ -52,7 +52,7 @@ func (r *UserCreateRepository) runPreCreate(ctx context.Context, client *Client,
 func (r *UserCreateRepository) CreateWithClient(
 	ctx context.Context, client *Client, input *UserCreateInput,
 ) (*User, error) {
-	err := r.runPostCreate(ctx, client, input)
+	err := r.runPreCreate(ctx, client, input)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (r *UserCreateRepository) CreateWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPreCreate(ctx, client, instance)
+	err = r.runPostCreate(ctx, client, instance)
 	if err != nil {
 		return nil, err
 	}

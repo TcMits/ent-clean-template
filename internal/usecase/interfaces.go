@@ -8,11 +8,31 @@ import (
 //go:generate mockgen -source=interfaces.go -destination=./mocks.go -package=usecase
 
 type (
-	SerializeUseCase[ModelType, SerializedType any] interface {
+	SerializeModelUseCase[ModelType, SerializedType any] interface {
 		Serialize(context.Context, ModelType) SerializedType
 	}
-	ValidateUseCase[ModelType, MutationInput, ValidatedMutationInput any] interface {
-		Validate(context.Context, ModelType, MutationInput) ValidatedMutationInput
+	ListModelUseCase[ModelType, OrderInput, WhereInput any] interface {
+		List(context.Context, int, int, OrderInput, WhereInput) ([]ModelType, error)
+	}
+	GetModelUseCase[ModelType, WhereInput any] interface {
+		Get(context.Context, WhereInput) (ModelType, error)
+	}
+	CountModelUseCase[ModelType, WhereInput any] interface {
+		Count(context.Context, WhereInput) (int, error)
+	}
+	CreateModelUseCase[ModelType, CreateInput any] interface {
+		Create(context.Context, CreateInput) (ModelType, error)
+	}
+	GetAndUpdateModelUseCase[ModelType, WhereInput, UpdateInput any] interface {
+		GetAndUpdate(context.Context, WhereInput, UpdateInput) (ModelType, error)
+	}
+	GetAndDeleteModelUseCase[ModelType, WhereInput any] interface {
+		GetAndDelete(context.Context, WhereInput) error
+	}
+	UserPermissionCheckerUseCase[UserType any] interface {
+		Check(context.Context, UserType) error
+		Or(UserPermissionCheckerUseCase[UserType]) UserPermissionCheckerUseCase[UserType]
+		And(UserPermissionCheckerUseCase[UserType]) UserPermissionCheckerUseCase[UserType]
 	}
 
 	LoginUseCase[LoginInputType, JWTAuthenticatedPayloadType, RefreshTokenInputType, UserType any] interface {

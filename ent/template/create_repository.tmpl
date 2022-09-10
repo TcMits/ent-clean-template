@@ -13,27 +13,27 @@
         {{ $createInput := print $n.Name "CreateInput" }}
         type {{ $repository }} struct {
             client *Client
-            postCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error
-            preCreateFunctions []func(context.Context, *Client, *{{ $n.Name }}) error
+            preCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error
+            postCreateFunctions []func(context.Context, *Client,  *{{ $n.Name }}) error
             isAtomic bool
         }
 
         func New{{ $repository }}(
             client *Client, 
-            postCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error,
-            preCreateFunctions []func(context.Context, *Client, *{{ $n.Name }}) error,
+            preCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error,
+            postCreateFunctions []func(context.Context, *Client,  *{{ $n.Name }}) error,
             isAtomic bool,
         ) *{{ $repository }} {
             return &{{ $repository }}{
                 client: client,
-                postCreateFunctions: postCreateFunctions,
                 preCreateFunctions: preCreateFunctions,
+                postCreateFunctions: postCreateFunctions,
                 isAtomic: isAtomic,
             }
         }
 
-        func (r *{{ $repository }}) runPostCreate(ctx context.Context, client *Client, i *{{ $createInput }}) error {
-          for _, function := range r.postCreateFunctions {
+        func (r *{{ $repository }}) runPreCreate(ctx context.Context, client *Client, i *{{ $createInput }}) error {
+          for _, function := range r.preCreateFunctions {
             err := function(ctx, client, i)
             if err != nil {
               return err
@@ -42,8 +42,8 @@
           return nil
         }
 
-        func (r *{{ $repository }}) runPreCreate(ctx context.Context, client *Client, instance *{{ $n.Name }}) error {
-          for _, function := range r.preCreateFunctions {
+        func (r *{{ $repository }}) runPostCreate(ctx context.Context, client *Client, instance *{{ $n.Name }}) error {
+          for _, function := range r.postCreateFunctions {
             err := function(ctx, client, instance)
             if err != nil {
               return err
@@ -56,7 +56,7 @@
         func (r *{{ $repository }}) CreateWithClient(
             ctx context.Context, client *Client, input *{{ $createInput }},
         ) (*{{ $n.Name }}, error) {
-            err := r.runPostCreate(ctx, client, input)
+            err := r.runPreCreate(ctx, client, input)
             if err != nil {
               return nil, err
             }
@@ -64,7 +64,7 @@
             if err != nil {
               return nil, err
             }
-            err = r.runPreCreate(ctx, client, instance)
+            err = r.runPostCreate(ctx, client, instance)
             if err != nil {
               return nil, err
             }

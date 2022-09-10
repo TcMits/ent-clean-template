@@ -9,21 +9,21 @@ import (
 
 type UserDeleteRepository struct {
 	client              *Client
-	postDeleteFunctions []func(context.Context, *Client, *User) error
 	preDeleteFunctions  []func(context.Context, *Client, *User) error
+	postDeleteFunctions []func(context.Context, *Client, *User) error
 	isAtomic            bool
 }
 
 func NewUserDeleteRepository(
 	client *Client,
-	postDeleteFunctions []func(context.Context, *Client, *User) error,
 	preDeleteFunctions []func(context.Context, *Client, *User) error,
+	postDeleteFunctions []func(context.Context, *Client, *User) error,
 	isAtomic bool,
 ) *UserDeleteRepository {
 	return &UserDeleteRepository{
 		client:              client,
-		postDeleteFunctions: postDeleteFunctions,
 		preDeleteFunctions:  preDeleteFunctions,
+		postDeleteFunctions: postDeleteFunctions,
 		isAtomic:            isAtomic,
 	}
 }
@@ -56,7 +56,7 @@ func (r *UserDeleteRepository) runPreDelete(
 func (r *UserDeleteRepository) DeleteWithClient(
 	ctx context.Context, client *Client, instance *User,
 ) error {
-	err := r.runPostDelete(ctx, client, instance)
+	err := r.runPreDelete(ctx, client, instance)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (r *UserDeleteRepository) DeleteWithClient(
 	if err != nil {
 		return err
 	}
-	err = r.runPreDelete(ctx, client, instance)
+	err = r.runPostDelete(ctx, client, instance)
 	if err != nil {
 		return err
 	}

@@ -15,6 +15,8 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/datastore"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/httpserver"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
+	"github.com/kataras/iris/v12/middleware/cors"
+	"github.com/kataras/iris/v12/middleware/recover"
 )
 
 // Run creates objects via constructors.
@@ -36,7 +38,12 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := v1.NewHandler()
+	// HTTP middlewares
 	handler.UseRouter(middleware.Logger(l))
+	handler.UseRouter(recover.New())
+	handler.UseRouter(cors.New().Handler())
+
+	// routes
 	v1.RegisterLoginController(handler, loginUseCase, l)
 
 	if err := handler.Build(); err != nil {

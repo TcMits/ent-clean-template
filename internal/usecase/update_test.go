@@ -3,61 +3,76 @@ package usecase
 import (
 	"context"
 	"errors"
+	"reflect"
 	"testing"
 
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	"github.com/google/uuid"
-	"github.com/stretchr/testify/require"
+	gomock "github.com/golang/mock/gomock"
 )
 
 func Test_updateModelUseCase_Update(t *testing.T) {
 	type fields struct {
-		repository           repository.UpdateModelRepository[*model.User, *model.UserUpdateInput]
-		getRepository        repository.GetModelRepository[*model.User, *model.UserWhereInput]
-		toRepoWhereInputFunc ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
-		validateFunc         UpdateValidateFunc[*model.User, *model.UserUpdateInput, *model.UserUpdateInput]
+		repository           repository.UpdateModelRepository[*struct{}, *struct{}]
+		getRepository        repository.GetModelRepository[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
+		validateFunc         UpdateValidateFunc[*struct{}, *struct{}, *struct{}]
 		wrapGetErrorFunc     func(error) error
 		wrapUpdateErrorFunc  func(error) error
 	}
 	type args struct {
 		ctx         context.Context
-		whereInput  *model.UserWhereInput
-		updateInput *model.UserUpdateInput
+		whereInput  *struct{}
+		updateInput *struct{}
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u1, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	u2, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	newUUID := uuid.New()
 
-	testEmail := "test@gmail.com"
-	repository := repository.NewUserRepository(client)
-	updateInput := &model.UserUpdateInput{Email: &testEmail}
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	getRepo := repository.NewMockGetModelRepository[*struct{}, *struct{}](ctrl)
+	updateRepo := repository.NewMockUpdateModelRepository[*struct{}, *struct{}](ctrl)
+
+	getRepo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	getRepo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
+	updateRepo.EXPECT().Update(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})), gomock.Eq(new(struct{})),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	updateRepo.EXPECT().Update(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *model.UserUpdateInput
+		want    *struct{}
 		wantErr bool
 	}{
 		{
 			name: "Success",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    updateRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -65,20 +80,20 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u1.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
-			want: updateInput,
+			want: new(struct{}),
 		},
 		{
 			name: "toRepoWhereInputFuncError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    updateRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -86,20 +101,20 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "GetError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    updateRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -107,20 +122,20 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &newUUID},
-				updateInput: updateInput,
+				whereInput:  nil,
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "ValidateFuncError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    updateRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -128,20 +143,20 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "UpdateError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    updateRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -149,15 +164,15 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &updateModelUseCase[*model.User, *model.UserWhereInput, *model.UserUpdateInput, *model.UserWhereInput, *model.UserUpdateInput]{
+			l := &updateModelUseCase[*struct{}, *struct{}, *struct{}, *struct{}, *struct{}]{
 				repository:           tt.fields.repository,
 				getRepository:        tt.fields.getRepository,
 				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
@@ -171,10 +186,8 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 				return
 			}
 
-			if got != nil && tt.want != nil {
-				if got.Email != *tt.want.Email {
-					t.Errorf("createModelUseCase.Create() = %v, want %v", got.Email, *tt.want.Email)
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createModelUseCase.Create() = %v, want %v", got, *tt.want)
 			}
 		})
 	}
@@ -182,52 +195,73 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 
 func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 	type fields struct {
-		repository            repository.UpdateWithClientModelRepository[*model.User, *model.UserUpdateInput]
-		getRepository         repository.GetWithClientModelRepository[*model.User, *model.UserWhereInput]
+		repository            repository.UpdateWithClientModelRepository[*struct{}, *struct{}]
+		getRepository         repository.GetWithClientModelRepository[*struct{}, *struct{}]
 		transactionRepository repository.TransactionRepository
-		toRepoWhereInputFunc  ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
-		validateFunc          UpdateInTransactionValidateFunc[*model.User, *model.UserUpdateInput, *model.UserUpdateInput]
+		toRepoWhereInputFunc  ConverFunc[*struct{}, *struct{}]
+		validateFunc          UpdateInTransactionValidateFunc[*struct{}, *struct{}, *struct{}]
 		selectForUpdate       bool
 		wrapGetErrorFunc      func(error) error
 		wrapUpdateErrorFunc   func(error) error
 	}
 	type args struct {
 		ctx         context.Context
-		whereInput  *model.UserWhereInput
-		updateInput *model.UserUpdateInput
+		whereInput  *struct{}
+		updateInput *struct{}
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
 	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	u1, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	u2, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	newUUID := uuid.New()
+	ctrl := gomock.NewController(t)
 
-	testEmail := "test@gmail.com"
-	repo := repository.NewUserRepository(client)
+	defer ctrl.Finish()
+	getRepo := repository.NewMockGetWithClientModelRepository[*struct{}, *struct{}](ctrl)
+	updateRepo := repository.NewMockUpdateWithClientModelRepository[*struct{}, *struct{}](ctrl)
+
+	getRepo.EXPECT().GetWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})), false,
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	getRepo.EXPECT().GetWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Nil(), false,
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
+	updateRepo.EXPECT().UpdateWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})), gomock.Eq(new(struct{})),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	updateRepo.EXPECT().UpdateWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
 	transactionRepository := repository.NewTransactionRepository(client)
-	updateInput := &model.UserUpdateInput{Email: &testEmail}
 
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *model.UserUpdateInput
+		want    *struct{}
 		wantErr bool
 	}{
 		{
 			name: "Success",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            updateRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput, client *ent.Client) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -235,21 +269,21 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u1.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
-			want: updateInput,
+			want: new(struct{}),
 		},
 		{
 			name: "toRepoWhereInputFuncError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            updateRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput, client *ent.Client) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -257,21 +291,21 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "GetError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            updateRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput, client *ent.Client) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -279,21 +313,21 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &newUUID},
-				updateInput: updateInput,
+				whereInput:  nil,
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "ValidateFuncError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            updateRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput, client *ent.Client) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -301,21 +335,21 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "UpdateError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            updateRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(ins *model.User, uui *model.UserUpdateInput, client *ent.Client) (*model.UserUpdateInput, error) {
+				validateFunc: func(ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -323,15 +357,15 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			},
 			args: args{
 				ctx:         ctx,
-				whereInput:  &model.UserWhereInput{ID: &u2.ID},
-				updateInput: updateInput,
+				whereInput:  new(struct{}),
+				updateInput: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &updateModelInTransactionUseCase[*model.User, *model.UserWhereInput, *model.UserUpdateInput, *model.UserWhereInput, *model.UserUpdateInput]{
+			l := &updateModelInTransactionUseCase[*struct{}, *struct{}, *struct{}, *struct{}, *struct{}]{
 				repository:            tt.fields.repository,
 				getRepository:         tt.fields.getRepository,
 				transactionRepository: tt.fields.transactionRepository,
@@ -347,10 +381,8 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				return
 			}
 
-			if got != nil && tt.want != nil {
-				if got.Email != *tt.want.Email {
-					t.Errorf("createModelUseCase.Create() = %v, want %v", got.Email, *tt.want.Email)
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("createModelUseCase.Create() = %v, want %v", got, *tt.want)
 			}
 		})
 	}

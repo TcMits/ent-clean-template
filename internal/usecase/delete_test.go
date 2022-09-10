@@ -7,32 +7,51 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	"github.com/stretchr/testify/require"
+	gomock "github.com/golang/mock/gomock"
 )
 
 func Test_deleteModelUseCase_Delete(t *testing.T) {
 	type fields struct {
-		repository           repository.DeleteModelRepository[*model.User]
-		getRepository        repository.GetModelRepository[*model.User, *model.UserWhereInput]
-		toRepoWhereInputFunc ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
+		repository           repository.DeleteModelRepository[*struct{}]
+		getRepository        repository.GetModelRepository[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
 		wrapGetErrorFunc     func(error) error
 		wrapDeleteErrorFunc  func(error) error
 	}
 	type args struct {
 		ctx   context.Context
-		input *model.UserWhereInput
+		input *struct{}
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	getRepo := repository.NewMockGetModelRepository[*struct{}, *struct{}](ctrl)
+	deleteRepo := repository.NewMockDeleteModelRepository[*struct{}](ctrl)
 
-	repository := repository.NewUserRepository(client)
+	getRepo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	getRepo.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Nil(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
+	deleteRepo.EXPECT().Delete(
+		gomock.Eq(ctx), gomock.Eq(new(struct{})),
+	).Return(
+		nil,
+	).AnyTimes()
+
+	deleteRepo.EXPECT().Delete(
+		gomock.Eq(ctx), gomock.Nil(),
+	).Return(
+		errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -43,9 +62,9 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    deleteRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -53,15 +72,15 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: new(struct{}),
 			},
 		},
 		{
 			name: "toRepoWhereInputFuncuccessError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    deleteRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -69,16 +88,16 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "GetError",
 			fields: fields{
-				repository:    repository,
-				getRepository: repository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				repository:    deleteRepo,
+				getRepository: getRepo,
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -86,14 +105,14 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &deleteModelUseCase[*model.User, *model.UserWhereInput, *model.UserWhereInput]{
+			l := &deleteModelUseCase[*struct{}, *struct{}, *struct{}]{
 				repository:           tt.fields.repository,
 				getRepository:        tt.fields.getRepository,
 				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
@@ -110,27 +129,51 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 }
 func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 	type fields struct {
-		repository            repository.DeleteWithClientModelRepository[*model.User]
-		getRepository         repository.GetWithClientModelRepository[*model.User, *model.UserWhereInput]
+		repository            repository.DeleteWithClientModelRepository[*struct{}]
+		getRepository         repository.GetWithClientModelRepository[*struct{}, *struct{}]
 		transactionRepository repository.TransactionRepository
-		toRepoWhereInputFunc  ConverFunc[*model.UserWhereInput, *model.UserWhereInput]
+		toRepoWhereInputFunc  ConverFunc[*struct{}, *struct{}]
 		selectForUpdate       bool
 		wrapGetErrorFunc      func(error) error
 		wrapDeleteErrorFunc   func(error) error
 	}
 	type args struct {
 		ctx   context.Context
-		input *model.UserWhereInput
+		input *struct{}
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
 	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	getRepo := repository.NewMockGetWithClientModelRepository[*struct{}, *struct{}](ctrl)
+	deleteRepo := repository.NewMockDeleteWithClientModelRepository[*struct{}](ctrl)
 
-	repo := repository.NewUserRepository(client)
+	getRepo.EXPECT().GetWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})), false,
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	getRepo.EXPECT().GetWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Nil(), false,
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
+	deleteRepo.EXPECT().DeleteWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})),
+	).Return(
+		nil,
+	).AnyTimes()
+
+	deleteRepo.EXPECT().DeleteWithClient(
+		gomock.Eq(ctx), gomock.Any(), gomock.Nil(),
+	).Return(
+		errors.New(""),
+	).AnyTimes()
+
 	transactionRepository := repository.NewTransactionRepository(client)
 
 	tests := []struct {
@@ -142,10 +185,10 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            deleteRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -153,16 +196,16 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: new(struct{}),
 			},
 		},
 		{
 			name: "toRepoWhereInputFuncuccessError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            deleteRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -170,17 +213,17 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: new(struct{}),
 			},
 			wantErr: true,
 		},
 		{
 			name: "GetError",
 			fields: fields{
-				repository:            repo,
-				getRepository:         repo,
+				repository:            deleteRepo,
+				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *model.UserWhereInput) (*model.UserWhereInput, error) {
+				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -188,14 +231,14 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 			},
 			args: args{
 				ctx:   ctx,
-				input: &model.UserWhereInput{ID: &u.ID},
+				input: nil,
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &deleteModelInTransactionUseCase[*model.User, *model.UserWhereInput, *model.UserWhereInput]{
+			l := &deleteModelInTransactionUseCase[*struct{}, *struct{}, *struct{}]{
 				repository:            tt.fields.repository,
 				getRepository:         tt.fields.getRepository,
 				transactionRepository: tt.fields.transactionRepository,

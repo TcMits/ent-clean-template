@@ -3,8 +3,6 @@ package v1
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/middleware/cors"
-	"github.com/kataras/iris/v12/middleware/recover"
 )
 
 func NewHandler() *iris.Application {
@@ -24,10 +22,6 @@ func NewHandler() *iris.Application {
 		panic(err)
 	}
 	handler.I18n.SetDefault("en-US")
-
-	// middlewares
-	handler.UseRouter(recover.New())
-	handler.UseRouter(cors.New().Handler())
 
 	return handler
 }

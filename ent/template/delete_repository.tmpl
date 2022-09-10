@@ -12,21 +12,21 @@
         {{ $repository := print $n.Name "DeleteRepository" }}
         type {{ $repository }} struct {
             client *Client
-            postDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error
             preDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error
+            postDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error
             isAtomic bool
         }
 
         func New{{ $repository }}(
             client *Client,
-            postDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error,
             preDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error,
+            postDeleteFunctions []func(context.Context, *Client, *{{ $n.Name }}) error,
             isAtomic bool,
         ) *{{ $repository }} {
             return &{{ $repository }}{
                 client: client,
-                postDeleteFunctions: postDeleteFunctions,
                 preDeleteFunctions: preDeleteFunctions,
+                postDeleteFunctions: postDeleteFunctions,
                 isAtomic: isAtomic,
             }
         }
@@ -59,7 +59,7 @@
         func (r *{{ $repository }}) DeleteWithClient(
             ctx context.Context, client *Client, instance *{{ $n.Name }},
         ) error {
-            err := r.runPostDelete(ctx, client, instance)
+            err := r.runPreDelete(ctx, client, instance)
             if err != nil {
               return err
             }
@@ -67,7 +67,7 @@
             if err != nil {
               return err
             }
-            err = r.runPreDelete(ctx, client, instance)
+            err = r.runPostDelete(ctx, client, instance)
             if err != nil {
               return err
             }

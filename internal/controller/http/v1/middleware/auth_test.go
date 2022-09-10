@@ -2,53 +2,61 @@ package middleware
 
 import (
 	"context"
+	"errors"
+	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/ent"
 	v1 "github.com/TcMits/ent-clean-template/internal/controller/http/v1"
-	"github.com/TcMits/ent-clean-template/internal/repository"
-	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
+	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
-	"github.com/stretchr/testify/require"
 )
 
-func newLoginUseCase(client *ent.Client) usecase.LoginUseCase[
-	*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
-	return usecase.NewLoginUseCase(
-		repository.NewLoginRepository(client),
-		"Dummy",
-	)
-}
-
-func TestAuth(t *testing.T) {
+func Test_Auth(t *testing.T) {
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	loginUseCase := newLoginUseCase(client)
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
-	jwtPayload, err := loginUseCase.Login(ctx, &useCaseModel.LoginInput{
-		Username: u.Username,
-		Password: "12345678",
-	})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	u := usecase.NewMockLoginUseCase[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](ctrl)
+
+	u.EXPECT().VerifyToken(
+		gomock.Eq(ctx), gomock.Eq(""),
+	).Return(
+		nil, useCaseModel.NewUseCaseError(
+			errors.New(""), "test", "test", usecase.AuthenticationError,
+		),
+	).AnyTimes()
+
+	u.EXPECT().VerifyToken(
+		gomock.Eq(ctx), gomock.Eq("test"),
+	).Return(
+		new(struct{}), nil,
+	).AnyTimes()
+
+	u.EXPECT().VerifyToken(
+		gomock.Eq(ctx), gomock.Eq("tes"),
+	).Return(
+		nil, useCaseModel.NewUseCaseError(
+			errors.New(""), "test", "test", usecase.AuthenticationError,
+		),
+	).AnyTimes()
 
 	handler := v1.NewHandler()
-	handler.Use(Auth(loginUseCase))
+	handler.Use(Auth[
+		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+	](u))
 	handler.Get("/test", func(ctx iris.Context) {
-		userIrisContext, ok := ctx.Values().Get(UserKey).(lazy.LazyObject[*model.User])
+		userIrisContext, ok := ctx.Values().Get(UserKey).(lazy.LazyObject[*struct{}])
 		if !ok {
 			ctx.StatusCode(iris.StatusUnauthorized)
 			ctx.JSON(iris.Map{})
 			return
 		}
-		userRequestContext, ok := ctx.Request().Context().Value(UserKey).(lazy.LazyObject[*model.User])
+		userRequestContext, ok := ctx.Request().Context().Value(UserKey).(lazy.LazyObject[*struct{}])
 		if !ok {
 			ctx.StatusCode(iris.StatusUnauthorized)
 			ctx.JSON(iris.Map{})
@@ -66,7 +74,7 @@ func TestAuth(t *testing.T) {
 			ctx.JSON(iris.Map{})
 			return
 		}
-		if user1.ID != user2.ID {
+		if !reflect.DeepEqual(user1, user2) {
 			ctx.StatusCode(iris.StatusUnauthorized)
 			ctx.JSON(iris.Map{})
 			return
@@ -79,7 +87,9 @@ func TestAuth(t *testing.T) {
 	e := httptest.New(t, handler)
 
 	e.GET("/test").Expect().Status(iris.StatusUnauthorized)
-	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+jwtPayload.AccessToken).Expect().Status(iris.StatusOK)
-	e.GET("/test").WithQuery(JWTPrefix, jwtPayload.AccessToken).Expect().Status(iris.StatusOK)
+	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"tes").Expect().Status(iris.StatusUnauthorized)
+	e.GET("/test").WithQuery(JWTPrefix, "tes").Expect().Status(iris.StatusUnauthorized)
+	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
+	e.GET("/test").WithQuery(JWTPrefix, "test").Expect().Status(iris.StatusOK)
 
 }

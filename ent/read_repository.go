@@ -8,28 +8,28 @@ import (
 )
 
 type UserReadRepository struct {
-	client            *Client
-	postReadFunctions []func(context.Context, *Client, *UserQuery) error
-	preReadFunctions  []func(context.Context, *Client, *[]*User) error
-	preCountFunctions []func(context.Context, *Client, int) error
+	client             *Client
+	preReadFunctions   []func(context.Context, *Client, *UserQuery) error
+	postReadFunctions  []func(context.Context, *Client, *[]*User) error
+	postCountFunctions []func(context.Context, *Client, int) error
 }
 
 func NewUserReadRepository(
 	client *Client,
-	postReadFunctions []func(context.Context, *Client, *UserQuery) error,
-	preReadFunctions []func(context.Context, *Client, *[]*User) error,
-	preCountFunctions []func(context.Context, *Client, int) error,
+	preReadFunctions []func(context.Context, *Client, *UserQuery) error,
+	postReadFunctions []func(context.Context, *Client, *[]*User) error,
+	postCountFunctions []func(context.Context, *Client, int) error,
 ) *UserReadRepository {
 	return &UserReadRepository{
-		client:            client,
-		postReadFunctions: postReadFunctions,
-		preReadFunctions:  preReadFunctions,
-		preCountFunctions: preCountFunctions,
+		client:             client,
+		preReadFunctions:   preReadFunctions,
+		postReadFunctions:  postReadFunctions,
+		postCountFunctions: postCountFunctions,
 	}
 }
 
-func (r *UserReadRepository) runPostRead(ctx context.Context, client *Client, q *UserQuery) error {
-	for _, function := range r.postReadFunctions {
+func (r *UserReadRepository) runPreRead(ctx context.Context, client *Client, q *UserQuery) error {
+	for _, function := range r.preReadFunctions {
 		err := function(ctx, client, q)
 		if err != nil {
 			return err
@@ -38,8 +38,8 @@ func (r *UserReadRepository) runPostRead(ctx context.Context, client *Client, q 
 	return nil
 }
 
-func (r *UserReadRepository) runPreRead(ctx context.Context, client *Client, instances *[]*User) error {
-	for _, function := range r.preReadFunctions {
+func (r *UserReadRepository) runPostRead(ctx context.Context, client *Client, instances *[]*User) error {
+	for _, function := range r.postReadFunctions {
 		err := function(ctx, client, instances)
 		if err != nil {
 			return err
@@ -48,8 +48,8 @@ func (r *UserReadRepository) runPreRead(ctx context.Context, client *Client, ins
 	return nil
 }
 
-func (r *UserReadRepository) runPreCount(ctx context.Context, client *Client, count int) error {
-	for _, function := range r.preCountFunctions {
+func (r *UserReadRepository) runPostCount(ctx context.Context, client *Client, count int) error {
+	for _, function := range r.postCountFunctions {
 		err := function(ctx, client, count)
 		if err != nil {
 			return err
@@ -89,7 +89,7 @@ func (r *UserReadRepository) GetWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPostRead(ctx, client, q)
+	err = r.runPreRead(ctx, client, q)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (r *UserReadRepository) GetWithClient(
 		return nil, err
 	}
 	instances := []*User{instance}
-	err = r.runPreRead(ctx, client, &instances)
+	err = r.runPostRead(ctx, client, &instances)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +119,7 @@ func (r *UserReadRepository) ListWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPostRead(ctx, client, q)
+	err = r.runPreRead(ctx, client, q)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,10 @@ func (r *UserReadRepository) ListWithClient(
 		q = q.ForUpdate()
 	}
 	instances, err := q.All(ctx)
-	err = r.runPreRead(ctx, client, &instances)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPostRead(ctx, client, &instances)
 	if err != nil {
 		return nil, err
 	}
@@ -139,12 +142,15 @@ func (r *UserReadRepository) Count(ctx context.Context, w *UserWhereInput) (int,
 	if err != nil {
 		return 0, err
 	}
-	err = r.runPostRead(ctx, r.client, q)
+	err = r.runPreRead(ctx, r.client, q)
 	if err != nil {
 		return 0, err
 	}
 	count, err := q.Count(ctx)
-	err = r.runPreCount(ctx, r.client, count)
+	if err != nil {
+		return 0, err
+	}
+	err = r.runPostCount(ctx, r.client, count)
 	if err != nil {
 		return 0, err
 	}

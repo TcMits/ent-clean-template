@@ -6,8 +6,6 @@ import (
 	"strings"
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 	"github.com/kataras/iris/v12"
 )
@@ -42,11 +40,10 @@ func fromQuery(ctx iris.Context) string {
 	return ctx.URLParam(JWTPrefix)
 }
 
-func Auth(loginUseCase usecase.LoginUseCase[
-	*useCaseModel.LoginInput,
-	*useCaseModel.JWTAuthenticatedPayload,
-	*useCaseModel.RefreshTokenInput,
-	*model.User,
+func Auth[
+	LoginInputType, JWTAuthenticatedPayloadType, RefreshTokenInputType, UserType any,
+](loginUseCase usecase.LoginUseCase[
+	LoginInputType, JWTAuthenticatedPayloadType, RefreshTokenInputType, UserType,
 ]) iris.Handler {
 	return func(ctx iris.Context) {
 		request := ctx.Request()
@@ -55,7 +52,7 @@ func Auth(loginUseCase usecase.LoginUseCase[
 		if token == "" && ctx.Method() == http.MethodGet {
 			token = fromQuery(ctx)
 		}
-		getUser := func() *model.User {
+		getUser := func() UserType {
 			user, _ := loginUseCase.VerifyToken(requestCtx, token)
 			return user
 		}

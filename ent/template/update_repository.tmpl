@@ -13,29 +13,29 @@
         {{ $updateInput := print $n.Name "UpdateInput" }}
         type {{ $repository }} struct {
             client *Client
-            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error
-            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error
+            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error
+            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error
             isAtomic bool
         }
 
         func New{{ $repository }}(
             client *Client,
-            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error,
-            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error,
+            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error,
+            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error,
             isAtomic bool,
         ) *{{ $repository }} {
             return &{{ $repository }}{
                 client: client,
-                postUpdateFunctions: postUpdateFunctions,
                 preUpdateFunctions: preUpdateFunctions,
+                postUpdateFunctions: postUpdateFunctions,
                 isAtomic: isAtomic,
             }
         }
 
-        func (r *{{ $repository }}) runPostUpdate(
+        func (r *{{ $repository }}) runPreUpdate(
             ctx context.Context, client *Client, instance *{{ $n.Name }}, i *{{ $updateInput }},
         ) error {
-            for _, function := range r.postUpdateFunctions {
+            for _, function := range r.preUpdateFunctions {
               err := function(ctx, client, instance, i)
               if err != nil {
                 return err
@@ -44,10 +44,10 @@
             return nil
         }
 
-        func (r *{{ $repository }}) runPreUpdate(
+        func (r *{{ $repository }}) runPostUpdate(
             ctx context.Context, client *Client, oldInstance *{{ $n.Name }}, newInstance *{{ $n.Name }},
         ) error {
-            for _, function := range r.preUpdateFunctions {
+            for _, function := range r.postUpdateFunctions {
               err := function(ctx, client, oldInstance, newInstance)
               if err != nil {
                 return err
@@ -60,7 +60,7 @@
         func (r *{{ $repository }}) UpdateWithClient(
             ctx context.Context, client *Client, instance *{{ $n.Name }}, input *{{ $updateInput }},
         ) (*{{ $n.Name }}, error) {
-            err := r.runPostUpdate(ctx, client, instance, input)
+            err := r.runPreUpdate(ctx, client, instance, input)
             if err != nil {
               return nil, err
             }
@@ -68,7 +68,7 @@
             if err != nil {
               return nil, err
             }
-            err = r.runPreUpdate(ctx, client, instance, newInstance)
+            err = r.runPostUpdate(ctx, client, instance, newInstance)
             if err != nil {
               return nil, err
             }

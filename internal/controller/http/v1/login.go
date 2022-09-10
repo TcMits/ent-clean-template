@@ -5,9 +5,7 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 )
 
@@ -20,7 +18,7 @@ const (
 var (
 	_wrapInvalidLoginInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginController - Login - ctx.ReadBody: %w", err),
+			fmt.Errorf("v1 - getLoginHandler - ctx.ReadBody: %w", err),
 			defaultInvalidErrorTranslateKey,
 			translationFunc,
 			defaultInvalidErrorMessage,
@@ -29,7 +27,7 @@ var (
 	}
 	_wrapInvalidRefreshInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginController - RefreshToken - ctx.ReadBody: %w", err),
+			fmt.Errorf("v1 - getRefreshTokenHandler - ctx.ReadBody: %w", err),
 			defaultInvalidErrorTranslateKey,
 			translationFunc,
 			defaultInvalidErrorMessage,
@@ -38,7 +36,7 @@ var (
 	}
 	_wrapInvalidVerifyTokenInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginController - VerifyToken - ctx.ReadBody: %w", err),
+			fmt.Errorf("v1 - getVerifyTokenHandler - ctx.ReadBody: %w", err),
 			defaultInvalidErrorTranslateKey,
 			translationFunc,
 			defaultInvalidErrorMessage,
@@ -55,91 +53,99 @@ type verifyTokenRequest struct {
 	Token string `json:"token" validate:"required"`
 }
 
-type loginController struct {
-	useCase usecase.LoginUseCase[
-		*useCaseModel.LoginInput,
-		*useCaseModel.JWTAuthenticatedPayload,
-		*useCaseModel.RefreshTokenInput,
-		*model.User,
-	]
-	logger logger.Interface
-}
-
-func RegisterLoginController(
+func RegisterLoginController[
+	PLoginInputType interface{ *LoginInputType },
+	JWTAuthenticatedPayloadType any,
+	PRefreshTokenInputType interface{ *RefreshTokenInputType },
+	UserType,
+	LoginInputType,
+	RefreshTokenInputType any,
+](
 	handler iris.Party,
-	useCase usecase.LoginUseCase[
-		*useCaseModel.LoginInput,
-		*useCaseModel.JWTAuthenticatedPayload,
-		*useCaseModel.RefreshTokenInput,
-		*model.User,
-	],
-	logger logger.Interface,
+	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
+	l logger.Interface,
 ) {
-	controller := &loginController{useCase: useCase, logger: logger}
-	handler.Post(loginSubPath, controller.Login)
-	handler.Post(refreshTokenSubPath, controller.RefreshToken)
-	handler.Post(verifyTokenSubPath, controller.VerifyToken)
+	handler.Post(loginSubPath, getLoginHandler(useCase, l))
+	handler.Post(refreshTokenSubPath, getRefreshTokenHandler(useCase, l))
+	handler.Post(verifyTokenSubPath, getVerifyTokenHandler(useCase, l))
 }
 
-func (c *loginController) Login(ctx iris.Context) {
-	loginInput := new(useCaseModel.LoginInput)
-	if err := ctx.ReadBody(loginInput); err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
-			err = translatableErrorFromValidationErrors(
-				loginInput, errs, ctx.Tr,
-			)
-		} else {
-			err = _wrapInvalidLoginInput(ctx.Tr, err)
+func getLoginHandler[
+	PLoginInputType interface{ *LoginInputType },
+	JWTAuthenticatedPayloadType any,
+	PRefreshTokenInputType interface{ *RefreshTokenInputType },
+	UserType,
+	LoginInputType,
+	RefreshTokenInputType any,
+](
+	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
+	l logger.Interface,
+) iris.Handler {
+	return func(ctx iris.Context) {
+		loginInput := PLoginInputType(new(LoginInputType))
+		if err := ctx.ReadBody(loginInput); err != nil {
+			handleBindingError(ctx, err, l, loginInput, _wrapInvalidLoginInput)
+			return
 		}
-		handleError(ctx, err, c.logger)
-		return
+		authenticatedPayload, err := useCase.Login(ctx.Request().Context(), loginInput)
+		if err != nil {
+			handleError(ctx, err, l)
+			return
+		}
+		ctx.JSON(authenticatedPayload)
 	}
-	authenticatedPayload, err := c.useCase.Login(ctx.Request().Context(), loginInput)
-	if err != nil {
-		handleError(ctx, err, c.logger)
-		return
-	}
-	ctx.JSON(authenticatedPayload)
 }
 
-func (c *loginController) RefreshToken(ctx iris.Context) {
-	refreshTokenInput := new(useCaseModel.RefreshTokenInput)
-	if err := ctx.ReadJSON(refreshTokenInput); err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
-			err = translatableErrorFromValidationErrors(
-				refreshTokenInput, errs, ctx.Tr,
-			)
-		} else {
-			err = _wrapInvalidRefreshInput(ctx.Tr, err)
+func getRefreshTokenHandler[
+	PLoginInputType interface{ *LoginInputType },
+	JWTAuthenticatedPayloadType any,
+	PRefreshTokenInputType interface{ *RefreshTokenInputType },
+	UserType,
+	LoginInputType,
+	RefreshTokenInputType any,
+](
+	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
+	l logger.Interface,
+
+) iris.Handler {
+	return func(ctx iris.Context) {
+		refreshTokenInput := PRefreshTokenInputType(new(RefreshTokenInputType))
+		if err := ctx.ReadJSON(refreshTokenInput); err != nil {
+			handleBindingError(ctx, err, l, refreshTokenInput, _wrapInvalidRefreshInput)
+			return
 		}
-		handleError(ctx, err, c.logger)
-		return
+		token, err := useCase.RefreshToken(ctx.Request().Context(), refreshTokenInput)
+		if err != nil {
+			handleError(ctx, err, l)
+			return
+		}
+		ctx.JSON(refreshTokenResponse{Token: token})
 	}
-	token, err := c.useCase.RefreshToken(ctx.Request().Context(), refreshTokenInput)
-	if err != nil {
-		handleError(ctx, err, c.logger)
-		return
-	}
-	ctx.JSON(refreshTokenResponse{Token: token})
 }
 
-func (c *loginController) VerifyToken(ctx iris.Context) {
-	verifyTokenInput := new(verifyTokenRequest)
-	if err := ctx.ReadBody(verifyTokenInput); err != nil {
-		if errs, ok := err.(validator.ValidationErrors); ok {
-			err = translatableErrorFromValidationErrors(
-				verifyTokenInput, errs, ctx.Tr,
-			)
-		} else {
-			err = _wrapInvalidVerifyTokenInput(ctx.Tr, err)
+func getVerifyTokenHandler[
+	PLoginInputType interface{ *LoginInputType },
+	JWTAuthenticatedPayloadType any,
+	PRefreshTokenInputType interface{ *RefreshTokenInputType },
+	UserType,
+	LoginInputType,
+	RefreshTokenInputType any,
+](
+	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
+	l logger.Interface,
+
+) iris.Handler {
+	return func(ctx iris.Context) {
+		verifyTokenInput := new(verifyTokenRequest)
+		if err := ctx.ReadBody(verifyTokenInput); err != nil {
+			handleBindingError(ctx, err, l, verifyTokenInput, _wrapInvalidVerifyTokenInput)
+			return
 		}
-		handleError(ctx, err, c.logger)
-		return
+		_, err := useCase.VerifyToken(ctx.Request().Context(), verifyTokenInput.Token)
+		if err != nil {
+			handleError(ctx, err, l)
+			return
+		}
+		ctx.JSON(iris.Map{})
 	}
-	_, err := c.useCase.VerifyToken(ctx.Request().Context(), verifyTokenInput.Token)
-	if err != nil {
-		handleError(ctx, err, c.logger)
-		return
-	}
-	ctx.JSON(iris.Map{})
 }
