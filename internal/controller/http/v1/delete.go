@@ -13,7 +13,7 @@ func getDeleteHandler[
 	SerializedType,
 	WhereUserInputType any,
 ](
-	createUseCase usecase.GetAndDeleteModelUseCase[ModelType, PWhereUserInputType],
+	getAndDeleteUseCase usecase.GetAndDeleteModelUseCase[ModelType, PWhereUserInputType],
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
 
@@ -31,7 +31,7 @@ func getDeleteHandler[
 			return
 		}
 		context := ctx.Request().Context()
-		err := createUseCase.GetAndDelete(context, whereInput)
+		err := getAndDeleteUseCase.GetAndDelete(context, whereInput)
 		if err != nil {
 			handleError(ctx, err, l)
 			return

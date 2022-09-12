@@ -15,7 +15,7 @@ func getUpdateHandler[
 	WhereUserInputType,
 	UpdateInputType any,
 ](
-	createUseCase usecase.GetAndUpdateModelUseCase[ModelType, PWhereUserInputType, PUpdateInputType],
+	getAndUpdateUseCase usecase.GetAndUpdateModelUseCase[ModelType, PWhereUserInputType, PUpdateInputType],
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
 
@@ -39,7 +39,7 @@ func getUpdateHandler[
 			return
 		}
 		context := ctx.Request().Context()
-		instance, err := createUseCase.GetAndUpdate(context, whereInput, updateInput)
+		instance, err := getAndUpdateUseCase.GetAndUpdate(context, whereInput, updateInput)
 		if err != nil {
 			handleError(ctx, err, l)
 			return

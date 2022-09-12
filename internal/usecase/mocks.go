@@ -125,30 +125,30 @@ func (mr *MockGetModelUseCaseMockRecorder[ModelType, WhereInput]) Get(arg0, arg1
 }
 
 // MockCountModelUseCase is a mock of CountModelUseCase interface.
-type MockCountModelUseCase[ModelType any, WhereInput any] struct {
+type MockCountModelUseCase[WhereInput any] struct {
 	ctrl     *gomock.Controller
-	recorder *MockCountModelUseCaseMockRecorder[ModelType, WhereInput]
+	recorder *MockCountModelUseCaseMockRecorder[WhereInput]
 }
 
 // MockCountModelUseCaseMockRecorder is the mock recorder for MockCountModelUseCase.
-type MockCountModelUseCaseMockRecorder[ModelType any, WhereInput any] struct {
-	mock *MockCountModelUseCase[ModelType, WhereInput]
+type MockCountModelUseCaseMockRecorder[WhereInput any] struct {
+	mock *MockCountModelUseCase[WhereInput]
 }
 
 // NewMockCountModelUseCase creates a new mock instance.
-func NewMockCountModelUseCase[ModelType any, WhereInput any](ctrl *gomock.Controller) *MockCountModelUseCase[ModelType, WhereInput] {
-	mock := &MockCountModelUseCase[ModelType, WhereInput]{ctrl: ctrl}
-	mock.recorder = &MockCountModelUseCaseMockRecorder[ModelType, WhereInput]{mock}
+func NewMockCountModelUseCase[WhereInput any](ctrl *gomock.Controller) *MockCountModelUseCase[WhereInput] {
+	mock := &MockCountModelUseCase[WhereInput]{ctrl: ctrl}
+	mock.recorder = &MockCountModelUseCaseMockRecorder[WhereInput]{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCountModelUseCase[ModelType, WhereInput]) EXPECT() *MockCountModelUseCaseMockRecorder[ModelType, WhereInput] {
+func (m *MockCountModelUseCase[WhereInput]) EXPECT() *MockCountModelUseCaseMockRecorder[WhereInput] {
 	return m.recorder
 }
 
 // Count mocks base method.
-func (m *MockCountModelUseCase[ModelType, WhereInput]) Count(arg0 context.Context, arg1 WhereInput) (int, error) {
+func (m *MockCountModelUseCase[WhereInput]) Count(arg0 context.Context, arg1 WhereInput) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Count", arg0, arg1)
 	ret0, _ := ret[0].(int)
@@ -157,9 +157,9 @@ func (m *MockCountModelUseCase[ModelType, WhereInput]) Count(arg0 context.Contex
 }
 
 // Count indicates an expected call of Count.
-func (mr *MockCountModelUseCaseMockRecorder[ModelType, WhereInput]) Count(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockCountModelUseCaseMockRecorder[WhereInput]) Count(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockCountModelUseCase[ModelType, WhereInput])(nil).Count), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Count", reflect.TypeOf((*MockCountModelUseCase[WhereInput])(nil).Count), arg0, arg1)
 }
 
 // MockCreateModelUseCase is a mock of CreateModelUseCase interface.

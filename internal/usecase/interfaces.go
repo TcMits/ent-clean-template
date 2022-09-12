@@ -17,7 +17,7 @@ type (
 	GetModelUseCase[ModelType, WhereInput any] interface {
 		Get(context.Context, WhereInput) (ModelType, error)
 	}
-	CountModelUseCase[ModelType, WhereInput any] interface {
+	CountModelUseCase[WhereInput any] interface {
 		Count(context.Context, WhereInput) (int, error)
 	}
 	CreateModelUseCase[ModelType, CreateInput any] interface {

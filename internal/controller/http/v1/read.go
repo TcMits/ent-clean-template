@@ -25,7 +25,7 @@ type limitOffsetQueryInput struct {
 func paginate[ModelType, OrderInputType, WhereInputType any](
 	ctx iris.Context,
 	listUseCase usecase.ListModelUseCase[ModelType, OrderInputType, WhereInputType],
-	countUseCase usecase.CountModelUseCase[ModelType, WhereInputType],
+	countUseCase usecase.CountModelUseCase[WhereInputType],
 	orderInput OrderInputType,
 	whereInput WhereInputType,
 	limitOffsetInput *limitOffsetQueryInput,
@@ -120,7 +120,7 @@ func getListHandler[
 	WhereInputType any,
 ](
 	listUseCase usecase.ListModelUseCase[ModelType, POrderInputType, PWhereInputType],
-	countUseCase usecase.CountModelUseCase[ModelType, PWhereInputType],
+	countUseCase usecase.CountModelUseCase[PWhereInputType],
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
 
@@ -130,7 +130,7 @@ func getListHandler[
 	return func(ctx iris.Context) {
 		whereInput := PWhereInputType(new(WhereInputType))
 		orderInput := POrderInputType(new(OrderInputType))
-		limitOffsetInput := &limitOffsetQueryInput{Limit: defaultLimit}
+		limitOffsetInput := *defaultLimitOffsetInput
 		if err := ctx.ReadParams(whereInput); err != nil {
 			handleBindingError(ctx, err, l, whereInput, wrapReadParamsError)
 			return
@@ -143,12 +143,13 @@ func getListHandler[
 			handleBindingError(ctx, err, l, orderInput, wrapReadQueryError)
 			return
 		}
-		if err := ctx.ReadQuery(limitOffsetInput); err != nil {
-			limitOffsetInput = defaultLimitOffsetInput
+		if err := ctx.ReadQuery(&limitOffsetInput); err != nil {
+			handleBindingError(ctx, err, l, orderInput, wrapReadQueryError)
+			return
 		}
 
 		instances, paginateMeta, err := paginate(
-			ctx, listUseCase, countUseCase, orderInput, whereInput, limitOffsetInput,
+			ctx, listUseCase, countUseCase, orderInput, whereInput, &limitOffsetInput,
 		)
 		if err != nil {
 			handleError(ctx, err, l)
