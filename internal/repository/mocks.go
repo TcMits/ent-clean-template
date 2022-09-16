@@ -6,6 +6,7 @@ package repository
 
 import (
 	context "context"
+	io "io"
 	reflect "reflect"
 
 	ent "github.com/TcMits/ent-clean-template/ent"
@@ -35,41 +36,15 @@ func (m *MockTransactionRepository) EXPECT() *MockTransactionRepositoryMockRecor
 	return m.recorder
 }
 
-// Commit mocks base method.
-func (m *MockTransactionRepository) Commit(arg0 *ent.Tx) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Commit", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Commit indicates an expected call of Commit.
-func (mr *MockTransactionRepositoryMockRecorder) Commit(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Commit", reflect.TypeOf((*MockTransactionRepository)(nil).Commit), arg0)
-}
-
-// Rollback mocks base method.
-func (m *MockTransactionRepository) Rollback(arg0 *ent.Tx) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Rollback", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Rollback indicates an expected call of Rollback.
-func (mr *MockTransactionRepositoryMockRecorder) Rollback(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Rollback", reflect.TypeOf((*MockTransactionRepository)(nil).Rollback), arg0)
-}
-
 // Start mocks base method.
-func (m *MockTransactionRepository) Start(arg0 context.Context) (*ent.Tx, error) {
+func (m *MockTransactionRepository) Start(arg0 context.Context) (*ent.Client, func() error, func() error, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Start", arg0)
-	ret0, _ := ret[0].(*ent.Tx)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(*ent.Client)
+	ret1, _ := ret[1].(func() error)
+	ret2, _ := ret[2].(func() error)
+	ret3, _ := ret[3].(error)
+	return ret0, ret1, ret2, ret3
 }
 
 // Start indicates an expected call of Start.
@@ -517,21 +492,6 @@ func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) EXPECT()
 	return m.recorder
 }
 
-// Get mocks base method.
-func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) Get(arg0 context.Context, arg1 WhereInputType) (UserType, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", arg0, arg1)
-	ret0, _ := ret[0].(UserType)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType]) Get(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockLoginRepository[UserType, WhereInputType, LoginInputType])(nil).Get), arg0, arg1)
-}
-
 // Login mocks base method.
 func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) Login(arg0 context.Context, arg1 LoginInputType) (UserType, error) {
 	m.ctrl.T.Helper()
@@ -545,4 +505,237 @@ func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) Login(ar
 func (mr *MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType]) Login(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockLoginRepository[UserType, WhereInputType, LoginInputType])(nil).Login), arg0, arg1)
+}
+
+// MockReadFileRepository is a mock of ReadFileRepository interface.
+type MockReadFileRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockReadFileRepositoryMockRecorder
+}
+
+// MockReadFileRepositoryMockRecorder is the mock recorder for MockReadFileRepository.
+type MockReadFileRepositoryMockRecorder struct {
+	mock *MockReadFileRepository
+}
+
+// NewMockReadFileRepository creates a new mock instance.
+func NewMockReadFileRepository(ctrl *gomock.Controller) *MockReadFileRepository {
+	mock := &MockReadFileRepository{ctrl: ctrl}
+	mock.recorder = &MockReadFileRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockReadFileRepository) EXPECT() *MockReadFileRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Read mocks base method.
+func (m *MockReadFileRepository) Read(arg0 context.Context, arg1 string, arg2 io.Writer, arg3, arg4 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Read", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Read indicates an expected call of Read.
+func (mr *MockReadFileRepositoryMockRecorder) Read(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockReadFileRepository)(nil).Read), arg0, arg1, arg2, arg3, arg4)
+}
+
+// MockExistFileRepository is a mock of ExistFileRepository interface.
+type MockExistFileRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockExistFileRepositoryMockRecorder
+}
+
+// MockExistFileRepositoryMockRecorder is the mock recorder for MockExistFileRepository.
+type MockExistFileRepositoryMockRecorder struct {
+	mock *MockExistFileRepository
+}
+
+// NewMockExistFileRepository creates a new mock instance.
+func NewMockExistFileRepository(ctrl *gomock.Controller) *MockExistFileRepository {
+	mock := &MockExistFileRepository{ctrl: ctrl}
+	mock.recorder = &MockExistFileRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockExistFileRepository) EXPECT() *MockExistFileRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Exist mocks base method.
+func (m *MockExistFileRepository) Exist(arg0 context.Context, arg1 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Exist", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Exist indicates an expected call of Exist.
+func (mr *MockExistFileRepositoryMockRecorder) Exist(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exist", reflect.TypeOf((*MockExistFileRepository)(nil).Exist), arg0, arg1)
+}
+
+// MockWriteFileRepository is a mock of WriteFileRepository interface.
+type MockWriteFileRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockWriteFileRepositoryMockRecorder
+}
+
+// MockWriteFileRepositoryMockRecorder is the mock recorder for MockWriteFileRepository.
+type MockWriteFileRepositoryMockRecorder struct {
+	mock *MockWriteFileRepository
+}
+
+// NewMockWriteFileRepository creates a new mock instance.
+func NewMockWriteFileRepository(ctrl *gomock.Controller) *MockWriteFileRepository {
+	mock := &MockWriteFileRepository{ctrl: ctrl}
+	mock.recorder = &MockWriteFileRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockWriteFileRepository) EXPECT() *MockWriteFileRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Write mocks base method.
+func (m *MockWriteFileRepository) Write(arg0 context.Context, arg1 string, arg2 io.Reader, arg3 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockWriteFileRepositoryMockRecorder) Write(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockWriteFileRepository)(nil).Write), arg0, arg1, arg2, arg3)
+}
+
+// MockDeleteFileRepository is a mock of DeleteFileRepository interface.
+type MockDeleteFileRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockDeleteFileRepositoryMockRecorder
+}
+
+// MockDeleteFileRepositoryMockRecorder is the mock recorder for MockDeleteFileRepository.
+type MockDeleteFileRepositoryMockRecorder struct {
+	mock *MockDeleteFileRepository
+}
+
+// NewMockDeleteFileRepository creates a new mock instance.
+func NewMockDeleteFileRepository(ctrl *gomock.Controller) *MockDeleteFileRepository {
+	mock := &MockDeleteFileRepository{ctrl: ctrl}
+	mock.recorder = &MockDeleteFileRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDeleteFileRepository) EXPECT() *MockDeleteFileRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Delete mocks base method.
+func (m *MockDeleteFileRepository) Delete(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockDeleteFileRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockDeleteFileRepository)(nil).Delete), arg0, arg1)
+}
+
+// MockFileRepository is a mock of FileRepository interface.
+type MockFileRepository struct {
+	ctrl     *gomock.Controller
+	recorder *MockFileRepositoryMockRecorder
+}
+
+// MockFileRepositoryMockRecorder is the mock recorder for MockFileRepository.
+type MockFileRepositoryMockRecorder struct {
+	mock *MockFileRepository
+}
+
+// NewMockFileRepository creates a new mock instance.
+func NewMockFileRepository(ctrl *gomock.Controller) *MockFileRepository {
+	mock := &MockFileRepository{ctrl: ctrl}
+	mock.recorder = &MockFileRepositoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockFileRepository) EXPECT() *MockFileRepositoryMockRecorder {
+	return m.recorder
+}
+
+// Delete mocks base method.
+func (m *MockFileRepository) Delete(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Delete indicates an expected call of Delete.
+func (mr *MockFileRepositoryMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockFileRepository)(nil).Delete), arg0, arg1)
+}
+
+// Exist mocks base method.
+func (m *MockFileRepository) Exist(arg0 context.Context, arg1 string) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Exist", arg0, arg1)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Exist indicates an expected call of Exist.
+func (mr *MockFileRepositoryMockRecorder) Exist(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Exist", reflect.TypeOf((*MockFileRepository)(nil).Exist), arg0, arg1)
+}
+
+// Read mocks base method.
+func (m *MockFileRepository) Read(arg0 context.Context, arg1 string, arg2 io.Writer, arg3, arg4 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Read", arg0, arg1, arg2, arg3, arg4)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Read indicates an expected call of Read.
+func (mr *MockFileRepositoryMockRecorder) Read(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockFileRepository)(nil).Read), arg0, arg1, arg2, arg3, arg4)
+}
+
+// Write mocks base method.
+func (m *MockFileRepository) Write(arg0 context.Context, arg1 string, arg2 io.Reader, arg3 int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Write", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Write indicates an expected call of Write.
+func (mr *MockFileRepositoryMockRecorder) Write(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockFileRepository)(nil).Write), arg0, arg1, arg2, arg3)
 }

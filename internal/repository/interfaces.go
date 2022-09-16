@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"io"
 
 	"github.com/TcMits/ent-clean-template/ent"
 )
@@ -9,10 +10,10 @@ import (
 //go:generate mockgen -source=interfaces.go -destination=./mocks.go -package=repository
 
 type (
+	// database
 	TransactionRepository interface {
-		Start(context.Context) (*ent.Tx, error)
-		Commit(*ent.Tx) error
-		Rollback(*ent.Tx) error
+		// return client, commit function, rollback function, error
+		Start(context.Context) (*ent.Client, func() error, func() error, error)
 	}
 	GetModelRepository[ModelType, WhereInputType any] interface {
 		Get(context.Context, WhereInputType) (ModelType, error)
@@ -47,6 +48,30 @@ type (
 	DeleteWithClientModelRepository[ModelType any] interface {
 		DeleteWithClient(context.Context, *ent.Client, ModelType) error
 	}
+	LoginRepository[UserType, WhereInputType, LoginInputType any] interface {
+		Login(context.Context, LoginInputType) (UserType, error)
+	}
+
+	// files
+	ReadFileRepository interface {
+		Read(context.Context, string, io.Writer, int64, int64) (int64, error)
+	}
+	ExistFileRepository interface {
+		Exist(context.Context, string) (bool, error)
+	}
+	WriteFileRepository interface {
+		Write(context.Context, string, io.Reader, int64) (int64, error)
+	}
+	DeleteFileRepository interface {
+		Delete(context.Context, string) error
+	}
+
+	FileRepository interface {
+		ReadFileRepository
+		ExistFileRepository
+		WriteFileRepository
+		DeleteFileRepository
+	}
 
 	ModelRepository[ModelType, OrderInputType, WhereInputType, CreateInputType, UpdateInputType any] interface {
 		GetModelRepository[ModelType, WhereInputType]
@@ -60,11 +85,5 @@ type (
 		UpdateWithClientModelRepository[ModelType, UpdateInputType]
 		DeleteModelRepository[ModelType]
 		DeleteWithClientModelRepository[ModelType]
-	}
-
-	LoginRepository[UserType, WhereInputType, LoginInputType any] interface {
-		GetModelRepository[UserType, WhereInputType]
-
-		Login(context.Context, LoginInputType) (UserType, error)
 	}
 )

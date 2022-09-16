@@ -56,7 +56,7 @@ type deleteModelInTransactionUseCase[ModelType, WhereInputType, RepoWhereInputTy
 func (u *deleteModelUseCase[ModelType, WhereInputType, _]) GetAndDelete(
 	ctx context.Context, input WhereInputType,
 ) error {
-	repoWhereInput, err := u.toRepoWhereInputFunc(input)
+	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -73,37 +73,47 @@ func (u *deleteModelUseCase[ModelType, WhereInputType, _]) GetAndDelete(
 
 func (u *deleteModelInTransactionUseCase[ModelType, WhereInputType, _]) GetAndDelete(
 	ctx context.Context, input WhereInputType,
-) error {
-	tx, err := u.transactionRepository.Start(ctx)
+) (err error) {
+	client, commitFunc, rollbackFunc, err := u.transactionRepository.Start(ctx)
 	if err != nil {
-		return _wrapStartDeleteTransactionError(err)
+		err = _wrapStartDeleteTransactionError(err)
+		return
 	}
-	client := tx.Client()
-	repoWhereInput, err := u.toRepoWhereInputFunc(input)
+	// ensure rollback or commit
+	defer func() {
+		if r := recover(); r != nil {
+			rollbackFunc()
+			panic(r)
+		}
+		if err != nil {
+			if rerr := rollbackFunc(); rerr != nil {
+				err = _wrapRollbackDeleteError(rerr)
+			}
+			return
+		}
+		if cerr := commitFunc(); cerr != nil {
+			err = _wrapCommitDeleteError(cerr)
+		}
+	}()
+
+	// get whereInput
+	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, input)
 	if err != nil {
-		return err
+		return
 	}
 
 	// get instance
 	instance, err := u.getRepository.GetWithClient(ctx, client, repoWhereInput, u.selectForUpdate)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return _wrapRollbackDeleteError(err)
-		}
-		return u.wrapGetErrorFunc(err)
+		err = u.wrapGetErrorFunc(err)
+		return
 	}
 
 	// delete instance
 	err = u.repository.DeleteWithClient(ctx, client, instance)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return _wrapRollbackDeleteError(err)
-		}
-		return u.wrapDeleteErrorFunc(err)
+		err = u.wrapDeleteErrorFunc(err)
+		return
 	}
-
-	if err = u.transactionRepository.Commit(tx); err != nil {
-		return _wrapCommitDeleteError(err)
-	}
-	return nil
+	return
 }

@@ -16,20 +16,16 @@ func NewTransactionRepository(client *ent.Client) TransactionRepository {
 	return &transactionRepository{client: client}
 }
 
-func (r *transactionRepository) Start(ctx context.Context) (*ent.Tx, error) {
-	return r.client.Tx(ctx)
-}
-
-func (r *transactionRepository) Commit(tx *ent.Tx) error {
-	if err := tx.Commit(); err != nil {
-		return err
+func (r *transactionRepository) Start(ctx context.Context) (*ent.Client, func() error, func() error, error) {
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, nil, nil, err
 	}
-	return nil
-}
-
-func (r *transactionRepository) Rollback(tx *ent.Tx) error {
-	if err := tx.Rollback(); err != nil {
-		return err
+	commitFunc := func() error {
+		return tx.Commit()
 	}
-	return nil
+	rollbackFunc := func() error {
+		return tx.Rollback()
+	}
+	return tx.Client(), commitFunc, rollbackFunc, nil
 }

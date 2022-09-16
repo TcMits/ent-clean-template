@@ -3,10 +3,14 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"io"
+	"path"
+	"time"
 
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 )
 
@@ -37,8 +41,16 @@ var (
 	}
 )
 
-type UpdateValidateFunc[ModelType, CreateInput, RepoCreateInput any] func(ModelType, CreateInput) (RepoCreateInput, error)
-type UpdateInTransactionValidateFunc[ModelType, CreateInput, RepoCreateInput any] func(ModelType, CreateInput, *ent.Client) (RepoCreateInput, error)
+type UpdateFile struct {
+	Filename string
+	Size     int64
+	Reader   io.Reader
+}
+
+type UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType) (RepoUpdateInputType, error)
+type UpdateInTransactionValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType, *ent.Client) (RepoUpdateInputType, error)
+type UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType any] func(context.Context, UpdateInputType, UpdateExistFunc) (UseCaseUpdateInputType, []*UpdateFile, error)
+type UpdateExistFunc func(context.Context, string) (bool, error)
 
 type updateModelUseCase[ModelType, WhereInputType, UpdateInputType, RepoWhereInputType, RepoUpdateInputType any] struct {
 	repository           repository.UpdateModelRepository[ModelType, RepoUpdateInputType]
@@ -60,10 +72,20 @@ type updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputType,
 	wrapUpdateErrorFunc   func(error) error
 }
 
+type getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType, UseCaseUpdateInputType any] struct {
+	getAndUpdateUseCase GetAndUpdateModelUseCase[ModelType, WhereInputType, UseCaseUpdateInputType]
+	existFileRepository repository.ExistFileRepository
+	writeFileRepository repository.WriteFileRepository
+	validateFunc        UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType]
+	writeFileTimeout    time.Duration
+	l                   logger.Interface
+	basePath            string
+}
+
 func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) GetAndUpdate(
 	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
 ) (ModelType, error) {
-	repoWhereInput, err := u.toRepoWhereInputFunc(whereInput)
+	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, whereInput)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -71,7 +93,7 @@ func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) G
 	if err != nil {
 		return generic.Zero[ModelType](), u.wrapGetErrorFunc(err)
 	}
-	repoUpdateInput, err := u.validateFunc(instance, updateInput)
+	repoUpdateInput, err := u.validateFunc(ctx, instance, updateInput)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -84,47 +106,87 @@ func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) G
 
 func (u *updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) GetAndUpdate(
 	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
-) (ModelType, error) {
-	tx, err := u.transactionRepository.Start(ctx)
+) (instance ModelType, err error) {
+	client, commitFunc, rollbackFunc, err := u.transactionRepository.Start(ctx)
 	if err != nil {
-		return generic.Zero[ModelType](), _wrapStartUpdateTransactionError(err)
+		err = _wrapStartUpdateTransactionError(err)
+		return
 	}
 
-	client := tx.Client()
-	repoWhereInput, err := u.toRepoWhereInputFunc(whereInput)
+	// ensure rollback or commit
+	defer func() {
+		if r := recover(); r != nil {
+			rollbackFunc()
+			panic(r)
+		}
+		if err != nil {
+			if rerr := rollbackFunc(); rerr != nil {
+				err = _wrapRollbackUpdateError(rerr)
+			}
+			return
+		}
+		if cerr := commitFunc(); cerr != nil {
+			err = _wrapCommitUpdateError(cerr)
+			instance = generic.Zero[ModelType]()
+		}
+	}()
+
+	// get whereInput
+	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, whereInput)
 	if err != nil {
-		return generic.Zero[ModelType](), err
+		return
 	}
 
 	// get instance
-	instance, err := u.getRepository.GetWithClient(ctx, client, repoWhereInput, u.selectForUpdate)
+	oldInstance, err := u.getRepository.GetWithClient(ctx, client, repoWhereInput, u.selectForUpdate)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return generic.Zero[ModelType](), _wrapRollbackUpdateError(err)
-		}
-		return generic.Zero[ModelType](), u.wrapGetErrorFunc(err)
+		err = u.wrapGetErrorFunc(err)
+		return
 	}
 
 	// validate input with old instance
-	repoUpdateInput, err := u.validateFunc(instance, updateInput, client)
+	repoUpdateInput, err := u.validateFunc(ctx, oldInstance, updateInput, client)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return generic.Zero[ModelType](), _wrapRollbackUpdateError(err)
-		}
-		return generic.Zero[ModelType](), err
+		return
 	}
 
 	// update instance
-	instance, err = u.repository.UpdateWithClient(ctx, client, instance, repoUpdateInput)
+	instance, err = u.repository.UpdateWithClient(ctx, client, oldInstance, repoUpdateInput)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return generic.Zero[ModelType](), _wrapRollbackUpdateError(err)
-		}
-		return generic.Zero[ModelType](), u.wrapUpdateErrorFunc(err)
+		err = u.wrapUpdateErrorFunc(err)
+		return
+	}
+	return
+}
+
+func (u *getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType, _]) GetAndUpdate(
+	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
+) (ModelType, error) {
+	useCaseUpdateInput, files, err := u.validateFunc(ctx, updateInput, u.existFileRepository.Exist)
+	if err != nil {
+		return generic.Zero[ModelType](), err
+	}
+	instance, err := u.getAndUpdateUseCase.GetAndUpdate(ctx, whereInput, useCaseUpdateInput)
+	if err != nil {
+		return generic.Zero[ModelType](), err
 	}
 
-	if err = u.transactionRepository.Commit(tx); err != nil {
-		return generic.Zero[ModelType](), _wrapCommitUpdateError(err)
+	// files upload
+	if len(files) > 0 {
+		go func() {
+			fileCtx, cancelFileCtx := context.WithTimeout(context.Background(), u.writeFileTimeout)
+			defer cancelFileCtx()
+			for _, file := range files {
+				n, fileErr := u.writeFileRepository.Write(
+					fileCtx, path.Join(u.basePath, file.Filename), file.Reader, file.Size,
+				)
+				if fileErr != nil {
+					u.l.Error(fileErr)
+					continue
+				}
+				u.l.Info("getAndUpdateModelWithFileUseCase - GetAndUpdate - u.getAndUpdateUseCase.GetAndUpdate: Upload %d bytes", n)
+			}
+		}()
 	}
 	return instance, nil
 }

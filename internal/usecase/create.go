@@ -3,10 +3,14 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"io"
+	"path"
+	"time"
 
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 )
 
@@ -37,26 +41,44 @@ var (
 	}
 )
 
-type CreateValidateFunc[CreateInput, RepoCreateInput any] func(CreateInput) (RepoCreateInput, error)
-type CreateInTransactionValidateFunc[CreateInput, RepoCreateInput any] func(CreateInput, *ent.Client) (RepoCreateInput, error)
+type CreateFile struct {
+	Filename string
+	Size     int64
+	Reader   io.Reader
+}
 
-type createModelUseCase[ModelType, CreateInput, RepoCreateInput any] struct {
-	repository          repository.CreateModelRepository[ModelType, RepoCreateInput]
-	validateFunc        CreateValidateFunc[CreateInput, RepoCreateInput]
+type CreateValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType) (RepoCreateInputType, error)
+type CreateInTransactionValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType, *ent.Client) (RepoCreateInputType, error)
+type CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType any] func(context.Context, CreateInputType, CreateExistFunc) (UseCaseCreateInputType, []*CreateFile, error)
+type CreateExistFunc func(context.Context, string) (bool, error)
+
+type createModelUseCase[ModelType, CreateInputType, RepoCreateInputType any] struct {
+	repository          repository.CreateModelRepository[ModelType, RepoCreateInputType]
+	validateFunc        CreateValidateFunc[CreateInputType, RepoCreateInputType]
 	wrapCreateErrorFunc func(error) error
 }
 
-type createModelInTransactionUseCase[ModelType, CreateInput, RepoCreateInput any] struct {
-	repository            repository.CreateWithClientModelRepository[ModelType, RepoCreateInput]
+type createModelInTransactionUseCase[ModelType, CreateInputType, RepoCreateInputType any] struct {
+	repository            repository.CreateWithClientModelRepository[ModelType, RepoCreateInputType]
 	transactionRepository repository.TransactionRepository
-	validateFunc          CreateInTransactionValidateFunc[CreateInput, RepoCreateInput]
+	validateFunc          CreateInTransactionValidateFunc[CreateInputType, RepoCreateInputType]
 	wrapCreateErrorFunc   func(error) error
 }
 
-func (u *createModelUseCase[ModelType, CreateInput, RepoCreateInput]) Create(
-	ctx context.Context, input CreateInput,
+type createModelHavingFileUseCase[ModelType, CreateInputType, UseCaseCreateInputType any] struct {
+	createUseCase       CreateModelUseCase[ModelType, UseCaseCreateInputType]
+	existFileRepository repository.ExistFileRepository
+	writeFileRepository repository.WriteFileRepository
+	validateFunc        CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType]
+	writeFileTimeout    time.Duration
+	l                   logger.Interface
+	basePath            string
+}
+
+func (u *createModelUseCase[ModelType, CreateInputType, _]) Create(
+	ctx context.Context, input CreateInputType,
 ) (ModelType, error) {
-	repoCreateInput, err := u.validateFunc(input)
+	repoCreateInput, err := u.validateFunc(ctx, input)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -67,35 +89,76 @@ func (u *createModelUseCase[ModelType, CreateInput, RepoCreateInput]) Create(
 	return instance, nil
 }
 
-func (u *createModelInTransactionUseCase[ModelType, CreateInput, RepoCreateInput]) Create(
-	ctx context.Context, input CreateInput,
-) (ModelType, error) {
-	tx, err := u.transactionRepository.Start(ctx)
+func (u *createModelInTransactionUseCase[ModelType, CreateInputType, _]) Create(
+	ctx context.Context, input CreateInputType,
+) (instance ModelType, err error) {
+	client, commitFunc, rollbackFunc, err := u.transactionRepository.Start(ctx)
 	if err != nil {
-		return generic.Zero[ModelType](), _wrapStartCreateTransactionError(err)
+		err = _wrapStartCreateTransactionError(err)
+		return
 	}
-	client := tx.Client()
+
+	// ensure rollback or commit
+	defer func() {
+		if r := recover(); r != nil {
+			rollbackFunc()
+			panic(r)
+		}
+		if err != nil {
+			if rerr := rollbackFunc(); rerr != nil {
+				err = _wrapRollbackCreateError(rerr)
+			}
+			return
+		}
+		if cerr := commitFunc(); cerr != nil {
+			err = _wrapCommitCreateError(cerr)
+			instance = generic.Zero[ModelType]()
+		}
+	}()
 
 	// validate input
-	repoCreateInput, err := u.validateFunc(input, client)
+	repoCreateInput, err := u.validateFunc(ctx, input, client)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return generic.Zero[ModelType](), _wrapRollbackCreateError(rerr)
-		}
-		return generic.Zero[ModelType](), err
+		return
 	}
 
 	// create instance
-	instance, err := u.repository.CreateWithClient(ctx, client, repoCreateInput)
+	instance, err = u.repository.CreateWithClient(ctx, client, repoCreateInput)
 	if err != nil {
-		if rerr := u.transactionRepository.Rollback(tx); rerr != nil {
-			return generic.Zero[ModelType](), _wrapRollbackCreateError(rerr)
-		}
-		return generic.Zero[ModelType](), u.wrapCreateErrorFunc(err)
+		err = u.wrapCreateErrorFunc(err)
+		return
+	}
+	return
+}
+
+func (u *createModelHavingFileUseCase[ModelType, CreateInputType, _]) Create(
+	ctx context.Context, input CreateInputType,
+) (ModelType, error) {
+	createInput, files, err := u.validateFunc(ctx, input, u.existFileRepository.Exist)
+	if err != nil {
+		return generic.Zero[ModelType](), err
+	}
+	instance, err := u.createUseCase.Create(ctx, createInput)
+	if err != nil {
+		return generic.Zero[ModelType](), err
 	}
 
-	if err = u.transactionRepository.Commit(tx); err != nil {
-		return generic.Zero[ModelType](), _wrapCommitCreateError(err)
+	// files upload
+	if len(files) > 0 {
+		go func() {
+			fileCtx, cancelFileCtx := context.WithTimeout(context.Background(), u.writeFileTimeout)
+			defer cancelFileCtx()
+			for _, file := range files {
+				n, fileErr := u.writeFileRepository.Write(
+					fileCtx, path.Join(u.basePath, file.Filename), file.Reader, file.Size,
+				)
+				if fileErr != nil {
+					u.l.Error(fileErr)
+					continue
+				}
+				u.l.Info("createModelHavingFileUseCase - Create - u.writeFileRepository.Write: Upload %d bytes", n)
+			}
+		}()
 	}
 	return instance, nil
 }

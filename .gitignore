@@ -5,6 +5,9 @@
 # Config
 .env
 
+# Macs
+.DS_store
+
 # Binaries for programs and plugins
 *.exe
 *.exe~

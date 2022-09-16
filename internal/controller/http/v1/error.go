@@ -21,6 +21,11 @@ const (
 	defaultInvalidErrorMessage      = "One or more fields failed to be validated"
 )
 
+type errorResponse struct {
+	Message string `json:"message"`
+	Code    string `json:"code"`
+}
+
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
 	if !ok {
@@ -77,14 +82,14 @@ func handleError(ctx iris.Context, err error, l logger.Interface) {
 	switch foundedError := err.(type) {
 	case *modelUseCase.UseCaseError:
 		translatableErr := model.TranslatableErrorFromUseCaseError(foundedError, ctx.Tr)
-		ctx.StopWithJSON(statusCode, iris.Map{
-			"code":    code,
-			"message": translatableErr.Error(),
+		ctx.StopWithJSON(statusCode, errorResponse{
+			Code:    code,
+			Message: translatableErr.Error(),
 		})
 	default:
-		ctx.StopWithJSON(statusCode, iris.Map{
-			"code":    code,
-			"message": foundedError.Error(),
+		ctx.StopWithJSON(statusCode, errorResponse{
+			Code:    code,
+			Message: foundedError.Error(),
 		})
 	}
 }

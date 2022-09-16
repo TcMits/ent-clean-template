@@ -33,6 +33,7 @@ func Run(cfg *config.Config) {
 	// Usecase
 	loginUseCase := usecase.NewLoginUseCase(
 		repository.NewLoginRepository(client),
+		repository.NewUserRepository(client),
 		cfg.LoginUseCase.Secret,
 	)
 

@@ -49,7 +49,7 @@ func Test_getModelUseCase_Get(t *testing.T) {
 			name: "Success",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc: func(err error) error { return err },
@@ -64,7 +64,7 @@ func Test_getModelUseCase_Get(t *testing.T) {
 			name: "WhereInputFuncError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc: func(err error) error { return err },
@@ -79,7 +79,7 @@ func Test_getModelUseCase_Get(t *testing.T) {
 			name: "GetError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc: func(err error) error { return err },
@@ -150,7 +150,7 @@ func Test_countModelUseCase_Count(t *testing.T) {
 			name: "Success",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapCountErrorFunc: func(err error) error { return err },
@@ -165,7 +165,7 @@ func Test_countModelUseCase_Count(t *testing.T) {
 			name: "WhereInputFuncError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapCountErrorFunc: func(err error) error { return err },
@@ -180,7 +180,7 @@ func Test_countModelUseCase_Count(t *testing.T) {
 			name: "CountError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapCountErrorFunc: func(err error) error { return err },
@@ -254,10 +254,10 @@ func Test_listModelUseCase_List(t *testing.T) {
 			name: "Success",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
+				toRepoOrderInputFunc: func(c context.Context, uoi *struct{}) (*struct{}, error) {
 					return uoi, nil
 				},
 				wrapListErrorFunc: func(err error) error { return err },
@@ -275,10 +275,10 @@ func Test_listModelUseCase_List(t *testing.T) {
 			name: "WhereInputFuncError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
+				toRepoOrderInputFunc: func(c context.Context, uoi *struct{}) (*struct{}, error) {
 					return uoi, nil
 				},
 				wrapListErrorFunc: func(err error) error { return err },
@@ -297,10 +297,10 @@ func Test_listModelUseCase_List(t *testing.T) {
 			name: "OrderInputFuncError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
+				toRepoOrderInputFunc: func(c context.Context, uoi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapListErrorFunc: func(err error) error { return err },
@@ -319,10 +319,10 @@ func Test_listModelUseCase_List(t *testing.T) {
 			name: "ListError",
 			fields: fields{
 				repository: repo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				toRepoOrderInputFunc: func(uoi *struct{}) (*struct{}, error) {
+				toRepoOrderInputFunc: func(c context.Context, uoi *struct{}) (*struct{}, error) {
 					return uoi, nil
 				},
 				wrapListErrorFunc: func(err error) error { return err },

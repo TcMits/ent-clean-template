@@ -7,7 +7,7 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 )
 
-type ConverFunc[FromType, ToType any] func(FromType) (ToType, error)
+type ConverFunc[FromType, ToType any] func(context.Context, FromType) (ToType, error)
 
 type getModelUseCase[ModelType, WhereInputType, RepoWhereInputType any] struct {
 	repository           repository.GetModelRepository[ModelType, RepoWhereInputType]
@@ -31,7 +31,7 @@ type listModelUseCase[ModelType, OrderInputType, WhereInputType, RepoOrderInputT
 func (u *getModelUseCase[ModelType, FilterInputType, _]) Get(
 	ctx context.Context, input FilterInputType,
 ) (ModelType, error) {
-	whereInput, err := u.toRepoWhereInputFunc(input)
+	whereInput, err := u.toRepoWhereInputFunc(ctx, input)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -45,7 +45,7 @@ func (u *getModelUseCase[ModelType, FilterInputType, _]) Get(
 func (u *countModelUseCase[FilterInputType, _]) Count(
 	ctx context.Context, input FilterInputType,
 ) (int, error) {
-	whereInput, err := u.toRepoWhereInputFunc(input)
+	whereInput, err := u.toRepoWhereInputFunc(ctx, input)
 	if err != nil {
 		return 0, err
 	}
@@ -59,11 +59,11 @@ func (u *countModelUseCase[FilterInputType, _]) Count(
 func (u *listModelUseCase[ModelType, OrderInputType, WhereInputType, _, _]) List(
 	ctx context.Context, limit int, offset int, orderInput OrderInputType, whereInput WhereInputType,
 ) ([]ModelType, error) {
-	repoOrderInput, err := u.toRepoOrderInputFunc(orderInput)
+	repoOrderInput, err := u.toRepoOrderInputFunc(ctx, orderInput)
 	if err != nil {
 		return nil, err
 	}
-	repoWhereInput, err := u.toRepoWhereInputFunc(whereInput)
+	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, whereInput)
 	if err != nil {
 		return nil, err
 	}

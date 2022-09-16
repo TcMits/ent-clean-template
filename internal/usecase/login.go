@@ -69,12 +69,14 @@ var (
 )
 
 type loginUseCase struct {
-	repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-	secret     string
+	repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+	getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+	secret        string
 }
 
 func NewLoginUseCase(
 	repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput],
+	getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput],
 	secret string,
 ) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
 	return &loginUseCase{repository: repository, secret: secret}
@@ -97,7 +99,7 @@ func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jw
 	if err != nil {
 		return nil, err
 	}
-	user, err := l.repository.Get(ctx, &model.UserWhereInput{ID: &id})
+	user, err := l.getRepository.Get(ctx, &model.UserWhereInput{ID: &id})
 	if err != nil {
 		return nil, err
 	}

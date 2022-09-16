@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
-	"github.com/TcMits/ent-clean-template/internal/testutils"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -64,7 +63,7 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			fields: fields{
 				repository:    deleteRepo,
 				getRepository: getRepo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -80,7 +79,7 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			fields: fields{
 				repository:    deleteRepo,
 				getRepository: getRepo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -97,7 +96,7 @@ func Test_deleteModelUseCase_Delete(t *testing.T) {
 			fields: fields{
 				repository:    deleteRepo,
 				getRepository: getRepo,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -143,12 +142,11 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	getRepo := repository.NewMockGetWithClientModelRepository[*struct{}, *struct{}](ctrl)
 	deleteRepo := repository.NewMockDeleteWithClientModelRepository[*struct{}](ctrl)
+	transactionRepository := repository.NewMockTransactionRepository(ctrl)
 
 	getRepo.EXPECT().GetWithClient(
 		gomock.Eq(ctx), gomock.Any(), gomock.Eq(new(struct{})), false,
@@ -174,7 +172,11 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 		errors.New(""),
 	).AnyTimes()
 
-	transactionRepository := repository.NewTransactionRepository(client)
+	transactionRepository.EXPECT().Start(
+		gomock.Eq(ctx),
+	).Return(
+		nil, func() error { return nil }, func() error { return nil }, nil,
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -188,7 +190,7 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 				repository:            deleteRepo,
 				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -205,7 +207,7 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 				repository:            deleteRepo,
 				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -223,7 +225,7 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 				repository:            deleteRepo,
 				getRepository:         getRepo,
 				transactionRepository: transactionRepository,
-				toRepoWhereInputFunc: func(uwi *struct{}) (*struct{}, error) {
+				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },

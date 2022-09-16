@@ -17,8 +17,9 @@ import (
 
 func TestNewLoginUseCase(t *testing.T) {
 	type args struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
@@ -26,6 +27,7 @@ func TestNewLoginUseCase(t *testing.T) {
 	defer client.Close()
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	want := loginUseCase{
 		repository: loginRepository,
@@ -40,15 +42,16 @@ func TestNewLoginUseCase(t *testing.T) {
 		{
 			name: "Success",
 			args: args{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			want: &want,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLoginUseCase(tt.args.repository, tt.args.secret); !reflect.DeepEqual(got, tt.want) {
+			if got := NewLoginUseCase(tt.args.repository, tt.args.getRepository, tt.args.secret); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewLoginUseCase() = %v, want %v", got, tt.want)
 			}
 		})
@@ -57,8 +60,9 @@ func TestNewLoginUseCase(t *testing.T) {
 
 func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		user *model.User
@@ -71,6 +75,7 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	tests := []struct {
 		name   string
@@ -81,8 +86,9 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				user: u,
@@ -97,8 +103,9 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			if got := l.getUserMapClaims(tt.args.user); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("loginUseCase.getUserMapClaims() = %v, want %v", got, tt.want)
@@ -109,8 +116,9 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 
 func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx          context.Context
@@ -124,6 +132,7 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	tests := []struct {
 		name    string
@@ -135,8 +144,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				ctx: ctx,
@@ -151,8 +161,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "MissingID",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				ctx: ctx,
@@ -167,8 +178,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongUUID",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				ctx: ctx,
@@ -184,8 +196,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongUUID",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				ctx: ctx,
@@ -201,8 +214,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongKey",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "secret",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "secret",
 			},
 			args: args{
 				ctx: ctx,
@@ -219,8 +233,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.getUserFromMapClaims(tt.args.ctx, tt.args.jwtMapClaims)
 			if (err != nil) != tt.wantErr {
@@ -236,8 +251,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 
 func Test_loginUseCase_createAccessToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		user *model.User
@@ -251,6 +267,7 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	tests := []struct {
 		name    string
@@ -262,8 +279,9 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				u,
@@ -274,8 +292,9 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.createAccessToken(tt.args.user)
 			if (err != nil) != tt.wantErr {
@@ -292,8 +311,9 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 
 func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		user *model.User
@@ -307,6 +327,7 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	tests := []struct {
 		name    string
@@ -318,8 +339,9 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{user: u},
 			want: u,
@@ -328,8 +350,9 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.createRefreshToken(tt.args.user)
 			if (err != nil) != tt.wantErr {
@@ -345,8 +368,9 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx   context.Context
@@ -361,9 +385,12 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
+
 	l := &loginUseCase{
-		repository: loginRepository,
-		secret:     "Dummy",
+		repository:    loginRepository,
+		getRepository: getRepository,
+		secret:        "Dummy",
 	}
 	token, err := l.createAccessToken(u)
 	require.NoError(t, err)
@@ -378,8 +405,9 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx:   ctx,
@@ -391,8 +419,9 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.parseAccessToken(tt.args.ctx, tt.args.token)
 			if (err != nil) != tt.wantErr {
@@ -408,8 +437,9 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 
 func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx               context.Context
@@ -424,9 +454,12 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
+
 	l := &loginUseCase{
-		repository: loginRepository,
-		secret:     "Dummy",
+		repository:    loginRepository,
+		getRepository: getRepository,
+		secret:        "Dummy",
 	}
 	refreshTokenInput, err := l.createRefreshToken(u)
 	require.NoError(t, err)
@@ -441,8 +474,9 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx:               ctx,
@@ -454,8 +488,9 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.parseRefreshToken(tt.args.ctx, tt.args.refreshTokenInput)
 			if (err != nil) != tt.wantErr {
@@ -471,8 +506,9 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_Login(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx        context.Context
@@ -486,6 +522,7 @@ func Test_loginUseCase_Login(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
 
 	tests := []struct {
 		name    string
@@ -497,8 +534,9 @@ func Test_loginUseCase_Login(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx: ctx,
@@ -512,8 +550,9 @@ func Test_loginUseCase_Login(t *testing.T) {
 		{
 			name: "WrongPassword",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx: ctx,
@@ -529,8 +568,9 @@ func Test_loginUseCase_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.Login(tt.args.ctx, tt.args.loginInput)
 			if (err != nil) != tt.wantErr {
@@ -554,8 +594,9 @@ func Test_loginUseCase_Login(t *testing.T) {
 
 func Test_loginUseCase_RefreshToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx               context.Context
@@ -569,9 +610,12 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
+
 	l := &loginUseCase{
-		repository: loginRepository,
-		secret:     "Dummy",
+		repository:    loginRepository,
+		getRepository: getRepository,
+		secret:        "Dummy",
 	}
 	refreshTokenInput, err := l.createRefreshToken(u)
 	require.NoError(t, err)
@@ -586,8 +630,9 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx:               ctx,
@@ -599,8 +644,9 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.RefreshToken(tt.args.ctx, tt.args.refreshTokenInput)
 			if (err != nil) != tt.wantErr {
@@ -616,8 +662,9 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 
 func Test_loginUseCase_VerifyToken(t *testing.T) {
 	type fields struct {
-		repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
-		secret     string
+		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
+		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+		secret        string
 	}
 	type args struct {
 		ctx   context.Context
@@ -632,9 +679,12 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 	require.NoError(t, err)
 
 	loginRepository := repository.NewLoginRepository(client)
+	getRepository := repository.NewUserRepository(client)
+
 	l := &loginUseCase{
-		repository: loginRepository,
-		secret:     "Dummy",
+		repository:    loginRepository,
+		getRepository: getRepository,
+		secret:        "Dummy",
 	}
 	token, err := l.createAccessToken(u)
 	require.NoError(t, err)
@@ -649,8 +699,9 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository: loginRepository,
-				secret:     "Dummy",
+				repository:    loginRepository,
+				getRepository: getRepository,
+				secret:        "Dummy",
 			},
 			args: args{
 				ctx:   ctx,
@@ -662,8 +713,9 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository: tt.fields.repository,
-				secret:     tt.fields.secret,
+				repository:    tt.fields.repository,
+				getRepository: tt.fields.getRepository,
+				secret:        tt.fields.secret,
 			}
 			got, err := l.VerifyToken(tt.args.ctx, tt.args.token)
 			if (err != nil) != tt.wantErr {
