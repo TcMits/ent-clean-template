@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	v1 "github.com/TcMits/ent-clean-template/internal/controller/http/v1"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
@@ -45,7 +44,7 @@ func Test_Auth(t *testing.T) {
 		),
 	).AnyTimes()
 
-	handler := v1.NewHandler()
+	handler := iris.New()
 	handler.Use(Auth[
 		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
 	](u))

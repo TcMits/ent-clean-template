@@ -38,6 +38,9 @@ type fileRepository struct {
 }
 
 func NewFileRepository(storager types.Storager) FileRepository {
+	if storager == nil {
+		panic("storager is required")
+	}
 	return &fileRepository{
 		&readFileRepository{storager: storager},
 		&existFileRepository{storager: storager},

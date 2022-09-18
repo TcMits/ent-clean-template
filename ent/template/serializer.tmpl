@@ -1,0 +1,46 @@
+{{ define "model/additional/serializer" }}
+    {{ $receiver := $.Receiver }}
+    {{ $name := print $.Name "Serializer" }}
+
+    type {{ $name }} struct {
+      columns map[string]func(context.Context, *{{ $.Name }}) any
+    }
+
+    func New{{ $name }}(customColumns map[string]func(context.Context, *{{ $.Name }}) any, columns ...string) *{{ $name }} {
+      columnsMap := map[string]func(context.Context, *{{ $.Name }}) any{}
+      for _, col := range columns {
+        switch col {
+          {{ if $.HasOneFieldID }}
+            case {{ $.Package }}.{{ $.ID.Constant }}:
+              columnsMap[col] = func(ctx context.Context, {{ $receiver }} *{{ $.Name }}) any{
+                return {{ $receiver }}.ID
+              }
+          {{ end }}
+          {{ range $f := $.Fields }}
+            case {{ $.Package }}.{{ $f.Constant }}:
+              columnsMap[col] = func(ctx context.Context, {{ $receiver }} *{{ $.Name }}) any{
+                return {{ $receiver }}.{{ $f.StructField }}
+              }
+          {{ end }}
+            default:
+              panic(fmt.Sprintf("Unexpect column %s", col))
+        }
+      }
+
+      for k, serializeFunc := range customColumns {
+        columnsMap[k] = serializeFunc
+      }
+
+      return &{{ $name }}{
+        columns: columnsMap,
+      }
+    }
+
+    func (s *{{ $name }}) Serialize(ctx context.Context, {{ $receiver }} *{{ $.Name }}) map[string]any {
+      result := map[string]any{}
+      for col, serializeFunc := range s.columns {
+        result[col] = serializeFunc(ctx, {{ $receiver }})
+      }
+      return result
+    }
+{{ end }}

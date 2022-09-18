@@ -18,6 +18,9 @@ type loginRepository struct {
 func NewLoginRepository(client *ent.Client) LoginRepository[
 	*model.User, *model.UserWhereInput, *useCaseModel.LoginInput,
 ] {
+	if client == nil {
+		panic("client is required")
+	}
 	return &loginRepository{client: client}
 }
 

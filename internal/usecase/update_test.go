@@ -403,7 +403,6 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 		validateFunc        UpdateWithFileValidateFunc[*struct{}, *struct{}]
 		writeFileTimeout    time.Duration
 		l                   logger.Interface
-		basePath            string
 	}
 	type args struct {
 		ctx         context.Context
@@ -463,7 +462,7 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff UpdateExistFunc) (*struct{}, []*UpdateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*UpdateFile, error) {
 					return new(struct{}), append(
 						[]*UpdateFile{},
 						&UpdateFile{Filename: "test.txt", Size: size, Reader: r},
@@ -471,7 +470,6 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				},
 				writeFileTimeout: 15 * time.Minute,
 				l:                testutils.NullLogger{},
-				basePath:         "hello-world",
 			},
 			args: args{
 				ctx:         ctx,
@@ -486,7 +484,7 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff UpdateExistFunc) (*struct{}, []*UpdateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*UpdateFile, error) {
 					return nil, nil, errors.New("")
 				},
 				writeFileTimeout: 15 * time.Minute,
@@ -505,7 +503,7 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff UpdateExistFunc) (*struct{}, []*UpdateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*UpdateFile, error) {
 					return nil, append(
 						[]*UpdateFile{},
 						&UpdateFile{Filename: "test.txt", Size: size, Reader: r},
@@ -527,7 +525,7 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff UpdateExistFunc) (*struct{}, []*UpdateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*UpdateFile, error) {
 					return new(struct{}), append(
 						[]*UpdateFile{},
 						&UpdateFile{Filename: "test2.txt", Size: size, Reader: r},
@@ -553,7 +551,6 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 				validateFunc:        tt.fields.validateFunc,
 				writeFileTimeout:    tt.fields.writeFileTimeout,
 				l:                   tt.fields.l,
-				basePath:            tt.fields.basePath,
 			}
 			got, err := l.GetAndUpdate(tt.args.ctx, tt.args.whereInput, tt.args.updateInput)
 			if (err != nil) != tt.wantErr {

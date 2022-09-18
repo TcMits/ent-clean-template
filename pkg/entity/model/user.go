@@ -25,6 +25,7 @@ type UserCreateInput = ent.UserCreateInput
 type UserUpdateInput = ent.UserUpdateInput
 type UserWhereInput = ent.UserWhereInput
 type UserOrderInput = ent.UserOrderInput
+type UserSerializer = ent.UserSerializer
 
 var descCreateTimeOrderField, _ = ent.ParseOrderField(ent.OrderDirectionDescPrefix + user.FieldCreateTime)
 var DefaultUserWhereInput = &UserWhereInput{}

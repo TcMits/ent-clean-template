@@ -79,7 +79,13 @@ func NewLoginUseCase(
 	getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput],
 	secret string,
 ) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
-	return &loginUseCase{repository: repository, secret: secret}
+	if repository == nil {
+		panic("repository is required")
+	}
+	if getRepository == nil {
+		panic("getRepository is required")
+	}
+	return &loginUseCase{repository: repository, getRepository: getRepository, secret: secret}
 }
 
 func (*loginUseCase) getUserMapClaims(user *model.User) jwtKit.MapClaims {
@@ -99,7 +105,10 @@ func (l *loginUseCase) getUserFromMapClaims(ctx context.Context, jwtMapClaims jw
 	if err != nil {
 		return nil, err
 	}
-	user, err := l.getRepository.Get(ctx, &model.UserWhereInput{ID: &id})
+	isActive := true
+	user, err := l.getRepository.Get(ctx, &model.UserWhereInput{
+		ID: &id, IsActive: &isActive,
+	})
 	if err != nil {
 		return nil, err
 	}

@@ -30,10 +30,14 @@ func Run(cfg *config.Config) {
 	}
 	defer client.Close()
 
+	// repository
+	userRepository := repository.NewUserRepository(client)
+	loginRepository := repository.NewLoginRepository(client)
+
 	// Usecase
 	loginUseCase := usecase.NewLoginUseCase(
-		repository.NewLoginRepository(client),
-		repository.NewUserRepository(client),
+		loginRepository,
+		userRepository,
 		cfg.LoginUseCase.Secret,
 	)
 
@@ -46,6 +50,9 @@ func Run(cfg *config.Config) {
 
 	// routes
 	v1.RegisterLoginController(handler, loginUseCase, l)
+
+	// protected route
+	_ = handler.Party("/admin", middleware.Auth(loginUseCase))
 
 	if err := handler.Build(); err != nil {
 		l.Fatal(fmt.Errorf("app - Run - handler.Build: %w", err))

@@ -1,177 +1,166 @@
-{{ define "read_repository" }}
-    {{- /*gotype: entgo.io/ent/entc/gen.Graph*/ -}}
+{{ define "model/additional/read_repository" }}
+    {{ $names := nodePaginationNames $ }}
+    {{ $repository := print $.Name "ReadRepository" }}
+    {{ $orderInput := print $.Name "OrderInput" }}
+    {{ $whereInput := $names.WhereInput }}
+    type {{ $repository }} struct {
+        client *Client
+        preReadFunctions []func(context.Context, *Client, *{{ $.QueryName }}) error
+        postReadFunctions []func(context.Context, *Client, *[]*{{ $.Name }}) error
+        postCountFunctions []func(context.Context, *Client, int) error
+    }
 
-    {{ $pkg := base $.Config.Package }}
-    {{- with extend $ "Package" $pkg }}
-        {{ template "header" . }}
-    {{- end }}
-
-    {{ template "import" $ }}
-
-    {{- range $n := $.Nodes }}
-        {{ $names := nodePaginationNames $n }}
-        {{ $repository := print $n.Name "ReadRepository" }}
-        {{ $orderInput := print $n.Name "OrderInput" }}
-        {{ $whereInput := $names.WhereInput }}
-        type {{ $repository }} struct {
-            client *Client
-            preReadFunctions []func(context.Context, *Client, *{{ $n.QueryName }}) error
-            postReadFunctions []func(context.Context, *Client, *[]*{{ $n.Name }}) error
-            postCountFunctions []func(context.Context, *Client, int) error
+    func New{{ $repository }}(
+        client *Client,
+        preReadFunctions []func(context.Context, *Client, *{{ $.QueryName }}) error,
+        postReadFunctions []func(context.Context, *Client, *[]*{{ $.Name }}) error,
+        postCountFunctions []func(context.Context, *Client, int) error,
+    ) *{{ $repository }} {
+        return &{{ $repository }}{
+            client: client,
+            preReadFunctions: preReadFunctions,
+            postReadFunctions: postReadFunctions,
+            postCountFunctions: postCountFunctions,
         }
+    }
 
-        func New{{ $repository }}(
-            client *Client,
-            preReadFunctions []func(context.Context, *Client, *{{ $n.QueryName }}) error,
-            postReadFunctions []func(context.Context, *Client, *[]*{{ $n.Name }}) error,
-            postCountFunctions []func(context.Context, *Client, int) error,
-        ) *{{ $repository }} {
-            return &{{ $repository }}{
-                client: client,
-                preReadFunctions: preReadFunctions,
-                postReadFunctions: postReadFunctions,
-                postCountFunctions: postCountFunctions,
-            }
+    func (r *{{ $repository }}) runPreRead(ctx context.Context, client *Client, q *{{ $.QueryName }}) error {
+      for _, function := range r.preReadFunctions {
+        err := function(ctx, client, q)
+        if err != nil {
+          return err
         }
+      }
+      return nil
+    }
 
-        func (r *{{ $repository }}) runPreRead(ctx context.Context, client *Client, q *{{ $n.QueryName }}) error {
-          for _, function := range r.preReadFunctions {
-            err := function(ctx, client, q)
-            if err != nil {
-              return err
-            }
-          }
-          return nil
+    func (r *{{ $repository }}) runPostRead(ctx context.Context, client *Client, instances *[]*{{ $.Name }}) error {
+      for _, function := range r.postReadFunctions {
+        err := function(ctx, client, instances)
+        if err != nil {
+          return err
         }
+      }
+      return nil
+    }
 
-        func (r *{{ $repository }}) runPostRead(ctx context.Context, client *Client, instances *[]*{{ $n.Name }}) error {
-          for _, function := range r.postReadFunctions {
-            err := function(ctx, client, instances)
-            if err != nil {
-              return err
-            }
-          }
-          return nil
+    func (r *{{ $repository }}) runPostCount(ctx context.Context, client *Client, count int) error {
+      for _, function := range r.postCountFunctions {
+        err := function(ctx, client, count)
+        if err != nil {
+          return err
         }
+      }
+      return nil
+    }
 
-        func (r *{{ $repository }}) runPostCount(ctx context.Context, client *Client, count int) error {
-          for _, function := range r.postCountFunctions {
-            err := function(ctx, client, count)
-            if err != nil {
-              return err
-            }
-          }
-          return nil
+    func (r *{{ $repository }}) prepareQuery(
+        client *Client, limit *int, offset *int, o *{{ $orderInput }}, w *{{ $whereInput }},
+    ) (*{{ $.QueryName }}, error) {
+        var err error
+        q := r.client.{{ $.Name }}.Query()
+        if limit != nil {
+            q = q.Limit(*limit)
         }
-
-        func (r *{{ $repository }}) prepareQuery(
-            client *Client, limit *int, offset *int, o *{{ $orderInput }}, w *{{ $whereInput }},
-        ) (*{{ $n.QueryName }}, error) {
-            var err error
-            q := r.client.{{ $n.Name }}.Query()
-            if limit != nil {
-                q = q.Limit(*limit)
-            }
-            if offset != nil {
-                q = q.Offset(*offset)
-            }
-            if o != nil {
-                q = o.Order(q)
-            }
-            if w != nil {
-                q, err = w.Filter(q)
-                if err != nil {
-                    return nil, err
-                }
-            }
-            return q, nil
+        if offset != nil {
+            q = q.Offset(*offset)
         }
-
-        // using in Tx
-        func (r *{{ $repository }}) GetWithClient(
-            ctx context.Context, client *Client, w *{{ $whereInput }}, forUpdate bool,
-        ) (*{{ $n.Name }}, error) {
-            q, err := r.prepareQuery(client, nil, nil, nil, w)
+        if o != nil {
+            q = o.Order(q)
+        }
+        if w != nil {
+            q, err = w.Filter(q)
             if err != nil {
                 return nil, err
             }
-            err = r.runPreRead(ctx, client, q)
-            if err != nil {
-                return nil, err
-            }
-            if forUpdate {
-                q = q.ForUpdate()
-            }
-            instance, err := q.Only(ctx)
-            if err != nil {
-                return nil, err
-            }
-            instances := []*{{ $n.Name }}{instance}
-            err = r.runPostRead(ctx, client, &instances)
-            if err != nil {
-                return nil, err
-            }
-            if len(instances) != 1 {
-                return nil, fmt.Errorf("{{ $repository }}- Get - r.runPreRead: Object not found")
-            }
-            return instances[0], nil
         }
+        return q, nil
+    }
 
-        // using in Tx
-        func (r *{{ $repository }}) ListWithClient(
-            ctx context.Context, client *Client, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }}, forUpdate bool,
-        ) ([]*{{ $n.Name }}, error) {
-            q, err := r.prepareQuery(client, &limit, &offset, o, w)
-            if err != nil {
-                return nil, err
-            }
-            err = r.runPreRead(ctx, client, q)
-            if err != nil {
-                return nil, err
-            }
-            if forUpdate {
-                q = q.ForUpdate()
-            }
-            instances, err := q.All(ctx)
-            if err != nil {
-                return nil, err
-            }
-            err = r.runPostRead(ctx, client, &instances)
-            if err != nil {
-                return nil, err
-            }
-            return instances, nil
+    // using in Tx
+    func (r *{{ $repository }}) GetWithClient(
+        ctx context.Context, client *Client, w *{{ $whereInput }}, forUpdate bool,
+    ) (*{{ $.Name }}, error) {
+        q, err := r.prepareQuery(client, nil, nil, nil, w)
+        if err != nil {
+            return nil, err
         }
+        err = r.runPreRead(ctx, client, q)
+        if err != nil {
+            return nil, err
+        }
+        if forUpdate {
+            q = q.ForUpdate()
+        }
+        instance, err := q.Only(ctx)
+        if err != nil {
+            return nil, err
+        }
+        instances := []*{{ $.Name }}{instance}
+        err = r.runPostRead(ctx, client, &instances)
+        if err != nil {
+            return nil, err
+        }
+        if len(instances) != 1 {
+            return nil, fmt.Errorf("{{ $repository }}- Get - r.runPreRead: Object not found")
+        }
+        return instances[0], nil
+    }
 
-        func (r *{{ $repository }}) Count(ctx context.Context, w *{{ $whereInput }}) (int, error) { 
-            q, err := r.prepareQuery(r.client, nil, nil, nil, w)
-            if err != nil {
-                return 0, err
-            }
-            err = r.runPreRead(ctx, r.client, q)
-            if err != nil {
-                return 0, err
-            }
-            count, err := q.Count(ctx)
-            if err != nil {
-                return 0, err
-            }
-            err = r.runPostCount(ctx, r.client, count)
-            if err != nil {
-                return 0, err
-            }
-            return count, nil
+    // using in Tx
+    func (r *{{ $repository }}) ListWithClient(
+        ctx context.Context, client *Client, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }}, forUpdate bool,
+    ) ([]*{{ $.Name }}, error) {
+        q, err := r.prepareQuery(client, &limit, &offset, o, w)
+        if err != nil {
+            return nil, err
         }
+        err = r.runPreRead(ctx, client, q)
+        if err != nil {
+            return nil, err
+        }
+        if forUpdate {
+            q = q.ForUpdate()
+        }
+        instances, err := q.All(ctx)
+        if err != nil {
+            return nil, err
+        }
+        err = r.runPostRead(ctx, client, &instances)
+        if err != nil {
+            return nil, err
+        }
+        return instances, nil
+    }
 
-        func (r *{{ $repository }}) Get(ctx context.Context, w *{{ $whereInput }}) (*{{ $n.Name }}, error) {
-            return r.GetWithClient(ctx, r.client, w, false)
+    func (r *{{ $repository }}) Count(ctx context.Context, w *{{ $whereInput }}) (int, error) { 
+        q, err := r.prepareQuery(r.client, nil, nil, nil, w)
+        if err != nil {
+            return 0, err
         }
+        err = r.runPreRead(ctx, r.client, q)
+        if err != nil {
+            return 0, err
+        }
+        count, err := q.Count(ctx)
+        if err != nil {
+            return 0, err
+        }
+        err = r.runPostCount(ctx, r.client, count)
+        if err != nil {
+            return 0, err
+        }
+        return count, nil
+    }
 
-        func (r *{{ $repository }}) List(
-            ctx context.Context, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }},
-        ) ([]*{{ $n.Name }}, error) {
-            return r.ListWithClient(ctx, r.client, limit, offset, o, w, false)
-        }
-    {{- end }}
+    func (r *{{ $repository }}) Get(ctx context.Context, w *{{ $whereInput }}) (*{{ $.Name }}, error) {
+        return r.GetWithClient(ctx, r.client, w, false)
+    }
+
+    func (r *{{ $repository }}) List(
+        ctx context.Context, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }},
+    ) ([]*{{ $.Name }}, error) {
+        return r.ListWithClient(ctx, r.client, limit, offset, o, w, false)
+    }
 {{ end }}
 

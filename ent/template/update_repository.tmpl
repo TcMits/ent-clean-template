@@ -1,101 +1,90 @@
-{{ define "update_repository" }}
-    {{- /*gotype: entgo.io/ent/entc/gen.Graph*/ -}}
+{{ define "model/additional/update_repository" }}
+    {{ $repository := print $.Name "UpdateRepository" }}
+    {{ $updateInput := print $.Name "UpdateInput" }}
+    type {{ $repository }} struct {
+        client *Client
+        preUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $updateInput }}) error
+        postUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $.Name }}) error
+        isAtomic bool
+    }
 
-    {{ $pkg := base $.Config.Package }}
-    {{- with extend $ "Package" $pkg }}
-        {{ template "header" . }}
-    {{- end }}
-
-    {{ template "import" $ }}
-
-    {{- range $n := $.Nodes }}
-        {{ $repository := print $n.Name "UpdateRepository" }}
-        {{ $updateInput := print $n.Name "UpdateInput" }}
-        type {{ $repository }} struct {
-            client *Client
-            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error
-            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error
-            isAtomic bool
+    func New{{ $repository }}(
+        client *Client,
+        preUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $updateInput }}) error,
+        postUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $.Name }}) error,
+        isAtomic bool,
+    ) *{{ $repository }} {
+        return &{{ $repository }}{
+            client: client,
+            preUpdateFunctions: preUpdateFunctions,
+            postUpdateFunctions: postUpdateFunctions,
+            isAtomic: isAtomic,
         }
+    }
 
-        func New{{ $repository }}(
-            client *Client,
-            preUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $updateInput }}) error,
-            postUpdateFunctions []func(context.Context, *Client, *{{ $n.Name }}, *{{ $n.Name }}) error,
-            isAtomic bool,
-        ) *{{ $repository }} {
-            return &{{ $repository }}{
-                client: client,
-                preUpdateFunctions: preUpdateFunctions,
-                postUpdateFunctions: postUpdateFunctions,
-                isAtomic: isAtomic,
-            }
+    func (r *{{ $repository }}) runPreUpdate(
+        ctx context.Context, client *Client, instance *{{ $.Name }}, i *{{ $updateInput }},
+    ) error {
+        for _, function := range r.preUpdateFunctions {
+          err := function(ctx, client, instance, i)
+          if err != nil {
+            return err
+          }
         }
+        return nil
+    }
 
-        func (r *{{ $repository }}) runPreUpdate(
-            ctx context.Context, client *Client, instance *{{ $n.Name }}, i *{{ $updateInput }},
-        ) error {
-            for _, function := range r.preUpdateFunctions {
-              err := function(ctx, client, instance, i)
-              if err != nil {
-                return err
-              }
-            }
-            return nil
+    func (r *{{ $repository }}) runPostUpdate(
+        ctx context.Context, client *Client, oldInstance *{{ $.Name }}, newInstance *{{ $.Name }},
+    ) error {
+        for _, function := range r.postUpdateFunctions {
+          err := function(ctx, client, oldInstance, newInstance)
+          if err != nil {
+            return err
+          }
         }
+        return nil
+    }
 
-        func (r *{{ $repository }}) runPostUpdate(
-            ctx context.Context, client *Client, oldInstance *{{ $n.Name }}, newInstance *{{ $n.Name }},
-        ) error {
-            for _, function := range r.postUpdateFunctions {
-              err := function(ctx, client, oldInstance, newInstance)
-              if err != nil {
-                return err
-              }
-            }
-            return nil
+    // using in Tx
+    func (r *{{ $repository }}) UpdateWithClient(
+        ctx context.Context, client *Client, instance *{{ $.Name }}, input *{{ $updateInput }},
+    ) (*{{ $.Name }}, error) {
+        err := r.runPreUpdate(ctx, client, instance, input)
+        if err != nil {
+          return nil, err
         }
+        newInstance, err := client.{{ $.Name }}.UpdateOne(instance).SetInput(input).Save(ctx)
+        if err != nil {
+          return nil, err
+        }
+        err = r.runPostUpdate(ctx, client, instance, newInstance)
+        if err != nil {
+          return nil, err
+        }
+        return newInstance, nil
+    }
 
-        // using in Tx
-        func (r *{{ $repository }}) UpdateWithClient(
-            ctx context.Context, client *Client, instance *{{ $n.Name }}, input *{{ $updateInput }},
-        ) (*{{ $n.Name }}, error) {
-            err := r.runPreUpdate(ctx, client, instance, input)
-            if err != nil {
-              return nil, err
-            }
-            newInstance, err := client.{{ $n.Name }}.UpdateOne(instance).SetInput(input).Save(ctx)
-            if err != nil {
-              return nil, err
-            }
-            err = r.runPostUpdate(ctx, client, instance, newInstance)
-            if err != nil {
-              return nil, err
-            }
-            return newInstance, nil
+    func (r *{{ $repository }}) Update(
+        ctx context.Context, instance *{{ $.Name }}, input *{{ $updateInput }},
+    ) (*{{ $.Name }}, error) {
+        if !r.isAtomic {
+            return r.UpdateWithClient(ctx, r.client, instance, input)
         }
- 
-        func (r *{{ $repository }}) Update(
-            ctx context.Context, instance *{{ $n.Name }}, input *{{ $updateInput }},
-        ) (*{{ $n.Name }}, error) {
-            if !r.isAtomic {
-                return r.UpdateWithClient(ctx, r.client, instance, input)
-            }
-            tx, err := r.client.Tx(ctx)
-            if err != nil {
-                return nil, err
-            }
-            instance, err = r.UpdateWithClient(ctx, tx.Client(), instance, input)
-            if err != nil {
-                if rerr := tx.Rollback(); rerr != nil {
-                    err = fmt.Errorf("rolling back transaction: %w", rerr)
-                }
-                return nil, err
-            }
-            if err := tx.Commit(); err != nil {
-                return nil, fmt.Errorf("committing transaction: %w", err) 
-            }
-            return instance, nil
+        tx, err := r.client.Tx(ctx)
+        if err != nil {
+            return nil, err
         }
-    {{- end }}
+        instance, err = r.UpdateWithClient(ctx, tx.Client(), instance, input)
+        if err != nil {
+            if rerr := tx.Rollback(); rerr != nil {
+                err = fmt.Errorf("rolling back transaction: %w", rerr)
+            }
+            return nil, err
+        }
+        if err := tx.Commit(); err != nil {
+            return nil, fmt.Errorf("committing transaction: %w", err) 
+        }
+        return instance, nil
+    }
 {{ end }}

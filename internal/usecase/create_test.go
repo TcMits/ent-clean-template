@@ -237,7 +237,6 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 		validateFunc        CreateWithFileValidateFunc[*struct{}, *struct{}]
 		writeFileTimeout    time.Duration
 		l                   logger.Interface
-		basePath            string
 	}
 	type args struct {
 		ctx   context.Context
@@ -296,7 +295,7 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 				createUseCase:       createModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff CreateExistFunc) (*struct{}, []*CreateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*CreateFile, error) {
 					return new(struct{}), append(
 						[]*CreateFile{},
 						&CreateFile{Filename: "test.txt", Size: size, Reader: r},
@@ -304,7 +303,6 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 				},
 				writeFileTimeout: 15 * time.Minute,
 				l:                testutils.NullLogger{},
-				basePath:         "hello-world",
 			},
 			args: args{
 				ctx:   ctx,
@@ -318,7 +316,7 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 				createUseCase:       createModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff CreateExistFunc) (*struct{}, []*CreateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*CreateFile, error) {
 					return nil, nil, errors.New("")
 				},
 				writeFileTimeout: 15 * time.Minute,
@@ -336,7 +334,7 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 				createUseCase:       createModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff CreateExistFunc) (*struct{}, []*CreateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*CreateFile, error) {
 					return nil, append(
 						[]*CreateFile{},
 						&CreateFile{Filename: "test.txt", Size: size, Reader: r},
@@ -357,7 +355,7 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 				createUseCase:       createModelUseCase,
 				existFileRepository: existFileRepository,
 				writeFileRepository: writeFileRepository,
-				validateFunc: func(ctx context.Context, s *struct{}, eff CreateExistFunc) (*struct{}, []*CreateFile, error) {
+				validateFunc: func(ctx context.Context, s *struct{}) (*struct{}, []*CreateFile, error) {
 					return new(struct{}), append(
 						[]*CreateFile{},
 						&CreateFile{Filename: "test2.txt", Size: size, Reader: r},

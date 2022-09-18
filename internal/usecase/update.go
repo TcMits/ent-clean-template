@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
 	"time"
 
 	"github.com/TcMits/ent-clean-template/ent"
@@ -49,8 +48,7 @@ type UpdateFile struct {
 
 type UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType) (RepoUpdateInputType, error)
 type UpdateInTransactionValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType, *ent.Client) (RepoUpdateInputType, error)
-type UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType any] func(context.Context, UpdateInputType, UpdateExistFunc) (UseCaseUpdateInputType, []*UpdateFile, error)
-type UpdateExistFunc func(context.Context, string) (bool, error)
+type UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType any] func(context.Context, UpdateInputType) (UseCaseUpdateInputType, []*UpdateFile, error)
 
 type updateModelUseCase[ModelType, WhereInputType, UpdateInputType, RepoWhereInputType, RepoUpdateInputType any] struct {
 	repository           repository.UpdateModelRepository[ModelType, RepoUpdateInputType]
@@ -79,7 +77,6 @@ type getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType
 	validateFunc        UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType]
 	writeFileTimeout    time.Duration
 	l                   logger.Interface
-	basePath            string
 }
 
 func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) GetAndUpdate(
@@ -162,7 +159,7 @@ func (u *updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputT
 func (u *getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType, _]) GetAndUpdate(
 	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
 ) (ModelType, error) {
-	useCaseUpdateInput, files, err := u.validateFunc(ctx, updateInput, u.existFileRepository.Exist)
+	useCaseUpdateInput, files, err := u.validateFunc(ctx, updateInput)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -178,7 +175,7 @@ func (u *getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInput
 			defer cancelFileCtx()
 			for _, file := range files {
 				n, fileErr := u.writeFileRepository.Write(
-					fileCtx, path.Join(u.basePath, file.Filename), file.Reader, file.Size,
+					fileCtx, file.Filename, file.Reader, file.Size,
 				)
 				if fileErr != nil {
 					u.l.Error(fileErr)

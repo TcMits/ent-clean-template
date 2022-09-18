@@ -3,11 +3,14 @@
 package ent
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/TcMits/ent-clean-template/ent/predicate"
 	"github.com/TcMits/ent-clean-template/ent/user"
 	"github.com/google/uuid"
 )
@@ -201,6 +204,1135 @@ func (u *User) String() string {
 	builder.WriteString(fmt.Sprintf("%v", u.IsActive))
 	builder.WriteByte(')')
 	return builder.String()
+}
+
+type UserCreateRepository struct {
+	client              *Client
+	preCreateFunctions  []func(context.Context, *Client, *UserCreateInput) error
+	postCreateFunctions []func(context.Context, *Client, *User) error
+	isAtomic            bool
+}
+
+func NewUserCreateRepository(
+	client *Client,
+	preCreateFunctions []func(context.Context, *Client, *UserCreateInput) error,
+	postCreateFunctions []func(context.Context, *Client, *User) error,
+	isAtomic bool,
+) *UserCreateRepository {
+	return &UserCreateRepository{
+		client:              client,
+		preCreateFunctions:  preCreateFunctions,
+		postCreateFunctions: postCreateFunctions,
+		isAtomic:            isAtomic,
+	}
+}
+
+func (r *UserCreateRepository) runPreCreate(ctx context.Context, client *Client, i *UserCreateInput) error {
+	for _, function := range r.preCreateFunctions {
+		err := function(ctx, client, i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserCreateRepository) runPostCreate(ctx context.Context, client *Client, instance *User) error {
+	for _, function := range r.postCreateFunctions {
+		err := function(ctx, client, instance)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// using in Tx
+func (r *UserCreateRepository) CreateWithClient(
+	ctx context.Context, client *Client, input *UserCreateInput,
+) (*User, error) {
+	err := r.runPreCreate(ctx, client, input)
+	if err != nil {
+		return nil, err
+	}
+	instance, err := client.User.Create().SetInput(input).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPostCreate(ctx, client, instance)
+	if err != nil {
+		return nil, err
+	}
+	return instance, nil
+}
+
+func (r *UserCreateRepository) Create(
+	ctx context.Context, input *UserCreateInput,
+) (*User, error) {
+	if !r.isAtomic {
+		return r.CreateWithClient(ctx, r.client, input)
+	}
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	instance, err := r.CreateWithClient(ctx, tx.Client(), input)
+	if err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("rolling back transaction: %w", rerr)
+		}
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("committing transaction: %w", err)
+	}
+	return instance, nil
+}
+
+type UserDeleteRepository struct {
+	client              *Client
+	preDeleteFunctions  []func(context.Context, *Client, *User) error
+	postDeleteFunctions []func(context.Context, *Client, *User) error
+	isAtomic            bool
+}
+
+func NewUserDeleteRepository(
+	client *Client,
+	preDeleteFunctions []func(context.Context, *Client, *User) error,
+	postDeleteFunctions []func(context.Context, *Client, *User) error,
+	isAtomic bool,
+) *UserDeleteRepository {
+	return &UserDeleteRepository{
+		client:              client,
+		preDeleteFunctions:  preDeleteFunctions,
+		postDeleteFunctions: postDeleteFunctions,
+		isAtomic:            isAtomic,
+	}
+}
+
+func (r *UserDeleteRepository) runPostDelete(
+	ctx context.Context, client *Client, instance *User,
+) error {
+	for _, function := range r.postDeleteFunctions {
+		err := function(ctx, client, instance)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserDeleteRepository) runPreDelete(
+	ctx context.Context, client *Client, instance *User,
+) error {
+	for _, function := range r.preDeleteFunctions {
+		err := function(ctx, client, instance)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// using in Tx
+func (r *UserDeleteRepository) DeleteWithClient(
+	ctx context.Context, client *Client, instance *User,
+) error {
+	err := r.runPreDelete(ctx, client, instance)
+	if err != nil {
+		return err
+	}
+	err = client.User.DeleteOne(instance).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	err = r.runPostDelete(ctx, client, instance)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserDeleteRepository) Delete(
+	ctx context.Context, instance *User,
+) error {
+	if !r.isAtomic {
+		return r.DeleteWithClient(ctx, r.client, instance)
+	}
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	err = r.DeleteWithClient(ctx, tx.Client(), instance)
+	if err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("rolling back transaction: %w", rerr)
+		}
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+	return nil
+}
+
+// UserCreateInput represents a mutation input for creating users.
+type UserCreateInput struct {
+	CreateTime  *time.Time `json:"create_time,omitempty" form:"create_time"`
+	UpdateTime  *time.Time `json:"update_time,omitempty" form:"update_time"`
+	JwtTokenKey *string    `json:"jwt_token_key,omitempty" form:"jwt_token_key"`
+	Password    *string    `json:"password,omitempty" form:"password"`
+	Username    string     `json:"username,omitempty" form:"username"`
+	FirstName   *string    `json:"first_name,omitempty" form:"first_name"`
+	LastName    *string    `json:"last_name,omitempty" form:"last_name"`
+	Email       string     `json:"email,omitempty" form:"email"`
+	IsStaff     *bool      `json:"is_staff,omitempty" form:"is_staff"`
+	IsSuperuser *bool      `json:"is_superuser,omitempty" form:"is_superuser"`
+	IsActive    *bool      `json:"is_active,omitempty" form:"is_active"`
+}
+
+// Mutate applies the UserCreateInput on the UserCreate builder.
+func (i *UserCreateInput) Mutate(m *UserMutation) {
+	if v := i.CreateTime; v != nil {
+		m.SetCreateTime(*v)
+	}
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	if v := i.JwtTokenKey; v != nil {
+		m.SetJwtTokenKey(*v)
+	}
+	if v := i.Password; v != nil {
+		m.SetPassword(*v)
+	}
+	m.SetUsername(i.Username)
+	if v := i.FirstName; v != nil {
+		m.SetFirstName(*v)
+	}
+	if v := i.LastName; v != nil {
+		m.SetLastName(*v)
+	}
+	m.SetEmail(i.Email)
+	if v := i.IsStaff; v != nil {
+		m.SetIsStaff(*v)
+	}
+	if v := i.IsSuperuser; v != nil {
+		m.SetIsSuperuser(*v)
+	}
+	if v := i.IsActive; v != nil {
+		m.SetIsActive(*v)
+	}
+}
+
+// SetInput applies the change-set in the UserCreateInput on the create builder.
+func (c *UserCreate) SetInput(i *UserCreateInput) *UserCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// UserUpdateInput represents a mutation input for updating users.
+type UserUpdateInput struct {
+	ID               uuid.UUID
+	UpdateTime       *time.Time `json:"update_time,omitempty" form:"update_time"`
+	JwtTokenKey      *string    `json:"jwt_token_key,omitempty" form:"jwt_token_key"`
+	ClearJwtTokenKey bool
+	Password         *string `json:"password,omitempty" form:"password"`
+	ClearPassword    bool
+	Username         *string `json:"username,omitempty" form:"username"`
+	FirstName        *string `json:"first_name,omitempty" form:"first_name"`
+	ClearFirstName   bool
+	LastName         *string `json:"last_name,omitempty" form:"last_name"`
+	ClearLastName    bool
+	Email            *string `json:"email,omitempty" form:"email"`
+	IsStaff          *bool   `json:"is_staff,omitempty" form:"is_staff"`
+	ClearIsStaff     bool
+	IsSuperuser      *bool `json:"is_superuser,omitempty" form:"is_superuser"`
+	ClearIsSuperuser bool
+	IsActive         *bool `json:"is_active,omitempty" form:"is_active"`
+	ClearIsActive    bool
+}
+
+// Mutate applies the UserUpdateInput on the UserMutation.
+func (i *UserUpdateInput) Mutate(m *UserMutation) {
+	if v := i.UpdateTime; v != nil {
+		m.SetUpdateTime(*v)
+	}
+	if i.ClearJwtTokenKey {
+		m.ClearJwtTokenKey()
+	}
+	if v := i.JwtTokenKey; v != nil {
+		m.SetJwtTokenKey(*v)
+	}
+	if i.ClearPassword {
+		m.ClearPassword()
+	}
+	if v := i.Password; v != nil {
+		m.SetPassword(*v)
+	}
+	if v := i.Username; v != nil {
+		m.SetUsername(*v)
+	}
+	if i.ClearFirstName {
+		m.ClearFirstName()
+	}
+	if v := i.FirstName; v != nil {
+		m.SetFirstName(*v)
+	}
+	if i.ClearLastName {
+		m.ClearLastName()
+	}
+	if v := i.LastName; v != nil {
+		m.SetLastName(*v)
+	}
+	if v := i.Email; v != nil {
+		m.SetEmail(*v)
+	}
+	if i.ClearIsStaff {
+		m.ClearIsStaff()
+	}
+	if v := i.IsStaff; v != nil {
+		m.SetIsStaff(*v)
+	}
+	if i.ClearIsSuperuser {
+		m.ClearIsSuperuser()
+	}
+	if v := i.IsSuperuser; v != nil {
+		m.SetIsSuperuser(*v)
+	}
+	if i.ClearIsActive {
+		m.ClearIsActive()
+	}
+	if v := i.IsActive; v != nil {
+		m.SetIsActive(*v)
+	}
+}
+
+// SetInput applies the change-set in the UserUpdateInput on the update builder.
+func (u *UserUpdate) SetInput(i *UserUpdateInput) *UserUpdate {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+// SetInput applies the change-set in the UserUpdateInput on the update-one builder.
+func (u *UserUpdateOne) SetInput(i *UserUpdateInput) *UserUpdateOne {
+	i.Mutate(u.Mutation())
+	return u
+}
+
+type UserReadRepository struct {
+	client             *Client
+	preReadFunctions   []func(context.Context, *Client, *UserQuery) error
+	postReadFunctions  []func(context.Context, *Client, *[]*User) error
+	postCountFunctions []func(context.Context, *Client, int) error
+}
+
+func NewUserReadRepository(
+	client *Client,
+	preReadFunctions []func(context.Context, *Client, *UserQuery) error,
+	postReadFunctions []func(context.Context, *Client, *[]*User) error,
+	postCountFunctions []func(context.Context, *Client, int) error,
+) *UserReadRepository {
+	return &UserReadRepository{
+		client:             client,
+		preReadFunctions:   preReadFunctions,
+		postReadFunctions:  postReadFunctions,
+		postCountFunctions: postCountFunctions,
+	}
+}
+
+func (r *UserReadRepository) runPreRead(ctx context.Context, client *Client, q *UserQuery) error {
+	for _, function := range r.preReadFunctions {
+		err := function(ctx, client, q)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserReadRepository) runPostRead(ctx context.Context, client *Client, instances *[]*User) error {
+	for _, function := range r.postReadFunctions {
+		err := function(ctx, client, instances)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserReadRepository) runPostCount(ctx context.Context, client *Client, count int) error {
+	for _, function := range r.postCountFunctions {
+		err := function(ctx, client, count)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserReadRepository) prepareQuery(
+	client *Client, limit *int, offset *int, o *UserOrderInput, w *UserWhereInput,
+) (*UserQuery, error) {
+	var err error
+	q := r.client.User.Query()
+	if limit != nil {
+		q = q.Limit(*limit)
+	}
+	if offset != nil {
+		q = q.Offset(*offset)
+	}
+	if o != nil {
+		q = o.Order(q)
+	}
+	if w != nil {
+		q, err = w.Filter(q)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return q, nil
+}
+
+// using in Tx
+func (r *UserReadRepository) GetWithClient(
+	ctx context.Context, client *Client, w *UserWhereInput, forUpdate bool,
+) (*User, error) {
+	q, err := r.prepareQuery(client, nil, nil, nil, w)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPreRead(ctx, client, q)
+	if err != nil {
+		return nil, err
+	}
+	if forUpdate {
+		q = q.ForUpdate()
+	}
+	instance, err := q.Only(ctx)
+	if err != nil {
+		return nil, err
+	}
+	instances := []*User{instance}
+	err = r.runPostRead(ctx, client, &instances)
+	if err != nil {
+		return nil, err
+	}
+	if len(instances) != 1 {
+		return nil, fmt.Errorf("UserReadRepository- Get - r.runPreRead: Object not found")
+	}
+	return instances[0], nil
+}
+
+// using in Tx
+func (r *UserReadRepository) ListWithClient(
+	ctx context.Context, client *Client, limit int, offset int, o *UserOrderInput, w *UserWhereInput, forUpdate bool,
+) ([]*User, error) {
+	q, err := r.prepareQuery(client, &limit, &offset, o, w)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPreRead(ctx, client, q)
+	if err != nil {
+		return nil, err
+	}
+	if forUpdate {
+		q = q.ForUpdate()
+	}
+	instances, err := q.All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPostRead(ctx, client, &instances)
+	if err != nil {
+		return nil, err
+	}
+	return instances, nil
+}
+
+func (r *UserReadRepository) Count(ctx context.Context, w *UserWhereInput) (int, error) {
+	q, err := r.prepareQuery(r.client, nil, nil, nil, w)
+	if err != nil {
+		return 0, err
+	}
+	err = r.runPreRead(ctx, r.client, q)
+	if err != nil {
+		return 0, err
+	}
+	count, err := q.Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	err = r.runPostCount(ctx, r.client, count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *UserReadRepository) Get(ctx context.Context, w *UserWhereInput) (*User, error) {
+	return r.GetWithClient(ctx, r.client, w, false)
+}
+
+func (r *UserReadRepository) List(
+	ctx context.Context, limit int, offset int, o *UserOrderInput, w *UserWhereInput,
+) ([]*User, error) {
+	return r.ListWithClient(ctx, r.client, limit, offset, o, w, false)
+}
+
+type UserSerializer struct {
+	columns map[string]func(context.Context, *User) any
+}
+
+func NewUserSerializer(customColumns map[string]func(context.Context, *User) any, columns ...string) *UserSerializer {
+	columnsMap := map[string]func(context.Context, *User) any{}
+	for _, col := range columns {
+		switch col {
+
+		case user.FieldID:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.ID
+			}
+
+		case user.FieldCreateTime:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.CreateTime
+			}
+
+		case user.FieldUpdateTime:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.UpdateTime
+			}
+
+		case user.FieldJwtTokenKey:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.JwtTokenKey
+			}
+
+		case user.FieldPassword:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.Password
+			}
+
+		case user.FieldUsername:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.Username
+			}
+
+		case user.FieldFirstName:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.FirstName
+			}
+
+		case user.FieldLastName:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.LastName
+			}
+
+		case user.FieldEmail:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.Email
+			}
+
+		case user.FieldIsStaff:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.IsStaff
+			}
+
+		case user.FieldIsSuperuser:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.IsSuperuser
+			}
+
+		case user.FieldIsActive:
+			columnsMap[col] = func(ctx context.Context, u *User) any {
+				return u.IsActive
+			}
+
+		default:
+			panic(fmt.Sprintf("Unexpect column %s", col))
+		}
+	}
+
+	for k, serializeFunc := range customColumns {
+		columnsMap[k] = serializeFunc
+	}
+
+	return &UserSerializer{
+		columns: columnsMap,
+	}
+}
+
+func (s *UserSerializer) Serialize(ctx context.Context, u *User) map[string]any {
+	result := map[string]any{}
+	for col, serializeFunc := range s.columns {
+		result[col] = serializeFunc(ctx, u)
+	}
+	return result
+}
+
+type UserUpdateRepository struct {
+	client              *Client
+	preUpdateFunctions  []func(context.Context, *Client, *User, *UserUpdateInput) error
+	postUpdateFunctions []func(context.Context, *Client, *User, *User) error
+	isAtomic            bool
+}
+
+func NewUserUpdateRepository(
+	client *Client,
+	preUpdateFunctions []func(context.Context, *Client, *User, *UserUpdateInput) error,
+	postUpdateFunctions []func(context.Context, *Client, *User, *User) error,
+	isAtomic bool,
+) *UserUpdateRepository {
+	return &UserUpdateRepository{
+		client:              client,
+		preUpdateFunctions:  preUpdateFunctions,
+		postUpdateFunctions: postUpdateFunctions,
+		isAtomic:            isAtomic,
+	}
+}
+
+func (r *UserUpdateRepository) runPreUpdate(
+	ctx context.Context, client *Client, instance *User, i *UserUpdateInput,
+) error {
+	for _, function := range r.preUpdateFunctions {
+		err := function(ctx, client, instance, i)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *UserUpdateRepository) runPostUpdate(
+	ctx context.Context, client *Client, oldInstance *User, newInstance *User,
+) error {
+	for _, function := range r.postUpdateFunctions {
+		err := function(ctx, client, oldInstance, newInstance)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// using in Tx
+func (r *UserUpdateRepository) UpdateWithClient(
+	ctx context.Context, client *Client, instance *User, input *UserUpdateInput,
+) (*User, error) {
+	err := r.runPreUpdate(ctx, client, instance, input)
+	if err != nil {
+		return nil, err
+	}
+	newInstance, err := client.User.UpdateOne(instance).SetInput(input).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	err = r.runPostUpdate(ctx, client, instance, newInstance)
+	if err != nil {
+		return nil, err
+	}
+	return newInstance, nil
+}
+
+func (r *UserUpdateRepository) Update(
+	ctx context.Context, instance *User, input *UserUpdateInput,
+) (*User, error) {
+	if !r.isAtomic {
+		return r.UpdateWithClient(ctx, r.client, instance, input)
+	}
+	tx, err := r.client.Tx(ctx)
+	if err != nil {
+		return nil, err
+	}
+	instance, err = r.UpdateWithClient(ctx, tx.Client(), instance, input)
+	if err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = fmt.Errorf("rolling back transaction: %w", rerr)
+		}
+		return nil, err
+	}
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("committing transaction: %w", err)
+	}
+	return instance, nil
+}
+
+// UserWhereInput represents a where input for filtering User queries.
+type UserWhereInput struct {
+	Predicates []predicate.User  `json:"-"`
+	Not        *UserWhereInput   `json:"not,omitempty"`
+	Or         []*UserWhereInput `json:"or,omitempty"`
+	And        []*UserWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *uuid.UUID  `json:"id,omitempty" form:"id" param:"id" url:"id"`
+	IDNEQ   *uuid.UUID  `json:"id_neq,omitempty" form:"id_neq" param:"id_neq" url:"id_neq"`
+	IDIn    []uuid.UUID `json:"id_in,omitempty" form:"id_in" param:"id_in" url:"id_in"`
+	IDNotIn []uuid.UUID `json:"id_not_in,omitempty" form:"id_not_in" param:"id_not_in" url:"id_not_in"`
+	IDGT    *uuid.UUID  `json:"id_gt,omitempty" form:"id_gt" param:"id_gt" url:"id_gt"`
+	IDGTE   *uuid.UUID  `json:"id_gte,omitempty" form:"id_gte" param:"id_gte" url:"id_gte"`
+	IDLT    *uuid.UUID  `json:"id_lt,omitempty" form:"id_lt" param:"id_lt" url:"id_lt"`
+	IDLTE   *uuid.UUID  `json:"id_lte,omitempty" form:"id_lte" param:"id_lte" url:"id_lte"`
+
+	// "create_time" field predicates.
+	CreateTime      *time.Time  `json:"create_time,omitempty" form:"create_time" param:"create_time" url:"create_time"`
+	CreateTimeNEQ   *time.Time  `json:"create_time_neq,omitempty" form:"create_time_neq" param:"create_time_neq" url:"create_time_neq"`
+	CreateTimeIn    []time.Time `json:"create_time_in,omitempty" form:"create_time_in" param:"create_time_in" url:"create_time_in"`
+	CreateTimeNotIn []time.Time `json:"create_time_not_in,omitempty" form:"create_time_not_in" param:"create_time_not_in" url:"create_time_not_in"`
+	CreateTimeGT    *time.Time  `json:"create_time_gt,omitempty" form:"create_time_gt" param:"create_time_gt" url:"create_time_gt"`
+	CreateTimeGTE   *time.Time  `json:"create_time_gte,omitempty" form:"create_time_gte" param:"create_time_gte" url:"create_time_gte"`
+	CreateTimeLT    *time.Time  `json:"create_time_lt,omitempty" form:"create_time_lt" param:"create_time_lt" url:"create_time_lt"`
+	CreateTimeLTE   *time.Time  `json:"create_time_lte,omitempty" form:"create_time_lte" param:"create_time_lte" url:"create_time_lte"`
+
+	// "update_time" field predicates.
+	UpdateTime      *time.Time  `json:"update_time,omitempty" form:"update_time" param:"update_time" url:"update_time"`
+	UpdateTimeNEQ   *time.Time  `json:"update_time_neq,omitempty" form:"update_time_neq" param:"update_time_neq" url:"update_time_neq"`
+	UpdateTimeIn    []time.Time `json:"update_time_in,omitempty" form:"update_time_in" param:"update_time_in" url:"update_time_in"`
+	UpdateTimeNotIn []time.Time `json:"update_time_not_in,omitempty" form:"update_time_not_in" param:"update_time_not_in" url:"update_time_not_in"`
+	UpdateTimeGT    *time.Time  `json:"update_time_gt,omitempty" form:"update_time_gt" param:"update_time_gt" url:"update_time_gt"`
+	UpdateTimeGTE   *time.Time  `json:"update_time_gte,omitempty" form:"update_time_gte" param:"update_time_gte" url:"update_time_gte"`
+	UpdateTimeLT    *time.Time  `json:"update_time_lt,omitempty" form:"update_time_lt" param:"update_time_lt" url:"update_time_lt"`
+	UpdateTimeLTE   *time.Time  `json:"update_time_lte,omitempty" form:"update_time_lte" param:"update_time_lte" url:"update_time_lte"`
+
+	// "username" field predicates.
+	Username             *string  `json:"username,omitempty" form:"username" param:"username" url:"username"`
+	UsernameNEQ          *string  `json:"username_neq,omitempty" form:"username_neq" param:"username_neq" url:"username_neq"`
+	UsernameIn           []string `json:"username_in,omitempty" form:"username_in" param:"username_in" url:"username_in"`
+	UsernameNotIn        []string `json:"username_not_in,omitempty" form:"username_not_in" param:"username_not_in" url:"username_not_in"`
+	UsernameGT           *string  `json:"username_gt,omitempty" form:"username_gt" param:"username_gt" url:"username_gt"`
+	UsernameGTE          *string  `json:"username_gte,omitempty" form:"username_gte" param:"username_gte" url:"username_gte"`
+	UsernameLT           *string  `json:"username_lt,omitempty" form:"username_lt" param:"username_lt" url:"username_lt"`
+	UsernameLTE          *string  `json:"username_lte,omitempty" form:"username_lte" param:"username_lte" url:"username_lte"`
+	UsernameContains     *string  `json:"username_contains,omitempty" form:"username_contains" param:"username_contains" url:"username_contains"`
+	UsernameHasPrefix    *string  `json:"username_has_prefix,omitempty" form:"username_has_prefix" param:"username_has_prefix" url:"username_has_prefix"`
+	UsernameHasSuffix    *string  `json:"username_has_suffix,omitempty" form:"username_has_suffix" param:"username_has_suffix" url:"username_has_suffix"`
+	UsernameEqualFold    *string  `json:"username_equal_fold,omitempty" form:"username_equal_fold" param:"username_equal_fold" url:"username_equal_fold"`
+	UsernameContainsFold *string  `json:"username_contains_fold,omitempty" form:"username_contains_fold" param:"username_contains_fold" url:"username_contains_fold"`
+
+	// "first_name" field predicates.
+	FirstName             *string  `json:"first_name,omitempty" form:"first_name" param:"first_name" url:"first_name"`
+	FirstNameNEQ          *string  `json:"first_name_neq,omitempty" form:"first_name_neq" param:"first_name_neq" url:"first_name_neq"`
+	FirstNameIn           []string `json:"first_name_in,omitempty" form:"first_name_in" param:"first_name_in" url:"first_name_in"`
+	FirstNameNotIn        []string `json:"first_name_not_in,omitempty" form:"first_name_not_in" param:"first_name_not_in" url:"first_name_not_in"`
+	FirstNameGT           *string  `json:"first_name_gt,omitempty" form:"first_name_gt" param:"first_name_gt" url:"first_name_gt"`
+	FirstNameGTE          *string  `json:"first_name_gte,omitempty" form:"first_name_gte" param:"first_name_gte" url:"first_name_gte"`
+	FirstNameLT           *string  `json:"first_name_lt,omitempty" form:"first_name_lt" param:"first_name_lt" url:"first_name_lt"`
+	FirstNameLTE          *string  `json:"first_name_lte,omitempty" form:"first_name_lte" param:"first_name_lte" url:"first_name_lte"`
+	FirstNameContains     *string  `json:"first_name_contains,omitempty" form:"first_name_contains" param:"first_name_contains" url:"first_name_contains"`
+	FirstNameHasPrefix    *string  `json:"first_name_has_prefix,omitempty" form:"first_name_has_prefix" param:"first_name_has_prefix" url:"first_name_has_prefix"`
+	FirstNameHasSuffix    *string  `json:"first_name_has_suffix,omitempty" form:"first_name_has_suffix" param:"first_name_has_suffix" url:"first_name_has_suffix"`
+	FirstNameIsNil        bool     `json:"first_name_is_nil,omitempty" form:"first_name_is_nil" param:"first_name_is_nil" url:"first_name_is_nil"`
+	FirstNameNotNil       bool     `json:"first_name_not_nil,omitempty" form:"first_name_not_nil" param:"first_name_not_nil" url:"first_name_not_nil"`
+	FirstNameEqualFold    *string  `json:"first_name_equal_fold,omitempty" form:"first_name_equal_fold" param:"first_name_equal_fold" url:"first_name_equal_fold"`
+	FirstNameContainsFold *string  `json:"first_name_contains_fold,omitempty" form:"first_name_contains_fold" param:"first_name_contains_fold" url:"first_name_contains_fold"`
+
+	// "last_name" field predicates.
+	LastName             *string  `json:"last_name,omitempty" form:"last_name" param:"last_name" url:"last_name"`
+	LastNameNEQ          *string  `json:"last_name_neq,omitempty" form:"last_name_neq" param:"last_name_neq" url:"last_name_neq"`
+	LastNameIn           []string `json:"last_name_in,omitempty" form:"last_name_in" param:"last_name_in" url:"last_name_in"`
+	LastNameNotIn        []string `json:"last_name_not_in,omitempty" form:"last_name_not_in" param:"last_name_not_in" url:"last_name_not_in"`
+	LastNameGT           *string  `json:"last_name_gt,omitempty" form:"last_name_gt" param:"last_name_gt" url:"last_name_gt"`
+	LastNameGTE          *string  `json:"last_name_gte,omitempty" form:"last_name_gte" param:"last_name_gte" url:"last_name_gte"`
+	LastNameLT           *string  `json:"last_name_lt,omitempty" form:"last_name_lt" param:"last_name_lt" url:"last_name_lt"`
+	LastNameLTE          *string  `json:"last_name_lte,omitempty" form:"last_name_lte" param:"last_name_lte" url:"last_name_lte"`
+	LastNameContains     *string  `json:"last_name_contains,omitempty" form:"last_name_contains" param:"last_name_contains" url:"last_name_contains"`
+	LastNameHasPrefix    *string  `json:"last_name_has_prefix,omitempty" form:"last_name_has_prefix" param:"last_name_has_prefix" url:"last_name_has_prefix"`
+	LastNameHasSuffix    *string  `json:"last_name_has_suffix,omitempty" form:"last_name_has_suffix" param:"last_name_has_suffix" url:"last_name_has_suffix"`
+	LastNameIsNil        bool     `json:"last_name_is_nil,omitempty" form:"last_name_is_nil" param:"last_name_is_nil" url:"last_name_is_nil"`
+	LastNameNotNil       bool     `json:"last_name_not_nil,omitempty" form:"last_name_not_nil" param:"last_name_not_nil" url:"last_name_not_nil"`
+	LastNameEqualFold    *string  `json:"last_name_equal_fold,omitempty" form:"last_name_equal_fold" param:"last_name_equal_fold" url:"last_name_equal_fold"`
+	LastNameContainsFold *string  `json:"last_name_contains_fold,omitempty" form:"last_name_contains_fold" param:"last_name_contains_fold" url:"last_name_contains_fold"`
+
+	// "email" field predicates.
+	Email             *string  `json:"email,omitempty" form:"email" param:"email" url:"email"`
+	EmailNEQ          *string  `json:"email_neq,omitempty" form:"email_neq" param:"email_neq" url:"email_neq"`
+	EmailIn           []string `json:"email_in,omitempty" form:"email_in" param:"email_in" url:"email_in"`
+	EmailNotIn        []string `json:"email_not_in,omitempty" form:"email_not_in" param:"email_not_in" url:"email_not_in"`
+	EmailGT           *string  `json:"email_gt,omitempty" form:"email_gt" param:"email_gt" url:"email_gt"`
+	EmailGTE          *string  `json:"email_gte,omitempty" form:"email_gte" param:"email_gte" url:"email_gte"`
+	EmailLT           *string  `json:"email_lt,omitempty" form:"email_lt" param:"email_lt" url:"email_lt"`
+	EmailLTE          *string  `json:"email_lte,omitempty" form:"email_lte" param:"email_lte" url:"email_lte"`
+	EmailContains     *string  `json:"email_contains,omitempty" form:"email_contains" param:"email_contains" url:"email_contains"`
+	EmailHasPrefix    *string  `json:"email_has_prefix,omitempty" form:"email_has_prefix" param:"email_has_prefix" url:"email_has_prefix"`
+	EmailHasSuffix    *string  `json:"email_has_suffix,omitempty" form:"email_has_suffix" param:"email_has_suffix" url:"email_has_suffix"`
+	EmailEqualFold    *string  `json:"email_equal_fold,omitempty" form:"email_equal_fold" param:"email_equal_fold" url:"email_equal_fold"`
+	EmailContainsFold *string  `json:"email_contains_fold,omitempty" form:"email_contains_fold" param:"email_contains_fold" url:"email_contains_fold"`
+
+	// "is_staff" field predicates.
+	IsStaff       *bool `json:"is_staff,omitempty" form:"is_staff" param:"is_staff" url:"is_staff"`
+	IsStaffNEQ    *bool `json:"is_staff_neq,omitempty" form:"is_staff_neq" param:"is_staff_neq" url:"is_staff_neq"`
+	IsStaffIsNil  bool  `json:"is_staff_is_nil,omitempty" form:"is_staff_is_nil" param:"is_staff_is_nil" url:"is_staff_is_nil"`
+	IsStaffNotNil bool  `json:"is_staff_not_nil,omitempty" form:"is_staff_not_nil" param:"is_staff_not_nil" url:"is_staff_not_nil"`
+
+	// "is_superuser" field predicates.
+	IsSuperuser       *bool `json:"is_superuser,omitempty" form:"is_superuser" param:"is_superuser" url:"is_superuser"`
+	IsSuperuserNEQ    *bool `json:"is_superuser_neq,omitempty" form:"is_superuser_neq" param:"is_superuser_neq" url:"is_superuser_neq"`
+	IsSuperuserIsNil  bool  `json:"is_superuser_is_nil,omitempty" form:"is_superuser_is_nil" param:"is_superuser_is_nil" url:"is_superuser_is_nil"`
+	IsSuperuserNotNil bool  `json:"is_superuser_not_nil,omitempty" form:"is_superuser_not_nil" param:"is_superuser_not_nil" url:"is_superuser_not_nil"`
+
+	// "is_active" field predicates.
+	IsActive       *bool `json:"is_active,omitempty" form:"is_active" param:"is_active" url:"is_active"`
+	IsActiveNEQ    *bool `json:"is_active_neq,omitempty" form:"is_active_neq" param:"is_active_neq" url:"is_active_neq"`
+	IsActiveIsNil  bool  `json:"is_active_is_nil,omitempty" form:"is_active_is_nil" param:"is_active_is_nil" url:"is_active_is_nil"`
+	IsActiveNotNil bool  `json:"is_active_not_nil,omitempty" form:"is_active_not_nil" param:"is_active_not_nil" url:"is_active_not_nil"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *UserWhereInput) AddPredicates(predicates ...predicate.User) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the UserWhereInput filter on the UserQuery builder.
+func (i *UserWhereInput) Filter(q *UserQuery) (*UserQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyUserWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyUserWhereInput is returned in case the UserWhereInput is empty.
+var ErrEmptyUserWhereInput = errors.New("ent: empty predicate UserWhereInput")
+
+// P returns a predicate for filtering users.
+// An error is returned if the input is empty or invalid.
+func (i *UserWhereInput) P() (predicate.User, error) {
+	var predicates []predicate.User
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, user.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.User, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, user.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.User, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, user.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, user.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, user.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, user.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, user.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, user.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, user.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, user.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, user.IDLTE(*i.IDLTE))
+	}
+	if i.CreateTime != nil {
+		predicates = append(predicates, user.CreateTimeEQ(*i.CreateTime))
+	}
+	if i.CreateTimeNEQ != nil {
+		predicates = append(predicates, user.CreateTimeNEQ(*i.CreateTimeNEQ))
+	}
+	if len(i.CreateTimeIn) > 0 {
+		predicates = append(predicates, user.CreateTimeIn(i.CreateTimeIn...))
+	}
+	if len(i.CreateTimeNotIn) > 0 {
+		predicates = append(predicates, user.CreateTimeNotIn(i.CreateTimeNotIn...))
+	}
+	if i.CreateTimeGT != nil {
+		predicates = append(predicates, user.CreateTimeGT(*i.CreateTimeGT))
+	}
+	if i.CreateTimeGTE != nil {
+		predicates = append(predicates, user.CreateTimeGTE(*i.CreateTimeGTE))
+	}
+	if i.CreateTimeLT != nil {
+		predicates = append(predicates, user.CreateTimeLT(*i.CreateTimeLT))
+	}
+	if i.CreateTimeLTE != nil {
+		predicates = append(predicates, user.CreateTimeLTE(*i.CreateTimeLTE))
+	}
+	if i.UpdateTime != nil {
+		predicates = append(predicates, user.UpdateTimeEQ(*i.UpdateTime))
+	}
+	if i.UpdateTimeNEQ != nil {
+		predicates = append(predicates, user.UpdateTimeNEQ(*i.UpdateTimeNEQ))
+	}
+	if len(i.UpdateTimeIn) > 0 {
+		predicates = append(predicates, user.UpdateTimeIn(i.UpdateTimeIn...))
+	}
+	if len(i.UpdateTimeNotIn) > 0 {
+		predicates = append(predicates, user.UpdateTimeNotIn(i.UpdateTimeNotIn...))
+	}
+	if i.UpdateTimeGT != nil {
+		predicates = append(predicates, user.UpdateTimeGT(*i.UpdateTimeGT))
+	}
+	if i.UpdateTimeGTE != nil {
+		predicates = append(predicates, user.UpdateTimeGTE(*i.UpdateTimeGTE))
+	}
+	if i.UpdateTimeLT != nil {
+		predicates = append(predicates, user.UpdateTimeLT(*i.UpdateTimeLT))
+	}
+	if i.UpdateTimeLTE != nil {
+		predicates = append(predicates, user.UpdateTimeLTE(*i.UpdateTimeLTE))
+	}
+	if i.Username != nil {
+		predicates = append(predicates, user.UsernameEQ(*i.Username))
+	}
+	if i.UsernameNEQ != nil {
+		predicates = append(predicates, user.UsernameNEQ(*i.UsernameNEQ))
+	}
+	if len(i.UsernameIn) > 0 {
+		predicates = append(predicates, user.UsernameIn(i.UsernameIn...))
+	}
+	if len(i.UsernameNotIn) > 0 {
+		predicates = append(predicates, user.UsernameNotIn(i.UsernameNotIn...))
+	}
+	if i.UsernameGT != nil {
+		predicates = append(predicates, user.UsernameGT(*i.UsernameGT))
+	}
+	if i.UsernameGTE != nil {
+		predicates = append(predicates, user.UsernameGTE(*i.UsernameGTE))
+	}
+	if i.UsernameLT != nil {
+		predicates = append(predicates, user.UsernameLT(*i.UsernameLT))
+	}
+	if i.UsernameLTE != nil {
+		predicates = append(predicates, user.UsernameLTE(*i.UsernameLTE))
+	}
+	if i.UsernameContains != nil {
+		predicates = append(predicates, user.UsernameContains(*i.UsernameContains))
+	}
+	if i.UsernameHasPrefix != nil {
+		predicates = append(predicates, user.UsernameHasPrefix(*i.UsernameHasPrefix))
+	}
+	if i.UsernameHasSuffix != nil {
+		predicates = append(predicates, user.UsernameHasSuffix(*i.UsernameHasSuffix))
+	}
+	if i.UsernameEqualFold != nil {
+		predicates = append(predicates, user.UsernameEqualFold(*i.UsernameEqualFold))
+	}
+	if i.UsernameContainsFold != nil {
+		predicates = append(predicates, user.UsernameContainsFold(*i.UsernameContainsFold))
+	}
+	if i.FirstName != nil {
+		predicates = append(predicates, user.FirstNameEQ(*i.FirstName))
+	}
+	if i.FirstNameNEQ != nil {
+		predicates = append(predicates, user.FirstNameNEQ(*i.FirstNameNEQ))
+	}
+	if len(i.FirstNameIn) > 0 {
+		predicates = append(predicates, user.FirstNameIn(i.FirstNameIn...))
+	}
+	if len(i.FirstNameNotIn) > 0 {
+		predicates = append(predicates, user.FirstNameNotIn(i.FirstNameNotIn...))
+	}
+	if i.FirstNameGT != nil {
+		predicates = append(predicates, user.FirstNameGT(*i.FirstNameGT))
+	}
+	if i.FirstNameGTE != nil {
+		predicates = append(predicates, user.FirstNameGTE(*i.FirstNameGTE))
+	}
+	if i.FirstNameLT != nil {
+		predicates = append(predicates, user.FirstNameLT(*i.FirstNameLT))
+	}
+	if i.FirstNameLTE != nil {
+		predicates = append(predicates, user.FirstNameLTE(*i.FirstNameLTE))
+	}
+	if i.FirstNameContains != nil {
+		predicates = append(predicates, user.FirstNameContains(*i.FirstNameContains))
+	}
+	if i.FirstNameHasPrefix != nil {
+		predicates = append(predicates, user.FirstNameHasPrefix(*i.FirstNameHasPrefix))
+	}
+	if i.FirstNameHasSuffix != nil {
+		predicates = append(predicates, user.FirstNameHasSuffix(*i.FirstNameHasSuffix))
+	}
+	if i.FirstNameIsNil {
+		predicates = append(predicates, user.FirstNameIsNil())
+	}
+	if i.FirstNameNotNil {
+		predicates = append(predicates, user.FirstNameNotNil())
+	}
+	if i.FirstNameEqualFold != nil {
+		predicates = append(predicates, user.FirstNameEqualFold(*i.FirstNameEqualFold))
+	}
+	if i.FirstNameContainsFold != nil {
+		predicates = append(predicates, user.FirstNameContainsFold(*i.FirstNameContainsFold))
+	}
+	if i.LastName != nil {
+		predicates = append(predicates, user.LastNameEQ(*i.LastName))
+	}
+	if i.LastNameNEQ != nil {
+		predicates = append(predicates, user.LastNameNEQ(*i.LastNameNEQ))
+	}
+	if len(i.LastNameIn) > 0 {
+		predicates = append(predicates, user.LastNameIn(i.LastNameIn...))
+	}
+	if len(i.LastNameNotIn) > 0 {
+		predicates = append(predicates, user.LastNameNotIn(i.LastNameNotIn...))
+	}
+	if i.LastNameGT != nil {
+		predicates = append(predicates, user.LastNameGT(*i.LastNameGT))
+	}
+	if i.LastNameGTE != nil {
+		predicates = append(predicates, user.LastNameGTE(*i.LastNameGTE))
+	}
+	if i.LastNameLT != nil {
+		predicates = append(predicates, user.LastNameLT(*i.LastNameLT))
+	}
+	if i.LastNameLTE != nil {
+		predicates = append(predicates, user.LastNameLTE(*i.LastNameLTE))
+	}
+	if i.LastNameContains != nil {
+		predicates = append(predicates, user.LastNameContains(*i.LastNameContains))
+	}
+	if i.LastNameHasPrefix != nil {
+		predicates = append(predicates, user.LastNameHasPrefix(*i.LastNameHasPrefix))
+	}
+	if i.LastNameHasSuffix != nil {
+		predicates = append(predicates, user.LastNameHasSuffix(*i.LastNameHasSuffix))
+	}
+	if i.LastNameIsNil {
+		predicates = append(predicates, user.LastNameIsNil())
+	}
+	if i.LastNameNotNil {
+		predicates = append(predicates, user.LastNameNotNil())
+	}
+	if i.LastNameEqualFold != nil {
+		predicates = append(predicates, user.LastNameEqualFold(*i.LastNameEqualFold))
+	}
+	if i.LastNameContainsFold != nil {
+		predicates = append(predicates, user.LastNameContainsFold(*i.LastNameContainsFold))
+	}
+	if i.Email != nil {
+		predicates = append(predicates, user.EmailEQ(*i.Email))
+	}
+	if i.EmailNEQ != nil {
+		predicates = append(predicates, user.EmailNEQ(*i.EmailNEQ))
+	}
+	if len(i.EmailIn) > 0 {
+		predicates = append(predicates, user.EmailIn(i.EmailIn...))
+	}
+	if len(i.EmailNotIn) > 0 {
+		predicates = append(predicates, user.EmailNotIn(i.EmailNotIn...))
+	}
+	if i.EmailGT != nil {
+		predicates = append(predicates, user.EmailGT(*i.EmailGT))
+	}
+	if i.EmailGTE != nil {
+		predicates = append(predicates, user.EmailGTE(*i.EmailGTE))
+	}
+	if i.EmailLT != nil {
+		predicates = append(predicates, user.EmailLT(*i.EmailLT))
+	}
+	if i.EmailLTE != nil {
+		predicates = append(predicates, user.EmailLTE(*i.EmailLTE))
+	}
+	if i.EmailContains != nil {
+		predicates = append(predicates, user.EmailContains(*i.EmailContains))
+	}
+	if i.EmailHasPrefix != nil {
+		predicates = append(predicates, user.EmailHasPrefix(*i.EmailHasPrefix))
+	}
+	if i.EmailHasSuffix != nil {
+		predicates = append(predicates, user.EmailHasSuffix(*i.EmailHasSuffix))
+	}
+	if i.EmailEqualFold != nil {
+		predicates = append(predicates, user.EmailEqualFold(*i.EmailEqualFold))
+	}
+	if i.EmailContainsFold != nil {
+		predicates = append(predicates, user.EmailContainsFold(*i.EmailContainsFold))
+	}
+	if i.IsStaff != nil {
+		predicates = append(predicates, user.IsStaffEQ(*i.IsStaff))
+	}
+	if i.IsStaffNEQ != nil {
+		predicates = append(predicates, user.IsStaffNEQ(*i.IsStaffNEQ))
+	}
+	if i.IsStaffIsNil {
+		predicates = append(predicates, user.IsStaffIsNil())
+	}
+	if i.IsStaffNotNil {
+		predicates = append(predicates, user.IsStaffNotNil())
+	}
+	if i.IsSuperuser != nil {
+		predicates = append(predicates, user.IsSuperuserEQ(*i.IsSuperuser))
+	}
+	if i.IsSuperuserNEQ != nil {
+		predicates = append(predicates, user.IsSuperuserNEQ(*i.IsSuperuserNEQ))
+	}
+	if i.IsSuperuserIsNil {
+		predicates = append(predicates, user.IsSuperuserIsNil())
+	}
+	if i.IsSuperuserNotNil {
+		predicates = append(predicates, user.IsSuperuserNotNil())
+	}
+	if i.IsActive != nil {
+		predicates = append(predicates, user.IsActiveEQ(*i.IsActive))
+	}
+	if i.IsActiveNEQ != nil {
+		predicates = append(predicates, user.IsActiveNEQ(*i.IsActiveNEQ))
+	}
+	if i.IsActiveIsNil {
+		predicates = append(predicates, user.IsActiveIsNil())
+	}
+	if i.IsActiveNotNil {
+		predicates = append(predicates, user.IsActiveNotNil())
+	}
+
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyUserWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return user.And(predicates...), nil
+	}
 }
 
 // Users is a parsable slice of User.

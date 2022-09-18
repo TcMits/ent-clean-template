@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"path"
 	"time"
 
 	"github.com/TcMits/ent-clean-template/ent"
@@ -49,8 +48,7 @@ type CreateFile struct {
 
 type CreateValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType) (RepoCreateInputType, error)
 type CreateInTransactionValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType, *ent.Client) (RepoCreateInputType, error)
-type CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType any] func(context.Context, CreateInputType, CreateExistFunc) (UseCaseCreateInputType, []*CreateFile, error)
-type CreateExistFunc func(context.Context, string) (bool, error)
+type CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType any] func(context.Context, CreateInputType) (UseCaseCreateInputType, []*CreateFile, error)
 
 type createModelUseCase[ModelType, CreateInputType, RepoCreateInputType any] struct {
 	repository          repository.CreateModelRepository[ModelType, RepoCreateInputType]
@@ -72,7 +70,6 @@ type createModelHavingFileUseCase[ModelType, CreateInputType, UseCaseCreateInput
 	validateFunc        CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType]
 	writeFileTimeout    time.Duration
 	l                   logger.Interface
-	basePath            string
 }
 
 func (u *createModelUseCase[ModelType, CreateInputType, _]) Create(
@@ -134,7 +131,7 @@ func (u *createModelInTransactionUseCase[ModelType, CreateInputType, _]) Create(
 func (u *createModelHavingFileUseCase[ModelType, CreateInputType, _]) Create(
 	ctx context.Context, input CreateInputType,
 ) (ModelType, error) {
-	createInput, files, err := u.validateFunc(ctx, input, u.existFileRepository.Exist)
+	createInput, files, err := u.validateFunc(ctx, input)
 	if err != nil {
 		return generic.Zero[ModelType](), err
 	}
@@ -150,7 +147,7 @@ func (u *createModelHavingFileUseCase[ModelType, CreateInputType, _]) Create(
 			defer cancelFileCtx()
 			for _, file := range files {
 				n, fileErr := u.writeFileRepository.Write(
-					fileCtx, path.Join(u.basePath, file.Filename), file.Reader, file.Size,
+					fileCtx, file.Filename, file.Reader, file.Size,
 				)
 				if fileErr != nil {
 					u.l.Error(fileErr)

@@ -10,6 +10,9 @@ import (
 )
 
 func Logger(l logger.Interface) iris.Handler {
+	if l == nil {
+		panic("l is required")
+	}
 	return func(ctx iris.Context) {
 		method := ctx.Method()
 		ip := ctx.RemoteAddr()

@@ -13,6 +13,9 @@ type transactionRepository struct {
 }
 
 func NewTransactionRepository(client *ent.Client) TransactionRepository {
+	if client == nil {
+		panic("client is required")
+	}
 	return &transactionRepository{client: client}
 }
 

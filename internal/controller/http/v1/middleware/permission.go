@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	v1 "github.com/TcMits/ent-clean-template/internal/controller/http/v1"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
@@ -9,7 +8,18 @@ import (
 	"github.com/kataras/iris/v12"
 )
 
-func Permission[UserType any](l logger.Interface, checkers ...usecase.UserPermissionCheckerUseCase[UserType]) iris.Handler {
+func Permission[UserType any](
+	handleErrorFunc func(iris.Context, error, logger.Interface),
+	l logger.Interface,
+	checkers ...usecase.UserPermissionCheckerUseCase[UserType],
+) iris.Handler {
+	if handleErrorFunc == nil {
+		panic("handleErrorFunc is required")
+	}
+	if l == nil {
+		panic("l is required")
+	}
+
 	checker := usecase.NewAllowAnyPermissionChecker[UserType]()
 	for _, c := range checkers {
 		checker = checker.And(c)
@@ -22,7 +32,7 @@ func Permission[UserType any](l logger.Interface, checkers ...usecase.UserPermis
 		}
 		userValue := user.Value()
 		if err := checker.Check(context, userValue); err != nil {
-			v1.HandleError(ctx, err, l)
+			handleErrorFunc(ctx, err, l)
 			return
 		}
 		ctx.Next()

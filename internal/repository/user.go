@@ -20,6 +20,9 @@ type userRepository struct {
 func NewUserRepository(client *ent.Client) ModelRepository[
 	*model.User, *model.UserOrderInput, *model.UserWhereInput, *model.UserCreateInput, *model.UserUpdateInput,
 ] {
+	if client == nil {
+		panic("client is required")
+	}
 	return &userRepository{
 		ent.NewUserReadRepository(client, nil, nil, nil),
 		ent.NewUserCreateRepository(client, nil, nil, false),

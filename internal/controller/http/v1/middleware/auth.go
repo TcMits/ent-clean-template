@@ -45,6 +45,9 @@ func Auth[
 ](loginUseCase usecase.LoginUseCase[
 	LoginInputType, JWTAuthenticatedPayloadType, RefreshTokenInputType, UserType,
 ]) iris.Handler {
+	if loginUseCase == nil {
+		panic("loginUseCase is required")
+	}
 	return func(ctx iris.Context) {
 		request := ctx.Request()
 		requestCtx := request.Context()

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"testing"
 
-	v1 "github.com/TcMits/ent-clean-template/internal/controller/http/v1"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
@@ -36,15 +36,19 @@ func Test_Permission(t *testing.T) {
 		new(struct{}), nil,
 	).AnyTimes()
 
-	handler := v1.NewHandler()
+	handler := iris.New()
 	handler.Use(Auth[
 		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
 	](u))
-	handler.Use(Permission(testutils.NullLogger{}, usecase.NewDisallowZeroPermissionChecker[*struct{}](
-		useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.PermissionDeniedError,
-		),
-	)))
+	handler.Use(Permission(
+		func(ctx iris.Context, err error, i logger.Interface) {
+			ctx.StopWithJSON(iris.StatusForbidden, iris.Map{})
+		},
+		testutils.NullLogger{}, usecase.NewDisallowZeroPermissionChecker[*struct{}](
+			useCaseModel.NewUseCaseError(
+				errors.New(""), "test", "test", usecase.PermissionDeniedError,
+			),
+		)))
 	handler.Get("/test", func(ctx iris.Context) {
 		ctx.StatusCode(iris.StatusOK)
 		ctx.JSON(iris.Map{})
@@ -55,5 +59,4 @@ func Test_Permission(t *testing.T) {
 
 	e.GET("/test").Expect().Status(iris.StatusForbidden)
 	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
-
 }

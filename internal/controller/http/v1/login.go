@@ -13,6 +13,10 @@ const (
 	loginSubPath        = "/login"
 	refreshTokenSubPath = "/refresh-token"
 	verifyTokenSubPath  = "/verify-token"
+
+	loginRouteName        = "login"
+	refreshTokenRouteName = "refreshToken"
+	verifyTokenRouteName  = "verifyToken"
 )
 
 var (
@@ -65,9 +69,18 @@ func RegisterLoginController[
 	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
 	l logger.Interface,
 ) {
-	handler.Post(loginSubPath, getLoginHandler(useCase, l))
-	handler.Post(refreshTokenSubPath, getRefreshTokenHandler(useCase, l))
-	handler.Post(verifyTokenSubPath, getVerifyTokenHandler(useCase, l))
+	if handler == nil {
+		panic("handler is required")
+	}
+	if useCase == nil {
+		panic("useCase is required")
+	}
+	if l == nil {
+		panic("l is required")
+	}
+	handler.Post(loginSubPath, getLoginHandler(useCase, l)).Name = loginRouteName
+	handler.Post(refreshTokenSubPath, getRefreshTokenHandler(useCase, l)).Name = refreshTokenRouteName
+	handler.Post(verifyTokenSubPath, getVerifyTokenHandler(useCase, l)).Name = verifyTokenRouteName
 }
 
 func getLoginHandler[

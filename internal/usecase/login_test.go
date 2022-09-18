@@ -30,8 +30,9 @@ func TestNewLoginUseCase(t *testing.T) {
 	getRepository := repository.NewUserRepository(client)
 
 	want := loginUseCase{
-		repository: loginRepository,
-		secret:     "secret",
+		repository:    loginRepository,
+		getRepository: getRepository,
+		secret:        "secret",
 	}
 
 	tests := []struct {
