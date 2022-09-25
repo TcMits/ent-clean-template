@@ -15,7 +15,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.3.0
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/kataras/iris/v12 v12.2.0-beta4.0.20220815102844-9821cbe6d881
-	github.com/mattn/go-sqlite3 v1.14.13
+	github.com/mattn/go-sqlite3 v1.14.15
 	github.com/rs/zerolog v1.27.0
 	github.com/stretchr/testify v1.8.0
 	go.beyondstorage.io/services/memory v0.4.0
