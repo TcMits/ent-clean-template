@@ -6,8 +6,6 @@ import (
 	"github.com/TcMits/ent-clean-template/ent"
 )
 
-var _ TransactionRepository = &transactionRepository{}
-
 type transactionRepository struct {
 	client *ent.Client
 }
@@ -19,7 +17,9 @@ func NewTransactionRepository(client *ent.Client) TransactionRepository {
 	return &transactionRepository{client: client}
 }
 
-func (r *transactionRepository) Start(ctx context.Context) (*ent.Client, func() error, func() error, error) {
+func (r *transactionRepository) Start(
+	ctx context.Context,
+) (*ent.Client, func() error, func() error, error) {
 	tx, err := r.client.Tx(ctx)
 	if err != nil {
 		return nil, nil, nil, err

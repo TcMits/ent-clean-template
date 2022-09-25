@@ -49,7 +49,8 @@ func NewTranslatableError(
 }
 
 func TranslatableErrorFromUseCaseError(
-	err *useCaseModel.UseCaseError, translateFunc TranslateFunc) *TranslatableError {
+	err *useCaseModel.UseCaseError, translateFunc TranslateFunc,
+) *TranslatableError {
 	return NewTranslatableError(
 		err.Unwrap(), err.Key(), translateFunc, err.DefaultError(), err.Code(), err.Args()...,
 	)

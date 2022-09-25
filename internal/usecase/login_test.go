@@ -2,17 +2,18 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/internal/repository"
-	"github.com/TcMits/ent-clean-template/internal/testutils"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	jwtKit "github.com/golang-jwt/jwt/v4"
+	gomock "github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
+
+	"github.com/TcMits/ent-clean-template/internal/repository"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 )
 
 func TestNewLoginUseCase(t *testing.T) {
@@ -21,13 +22,13 @@ func TestNewLoginUseCase(t *testing.T) {
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 
 	want := loginUseCase{
 		repository:    loginRepository,
@@ -52,7 +53,10 @@ func TestNewLoginUseCase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLoginUseCase(tt.args.repository, tt.args.getRepository, tt.args.secret); !reflect.DeepEqual(got, tt.want) {
+			if got := NewLoginUseCase(tt.args.repository, tt.args.getRepository, tt.args.secret); !reflect.DeepEqual(
+				got,
+				tt.want,
+			) {
 				t.Errorf("NewLoginUseCase() = %v, want %v", got, tt.want)
 			}
 		})
@@ -68,15 +72,18 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	type args struct {
 		user *model.User
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
 
 	tests := []struct {
 		name   string
@@ -95,9 +102,9 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 				user: u,
 			},
 			want: jwtKit.MapClaims{
-				idFieldName:  u.ID.String(),
-				"email":      u.Email,
-				keyFieldName: u.JwtTokenKey,
+				_idFieldName:  u.ID.String(),
+				"email":       u.Email,
+				_keyFieldName: u.JwtTokenKey,
 			},
 		},
 	}
@@ -125,15 +132,32 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		ctx          context.Context
 		jwtMapClaims jwtKit.MapClaims
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -152,9 +176,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				jwtMapClaims: jwtKit.MapClaims{
-					idFieldName:  u.ID.String(),
-					"email":      u.Email,
-					keyFieldName: u.JwtTokenKey,
+					_idFieldName:  u.ID.String(),
+					"email":       u.Email,
+					_keyFieldName: u.JwtTokenKey,
 				},
 			},
 			want: u,
@@ -169,8 +193,8 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				jwtMapClaims: jwtKit.MapClaims{
-					"email":      u.Email,
-					keyFieldName: u.JwtTokenKey,
+					"email":       u.Email,
+					_keyFieldName: u.JwtTokenKey,
 				},
 			},
 			want:    nil,
@@ -186,9 +210,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				jwtMapClaims: jwtKit.MapClaims{
-					idFieldName:  "hello",
-					"email":      u.Email,
-					keyFieldName: u.JwtTokenKey,
+					_idFieldName:  "hello",
+					"email":       u.Email,
+					_keyFieldName: u.JwtTokenKey,
 				},
 			},
 			want:    nil,
@@ -204,9 +228,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				jwtMapClaims: jwtKit.MapClaims{
-					idFieldName:  uuid.NewString(),
-					"email":      u.Email,
-					keyFieldName: u.JwtTokenKey,
+					_idFieldName:  uuid.NewString(),
+					"email":       u.Email,
+					_keyFieldName: u.JwtTokenKey,
 				},
 			},
 			want:    nil,
@@ -222,9 +246,9 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				jwtMapClaims: jwtKit.MapClaims{
-					idFieldName:  u.ID,
-					"email":      u.Email,
-					keyFieldName: "hello",
+					_idFieldName:  u.ID,
+					"email":       u.Email,
+					_keyFieldName: "hello",
 				},
 			},
 			want:    nil,
@@ -240,7 +264,11 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 			}
 			got, err := l.getUserFromMapClaims(tt.args.ctx, tt.args.jwtMapClaims)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("loginUseCase.getUserFromMapClaims() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"loginUseCase.getUserFromMapClaims() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 				return
 			}
 			if got != nil && tt.want != nil && !reflect.DeepEqual(got.ID, tt.want.ID) {
@@ -260,15 +288,31 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 		user *model.User
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -303,7 +347,8 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 				return
 			}
 
-			if newU, err := l.parseAccessToken(ctx, got); err != nil || !reflect.DeepEqual(newU.ID, tt.want.ID) {
+			if newU, err := l.parseAccessToken(ctx, got); err != nil ||
+				!reflect.DeepEqual(newU.ID, tt.want.ID) {
 				t.Errorf("loginUseCase.createAccessToken() = %v, want %v", newU, tt.want)
 			}
 		})
@@ -320,15 +365,31 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 		user *model.User
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	tests := []struct {
 		name    string
@@ -357,10 +418,15 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 			}
 			got, err := l.createRefreshToken(tt.args.user)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("loginUseCase.createRefreshToken() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"loginUseCase.createRefreshToken() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 				return
 			}
-			if newU, err := l.parseRefreshToken(ctx, got); err != nil || !reflect.DeepEqual(newU.ID, tt.want.ID) {
+			if newU, err := l.parseRefreshToken(ctx, got); err != nil ||
+				!reflect.DeepEqual(newU.ID, tt.want.ID) {
 				t.Errorf("loginUseCase.createRefreshToken() = %v, want %v", newU, tt.want)
 			}
 		})
@@ -378,15 +444,31 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 		token string
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	l := &loginUseCase{
 		repository:    loginRepository,
@@ -447,15 +529,31 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 		refreshTokenInput *useCaseModel.RefreshTokenInput
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	l := &loginUseCase{
 		repository:    loginRepository,
@@ -515,15 +613,48 @@ func Test_loginUseCase_Login(t *testing.T) {
 		ctx        context.Context
 		loginInput *useCaseModel.LoginInput
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		Username:    "test",
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
+
+	loginRepository.EXPECT().Login(
+		gomock.Eq(ctx), gomock.Eq(&useCaseModel.LoginInput{
+			Username: "test",
+			Password: "12345678",
+		}),
+	).Return(
+		u, nil,
+	)
+
+	loginRepository.EXPECT().Login(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	)
 
 	tests := []struct {
 		name    string
@@ -579,7 +710,8 @@ func Test_loginUseCase_Login(t *testing.T) {
 				return
 			}
 			if got != nil {
-				if newU, err := l.parseAccessToken(ctx, got.AccessToken); err != nil || !reflect.DeepEqual(newU.ID, tt.want.ID) {
+				if newU, err := l.parseAccessToken(ctx, got.AccessToken); err != nil ||
+					!reflect.DeepEqual(newU.ID, tt.want.ID) {
 					t.Errorf("loginUseCase.Login() = %v, want %v", newU, tt.want)
 				}
 				if newU, err := l.parseRefreshToken(ctx, &useCaseModel.RefreshTokenInput{
@@ -603,15 +735,33 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 		ctx               context.Context
 		refreshTokenInput *useCaseModel.RefreshTokenInput
 	}
-	// Create an SQLite memory database and generate the schema.
-	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		Username:    "test",
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	l := &loginUseCase{
 		repository:    loginRepository,
@@ -654,7 +804,8 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 				t.Errorf("loginUseCase.RefreshToken() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if newU, err := l.parseAccessToken(ctx, got); err != nil || !reflect.DeepEqual(newU.ID, tt.want.ID) {
+			if newU, err := l.parseAccessToken(ctx, got); err != nil ||
+				!reflect.DeepEqual(newU.ID, tt.want.ID) {
 				t.Errorf("loginUseCase.RefreshToken() = %v, want %v", newU, tt.want)
 			}
 		})
@@ -672,15 +823,32 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 		token string
 	}
 
-	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
-	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
-	u, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
-	require.NoError(t, err)
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
+		ctrl,
+	)
+	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	u := &model.User{
+		Username:    "test",
+		ID:          uuid.New(),
+		Email:       "test@gmail.com",
+		JwtTokenKey: uuid.NewString(),
+	}
+	isActive := true
 
-	loginRepository := repository.NewLoginRepository(client)
-	getRepository := repository.NewUserRepository(client)
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Eq(&model.UserWhereInput{ID: &u.ID, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
+		gomock.Eq(ctx), gomock.Any(),
+	).Return(
+		nil, errors.New(""),
+	).AnyTimes()
 
 	l := &loginUseCase{
 		repository:    loginRepository,

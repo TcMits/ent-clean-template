@@ -1,0 +1,46 @@
+version: "3.7"
+
+services:
+    golang:
+        build:
+            context: .
+            dockerfile: ./compose/production/golang/Dockerfile
+        image: golang_test
+        container_name: golang_test
+        env_file:
+            - ./.envs/.integration_test/.golang
+            - ./.envs/.integration_test/.postgres
+        depends_on:
+            postgres:
+                condition: service_healthy
+        ports:
+            - 8080:8080
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/ping/"]
+
+    postgres:
+        build:
+            context: .
+            dockerfile: ./compose/production/postgres/Dockerfile
+        image: postgres_db_test
+        container_name: postgres_db_test
+        command: postgres
+        env_file:
+            - ./.envs/.integration_test/.postgres
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+    http_v1_integration:
+        build:
+            context: .
+            dockerfile: ./integration_test/http/v1/Dockerfile
+        image: http_v1_integration
+        container_name: http_v1_integration
+        env_file:
+            - ./.envs/.integration_test/.golang
+            - ./.envs/.integration_test/.postgres
+        depends_on:
+            - golang

@@ -5,11 +5,12 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
-	"github.com/TcMits/ent-clean-template/ent"
 	_ "github.com/jackc/pgx/v4/stdlib"
+
+	"github.com/TcMits/ent-clean-template/ent"
 )
 
-// Open new connection
+// Open new connection.
 func Open(databaseUrl string, maxPoolSize int) (*ent.Client, error) {
 	db, err := sql.Open("pgx", databaseUrl)
 	if err != nil {
@@ -22,7 +23,7 @@ func Open(databaseUrl string, maxPoolSize int) (*ent.Client, error) {
 	return ent.NewClient(ent.Driver(drv)), nil
 }
 
-// NewClient returns an orm client
+// NewClient returns an orm client.
 func NewClient(url string, poolMax int) (*ent.Client, error) {
 	var entOptions []ent.Option
 	entOptions = append(entOptions, ent.Debug())

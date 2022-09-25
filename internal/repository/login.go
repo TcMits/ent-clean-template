@@ -25,8 +25,8 @@ func NewLoginRepository(client *ent.Client) LoginRepository[
 }
 
 func (repo *loginRepository) Get(
-	ctx context.Context, userWhereInput *model.UserWhereInput) (*model.User, error) {
-
+	ctx context.Context, userWhereInput *model.UserWhereInput,
+) (*model.User, error) {
 	query, err := userWhereInput.Filter(repo.client.User.Query())
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -41,7 +41,8 @@ func (repo *loginRepository) Get(
 }
 
 func (repo *loginRepository) Login(
-	ctx context.Context, loginInput *useCaseModel.LoginInput) (*model.User, error) {
+	ctx context.Context, loginInput *useCaseModel.LoginInput,
+) (*model.User, error) {
 	isActive := true
 	userWhereInput := &model.UserWhereInput{IsActive: &isActive}
 	copygen.LoginInputToUserWhereInput(userWhereInput, loginInput)

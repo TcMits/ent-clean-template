@@ -1,11 +1,12 @@
 package middleware
 
 import (
+	"github.com/kataras/iris/v12"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
-	"github.com/kataras/iris/v12"
 )
 
 func Permission[UserType any](
@@ -25,7 +26,7 @@ func Permission[UserType any](
 		checker = checker.And(c)
 	}
 	return func(ctx iris.Context) {
-		user, ok := ctx.Values().Get(UserKey).(lazy.LazyObject[UserType])
+		user, ok := ctx.Values().Get(_userKey).(lazy.LazyObject[UserType])
 		context := ctx.Request().Context()
 		if !ok {
 			user = lazy.NewLazyObject(func() UserType { return generic.Zero[UserType]() })

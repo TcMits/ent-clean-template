@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kataras/iris/v12/httptest"
+
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/golang/mock/gomock"
-	"github.com/kataras/iris/v12/httptest"
 )
 
 type MockCreateInput struct {
@@ -87,7 +88,12 @@ func Test_getCreateHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getCreateHandler(tt.args.createUseCase, tt.args.serializeUseCase, tt.args.l, tt.args.wrapReadBodyError)
+			got := getCreateHandler(
+				tt.args.createUseCase,
+				tt.args.serializeUseCase,
+				tt.args.l,
+				tt.args.wrapReadBodyError,
+			)
 
 			handler := NewHandler()
 			handler.Post("/test", got)

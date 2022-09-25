@@ -23,7 +23,7 @@ func ParseUnverifiedJWT(token string) (jwt.MapClaims, error) {
 }
 
 // ParseJWT verifies and parses JWT token and returns its claims.
-func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
+func ParseJWT(token, verificationKey string) (jwt.MapClaims, error) {
 	parser := jwt.NewParser(jwt.WithValidMethods([]string{"HS256"}))
 
 	parsedToken, err := parser.Parse(token, func(t *jwt.Token) (any, error) {
@@ -41,7 +41,11 @@ func ParseJWT(token string, verificationKey string) (jwt.MapClaims, error) {
 }
 
 // NewToken generates and returns new HS256 signed JWT token.
-func NewToken(payload jwt.MapClaims, signingKey string, secondsDuration time.Duration) (string, error) {
+func NewToken(
+	payload jwt.MapClaims,
+	signingKey string,
+	secondsDuration time.Duration,
+) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"exp": now.Add(secondsDuration).Unix(),

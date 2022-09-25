@@ -11,7 +11,7 @@ import (
 	"go.beyondstorage.io/v5/types"
 )
 
-const DefaultWriteSize int64 = 1024 * 10
+const _DefaultWriteSize int64 = 1024 * 10
 
 type readFileRepository struct {
 	storager types.Storager
@@ -44,16 +44,27 @@ func NewFileRepository(storager types.Storager) FileRepository {
 	return &fileRepository{
 		&readFileRepository{storager: storager},
 		&existFileRepository{storager: storager},
-		&writeFileRepository{storager: storager, writeSize: DefaultWriteSize},
+		&writeFileRepository{storager: storager, writeSize: _DefaultWriteSize},
 		&deleteFileRepository{storager: storager},
 	}
 }
 
-func (r *readFileRepository) Read(ctx context.Context, path string, w io.Writer, offset int64, size int64) (int64, error) {
+func (r *readFileRepository) Read(
+	ctx context.Context,
+	path string,
+	w io.Writer,
+	offset int64,
+	size int64,
+) (int64, error) {
 	return r.storager.ReadWithContext(ctx, path, w, pairs.WithOffset(offset), pairs.WithSize(size))
 }
 
-func (r *writeFileRepository) Write(ctx context.Context, path string, re io.Reader, size int64) (int64, error) {
+func (r *writeFileRepository) Write(
+	ctx context.Context,
+	path string,
+	re io.Reader,
+	size int64,
+) (int64, error) {
 	_, err := r.storager.StatWithContext(ctx, path)
 	if err == nil || !errors.Is(err, services.ErrObjectNotExist) {
 		return 0, errors.New("writeFileRepository - Write - r.storager.Stat: Object is exist")

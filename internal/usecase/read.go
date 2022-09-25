@@ -57,7 +57,11 @@ func (u *countModelUseCase[FilterInputType, _]) Count(
 }
 
 func (u *listModelUseCase[ModelType, OrderInputType, WhereInputType, _, _]) List(
-	ctx context.Context, limit int, offset int, orderInput OrderInputType, whereInput WhereInputType,
+	ctx context.Context,
+	limit int,
+	offset int,
+	orderInput OrderInputType,
+	whereInput WhereInputType,
 ) ([]ModelType, error) {
 	repoOrderInput, err := u.toRepoOrderInputFunc(ctx, orderInput)
 	if err != nil {

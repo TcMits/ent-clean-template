@@ -16,7 +16,10 @@ import (
 var (
 	_wrapStartCreateTransactionError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("createModelInTransactionUseCase - Create - u.transactionRepository.Start: %w", err),
+			fmt.Errorf(
+				"createModelInTransactionUseCase - Create - u.transactionRepository.Start: %w",
+				err,
+			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.StartCreateTransactionError",
 			"Can't create now",
 			DBError,
@@ -24,7 +27,10 @@ var (
 	}
 	_wrapCommitCreateError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("createModelInTransactionUseCase - Create - u.transactionRepository.Commit: %w", err),
+			fmt.Errorf(
+				"createModelInTransactionUseCase - Create - u.transactionRepository.Commit: %w",
+				err,
+			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.CommitCreateError",
 			"Can't create now",
 			DBError,
@@ -32,7 +38,10 @@ var (
 	}
 	_wrapRollbackCreateError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("createModelInTransactionUseCase - Create - u.transactionRepository.Rollback: %w", err),
+			fmt.Errorf(
+				"createModelInTransactionUseCase - Create - u.transactionRepository.Rollback: %w",
+				err,
+			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.RollbackCreateError",
 			"Can't create now",
 			DBError,
@@ -46,9 +55,11 @@ type CreateFile struct {
 	Reader   io.Reader
 }
 
-type CreateValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType) (RepoCreateInputType, error)
-type CreateInTransactionValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType, *ent.Client) (RepoCreateInputType, error)
-type CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType any] func(context.Context, CreateInputType) (UseCaseCreateInputType, []*CreateFile, error)
+type (
+	CreateValidateFunc[CreateInputType, RepoCreateInputType any]              func(context.Context, CreateInputType) (RepoCreateInputType, error)
+	CreateInTransactionValidateFunc[CreateInputType, RepoCreateInputType any] func(context.Context, CreateInputType, *ent.Client) (RepoCreateInputType, error)
+	CreateWithFileValidateFunc[CreateInputType, UseCaseCreateInputType any]   func(context.Context, CreateInputType) (UseCaseCreateInputType, []*CreateFile, error)
+)
 
 type createModelUseCase[ModelType, CreateInputType, RepoCreateInputType any] struct {
 	repository          repository.CreateModelRepository[ModelType, RepoCreateInputType]
@@ -153,7 +164,10 @@ func (u *createModelHavingFileUseCase[ModelType, CreateInputType, _]) Create(
 					u.l.Error(fileErr)
 					continue
 				}
-				u.l.Info("createModelHavingFileUseCase - Create - u.writeFileRepository.Write: Upload %d bytes", n)
+				u.l.Info(
+					"createModelHavingFileUseCase - Create - u.writeFileRepository.Write: Upload %d bytes",
+					n,
+				)
 			}
 		}()
 	}

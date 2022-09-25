@@ -9,12 +9,13 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"go.beyondstorage.io/v5/pkg/randbytes"
+
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	gomock "github.com/golang/mock/gomock"
-	"go.beyondstorage.io/v5/pkg/randbytes"
 )
 
 func Test_createModelUseCase_Create(t *testing.T) {
@@ -219,7 +220,11 @@ func Test_createModelInTransactionUseCase_Create(t *testing.T) {
 			}
 			got, err := l.Create(tt.args.ctx, tt.args.input)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("createModelInTransactionUseCase.Create() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"createModelInTransactionUseCase.Create() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
@@ -383,7 +388,11 @@ func Test_createModelHavingFileUseCase_Create(t *testing.T) {
 			}
 			got, err := l.Create(tt.args.ctx, tt.args.input)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("createModelHavingFileUseCase.Create() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"createModelHavingFileUseCase.Create() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {

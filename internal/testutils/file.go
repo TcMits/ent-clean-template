@@ -11,6 +11,7 @@ import (
 )
 
 func GetMemmoryStorager(t *testing.T) types.Storager {
+	t.Helper()
 	memoryName := uuid.NewString()
 	storager, err := services.NewStoragerFromString("memory:///" + memoryName)
 	require.NoError(t, err)

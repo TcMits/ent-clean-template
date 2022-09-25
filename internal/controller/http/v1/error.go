@@ -3,22 +3,23 @@ package v1
 import (
 	"errors"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/kataras/iris/v12"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	modelUseCase "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/go-playground/validator/v10"
-	"github.com/kataras/iris/v12"
 )
 
 const (
-	UnknownError               = "UNKNOWN"
-	UscaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
+	_unknownError               = "UNKNOWN"
+	_uscaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
 )
 
 const (
-	defaultInvalidErrorTranslateKey = "internal.controller.http.v1.error.InvalidError"
-	defaultInvalidErrorMessage      = "One or more fields failed to be validated"
+	_defaultInvalidErrorTranslateKey = "internal.controller.http.v1.error.InvalidError"
+	_defaultInvalidErrorMessage      = "One or more fields failed to be validated"
 )
 
 type errorResponse struct {
@@ -29,7 +30,7 @@ type errorResponse struct {
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
 	if !ok {
-		return UnknownError
+		return _unknownError
 	}
 	return haveCodeErr.Code()
 }
@@ -40,9 +41,9 @@ func getStatusCodeFromCode(code string) int {
 		return iris.StatusForbidden
 	case usecase.AuthenticationError:
 		return iris.StatusUnauthorized
-	case usecase.InternalServerError, UnknownError:
+	case usecase.InternalServerError, _unknownError:
 		return iris.StatusInternalServerError
-	case usecase.ValidationError, UscaseInputValidationError:
+	case usecase.ValidationError, _uscaseInputValidationError:
 		return iris.StatusBadRequest
 	case usecase.NotFoundError:
 		return iris.StatusNotFound
@@ -63,11 +64,11 @@ func logError(err error, code string, l logger.Interface) {
 		usecase.AuthenticationError,
 		usecase.ValidationError,
 		usecase.NotFoundError,
-		UscaseInputValidationError:
+		_uscaseInputValidationError:
 		l.Info(logErr.Error())
 	case usecase.DBError:
 		l.Warn(logErr.Error())
-	case usecase.InternalServerError, UnknownError:
+	case usecase.InternalServerError, _unknownError:
 		l.Error(err)
 	default:
 		l.Info(logErr.Error())
@@ -94,7 +95,7 @@ func handleError(ctx iris.Context, err error, l logger.Interface) {
 	}
 }
 
-// alias handleError
+// alias handleError.
 func HandleError(ctx iris.Context, err error, l logger.Interface) {
 	handleError(ctx, err, l)
 }
@@ -106,8 +107,8 @@ func translatableErrorFromValidationErrors(
 		GetErrorMessageFromStructField(string) (string, string)
 	})
 	var err error = errs
-	translateKey := defaultInvalidErrorTranslateKey
-	defaultErrorMessage := defaultInvalidErrorMessage
+	translateKey := _defaultInvalidErrorTranslateKey
+	defaultErrorMessage := _defaultInvalidErrorMessage
 	if ok {
 		for _, validationErr := range errs {
 			err = validationErr
@@ -118,7 +119,7 @@ func translatableErrorFromValidationErrors(
 		}
 	}
 	return model.NewTranslatableError(
-		err, translateKey, tr, defaultErrorMessage, UscaseInputValidationError,
+		err, translateKey, tr, defaultErrorMessage, _uscaseInputValidationError,
 	)
 }
 

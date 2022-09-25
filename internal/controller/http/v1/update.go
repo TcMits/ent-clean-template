@@ -1,10 +1,11 @@
 package v1
 
 import (
+	"github.com/kataras/iris/v12"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/kataras/iris/v12"
 )
 
 func getUpdateHandler[
@@ -18,7 +19,6 @@ func getUpdateHandler[
 	getAndUpdateUseCase usecase.GetAndUpdateModelUseCase[ModelType, PWhereUserInputType, PUpdateInputType],
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
-
 	wrapReadParamsError func(model.TranslateFunc, error) error,
 	wrapReadQueryError func(model.TranslateFunc, error) error,
 	wrapReadBodyError func(model.TranslateFunc, error) error,

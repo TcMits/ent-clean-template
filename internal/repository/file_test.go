@@ -4,15 +4,15 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/stretchr/testify/require"
 	"go.beyondstorage.io/v5/pkg/randbytes"
 	"go.beyondstorage.io/v5/types"
+
+	"github.com/TcMits/ent-clean-template/internal/testutils"
 )
 
 func TestNewFileRepository(t *testing.T) {
@@ -33,7 +33,7 @@ func TestNewFileRepository(t *testing.T) {
 			want: &fileRepository{
 				&readFileRepository{storager: storager},
 				&existFileRepository{storager: storager},
-				&writeFileRepository{storager: storager, writeSize: DefaultWriteSize},
+				&writeFileRepository{storager: storager, writeSize: _DefaultWriteSize},
 				&deleteFileRepository{storager: storager},
 			},
 		},
@@ -66,7 +66,7 @@ func Test_readFileRepository_Read(t *testing.T) {
 	buf := bytes.Buffer{}
 	tee := io.TeeReader(r, &buf)
 	storager.Write(filePath, tee, size)
-	wantW, err := ioutil.ReadAll(&buf)
+	wantW, err := io.ReadAll(&buf)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -144,7 +144,7 @@ func Test_writeFileRepository_Write(t *testing.T) {
 	}{
 		{
 			name:   "Success",
-			fields: fields{storager: storager, writeSize: DefaultWriteSize},
+			fields: fields{storager: storager, writeSize: _DefaultWriteSize},
 			args: args{
 				ctx:  ctx,
 				path: "test2.txt",
@@ -155,7 +155,7 @@ func Test_writeFileRepository_Write(t *testing.T) {
 		},
 		{
 			name:   "ExistError",
-			fields: fields{storager: storager, writeSize: DefaultWriteSize},
+			fields: fields{storager: storager, writeSize: _DefaultWriteSize},
 			args: args{
 				ctx:  ctx,
 				path: "test.txt",

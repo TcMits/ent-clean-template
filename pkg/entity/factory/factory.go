@@ -7,13 +7,6 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
-var UserFactory = modelFactory[
-	*model.User,
-	*model.UserMutation,
-	*model.UserCreateInput,
-	*model.UserCreate,
-]{generator: newUserGenerator[*model.UserMutation, *model.UserCreateInput]()}
-
 type modelFactory[
 	ModelType any,
 	MutationType ent.Mutation,
@@ -24,12 +17,14 @@ type modelFactory[
 }
 
 func (f *modelFactory[_, _, MutationInputType, _]) Build(
-	ctx context.Context, opt map[string]any) MutationInputType {
+	ctx context.Context, opt map[string]any,
+) MutationInputType {
 	return f.generator.Generate(ctx, opt)
 }
 
 func (f *modelFactory[ModelType, _, _, ModelCreatorType]) Create(
-	ctx context.Context, creator ModelCreatorType, opt map[string]any) (ModelType, error) {
+	ctx context.Context, creator ModelCreatorType, opt map[string]any,
+) (ModelType, error) {
 	mutaitonInput := f.generator.Generate(ctx, opt)
 	mutaitonInput.Mutate(creator.Mutation())
 	return creator.Save(ctx)

@@ -9,22 +9,21 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"go.beyondstorage.io/v5/pkg/randbytes"
+
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	gomock "github.com/golang/mock/gomock"
-	"go.beyondstorage.io/v5/pkg/randbytes"
 )
 
 func Test_updateModelUseCase_Update(t *testing.T) {
 	type fields struct {
-		repository           repository.UpdateModelRepository[*struct{}, *struct{}]
-		getRepository        repository.GetModelRepository[*struct{}, *struct{}]
-		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
-		validateFunc         UpdateValidateFunc[*struct{}, *struct{}, *struct{}]
-		wrapGetErrorFunc     func(error) error
-		wrapUpdateErrorFunc  func(error) error
+		getUseCase          GetModelUseCase[*struct{}, *struct{}]
+		repository          repository.UpdateModelRepository[*struct{}, *struct{}]
+		validateFunc        UpdateValidateFunc[*struct{}, *struct{}, *struct{}]
+		wrapUpdateErrorFunc func(error) error
 	}
 	type args struct {
 		ctx         context.Context
@@ -35,16 +34,16 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	getRepo := repository.NewMockGetModelRepository[*struct{}, *struct{}](ctrl)
+	getUseCase := NewMockGetModelUseCase[*struct{}, *struct{}](ctrl)
 	updateRepo := repository.NewMockUpdateModelRepository[*struct{}, *struct{}](ctrl)
 
-	getRepo.EXPECT().Get(
+	getUseCase.EXPECT().Get(
 		gomock.Eq(ctx), gomock.Eq(new(struct{})),
 	).Return(
 		new(struct{}), nil,
 	).AnyTimes()
 
-	getRepo.EXPECT().Get(
+	getUseCase.EXPECT().Get(
 		gomock.Eq(ctx), gomock.Nil(),
 	).Return(
 		nil, errors.New(""),
@@ -72,15 +71,11 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    updateRepo,
-				getRepository: getRepo,
-				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
-					return uwi, nil
-				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}) (*struct{}, error) {
+				getUseCase: getUseCase,
+				repository: updateRepo,
+				validateFunc: func(c context.Context, ins, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
-				wrapGetErrorFunc:    func(err error) error { return err },
 				wrapUpdateErrorFunc: func(err error) error { return err },
 			},
 			args: args{
@@ -91,38 +86,13 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 			want: new(struct{}),
 		},
 		{
-			name: "toRepoWhereInputFuncError",
-			fields: fields{
-				repository:    updateRepo,
-				getRepository: getRepo,
-				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
-					return nil, errors.New("test")
-				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}) (*struct{}, error) {
-					return uui, nil
-				},
-				wrapGetErrorFunc:    func(err error) error { return err },
-				wrapUpdateErrorFunc: func(err error) error { return err },
-			},
-			args: args{
-				ctx:         ctx,
-				whereInput:  new(struct{}),
-				updateInput: new(struct{}),
-			},
-			wantErr: true,
-		},
-		{
 			name: "GetError",
 			fields: fields{
-				repository:    updateRepo,
-				getRepository: getRepo,
-				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
-					return uwi, nil
-				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}) (*struct{}, error) {
+				getUseCase: getUseCase,
+				repository: updateRepo,
+				validateFunc: func(c context.Context, ins, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
-				wrapGetErrorFunc:    func(err error) error { return err },
 				wrapUpdateErrorFunc: func(err error) error { return err },
 			},
 			args: args{
@@ -135,15 +105,11 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 		{
 			name: "ValidateFuncError",
 			fields: fields{
-				repository:    updateRepo,
-				getRepository: getRepo,
-				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
-					return uwi, nil
-				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}) (*struct{}, error) {
+				getUseCase: getUseCase,
+				repository: updateRepo,
+				validateFunc: func(c context.Context, ins, uui *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				wrapGetErrorFunc:    func(err error) error { return err },
 				wrapUpdateErrorFunc: func(err error) error { return err },
 			},
 			args: args{
@@ -156,15 +122,11 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 		{
 			name: "UpdateError",
 			fields: fields{
-				repository:    updateRepo,
-				getRepository: getRepo,
-				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
-					return uwi, nil
-				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}) (*struct{}, error) {
+				getUseCase: getUseCase,
+				repository: updateRepo,
+				validateFunc: func(c context.Context, ins, uui *struct{}) (*struct{}, error) {
 					return uui, nil
 				},
-				wrapGetErrorFunc:    func(err error) error { return err },
 				wrapUpdateErrorFunc: func(err error) error { return err },
 			},
 			args: args{
@@ -177,17 +139,19 @@ func Test_updateModelUseCase_Update(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			l := &updateModelUseCase[*struct{}, *struct{}, *struct{}, *struct{}, *struct{}]{
-				repository:           tt.fields.repository,
-				getRepository:        tt.fields.getRepository,
-				toRepoWhereInputFunc: tt.fields.toRepoWhereInputFunc,
-				validateFunc:         tt.fields.validateFunc,
-				wrapGetErrorFunc:     tt.fields.wrapGetErrorFunc,
-				wrapUpdateErrorFunc:  tt.fields.wrapUpdateErrorFunc,
+			l := &updateModelUseCase[*struct{}, *struct{}, *struct{}, *struct{}]{
+				getUseCase:          tt.fields.getUseCase,
+				repository:          tt.fields.repository,
+				validateFunc:        tt.fields.validateFunc,
+				wrapUpdateErrorFunc: tt.fields.wrapUpdateErrorFunc,
 			}
 			got, err := l.GetAndUpdate(tt.args.ctx, tt.args.whereInput, tt.args.updateInput)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getAndUpdateModelUseCase.GetAndUpdate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"getAndUpdateModelUseCase.GetAndUpdate() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 				return
 			}
 
@@ -268,7 +232,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
+				validateFunc: func(c context.Context, ins, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -290,7 +254,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
+				validateFunc: func(c context.Context, ins, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -312,7 +276,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
+				validateFunc: func(c context.Context, ins, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -334,7 +298,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
+				validateFunc: func(c context.Context, ins, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return nil, errors.New("test")
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -356,7 +320,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 				toRepoWhereInputFunc: func(c context.Context, uwi *struct{}) (*struct{}, error) {
 					return uwi, nil
 				},
-				validateFunc: func(c context.Context, ins *struct{}, uui *struct{}, client *ent.Client) (*struct{}, error) {
+				validateFunc: func(c context.Context, ins, uui *struct{}, client *ent.Client) (*struct{}, error) {
 					return uui, nil
 				},
 				wrapGetErrorFunc:    func(err error) error { return err },
@@ -384,7 +348,11 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 			}
 			got, err := l.GetAndUpdate(tt.args.ctx, tt.args.whereInput, tt.args.updateInput)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getAndUpdateModelUseCase.GetAndUpdate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"getAndUpdateModelUseCase.GetAndUpdate() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 				return
 			}
 
@@ -413,7 +381,9 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	getAndUpdateModelUseCase := NewMockGetAndUpdateModelUseCase[*struct{}, *struct{}, *struct{}](ctrl)
+	getAndUpdateModelUseCase := NewMockGetAndUpdateModelUseCase[*struct{}, *struct{}, *struct{}](
+		ctrl,
+	)
 	existFileRepository := repository.NewMockExistFileRepository(ctrl)
 	writeFileRepository := repository.NewMockWriteFileRepository(ctrl)
 	size := rand.Int63n(4 * 1024 * 1024)
@@ -554,11 +524,19 @@ func Test_getAndUpdateModelWithFileUseCase_GetAndUpdate(t *testing.T) {
 			}
 			got, err := l.GetAndUpdate(tt.args.ctx, tt.args.whereInput, tt.args.updateInput)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("getAndUpdateModelHavingFileUseCase.GetAndUpdate() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"getAndUpdateModelHavingFileUseCase.GetAndUpdate() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getAndUpdateModelHavingFileUseCase.GetAndUpdate() = %v, want%v", got, tt.want)
+				t.Errorf(
+					"getAndUpdateModelHavingFileUseCase.GetAndUpdate() = %v, want%v",
+					got,
+					tt.want,
+				)
 			}
 		})
 	}

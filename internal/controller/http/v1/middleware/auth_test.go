@@ -6,12 +6,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/internal/usecase"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+
+	"github.com/TcMits/ent-clean-template/internal/usecase"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 )
 
 func Test_Auth(t *testing.T) {
@@ -49,13 +50,13 @@ func Test_Auth(t *testing.T) {
 		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
 	](u))
 	handler.Get("/test", func(ctx iris.Context) {
-		userIrisContext, ok := ctx.Values().Get(UserKey).(lazy.LazyObject[*struct{}])
+		userIrisContext, ok := ctx.Values().Get(_userKey).(lazy.LazyObject[*struct{}])
 		if !ok {
 			ctx.StatusCode(iris.StatusUnauthorized)
 			ctx.JSON(iris.Map{})
 			return
 		}
-		userRequestContext, ok := ctx.Request().Context().Value(UserKey).(lazy.LazyObject[*struct{}])
+		userRequestContext, ok := ctx.Request().Context().Value(_userKey).(lazy.LazyObject[*struct{}])
 		if !ok {
 			ctx.StatusCode(iris.StatusUnauthorized)
 			ctx.JSON(iris.Map{})
@@ -86,9 +87,11 @@ func Test_Auth(t *testing.T) {
 	e := httptest.New(t, handler)
 
 	e.GET("/test").Expect().Status(iris.StatusUnauthorized)
-	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"tes").Expect().Status(iris.StatusUnauthorized)
-	e.GET("/test").WithQuery(JWTPrefix, "tes").Expect().Status(iris.StatusUnauthorized)
-	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
-	e.GET("/test").WithQuery(JWTPrefix, "test").Expect().Status(iris.StatusOK)
-
+	e.GET("/test").
+		WithHeader(_authHeaderKey, _JWTPrefix+" "+"tes").
+		Expect().
+		Status(iris.StatusUnauthorized)
+	e.GET("/test").WithQuery(_JWTPrefix, "tes").Expect().Status(iris.StatusUnauthorized)
+	e.GET("/test").WithHeader(_authHeaderKey, _JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
+	e.GET("/test").WithQuery(_JWTPrefix, "test").Expect().Status(iris.StatusOK)
 }

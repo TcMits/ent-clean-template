@@ -5,12 +5,13 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kataras/iris/v12/httptest"
+
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/golang/mock/gomock"
-	"github.com/kataras/iris/v12/httptest"
 )
 
 type MockUpdateInput struct {
@@ -34,7 +35,9 @@ func Test_getUpdateHandler(t *testing.T) {
 	wantErr := true
 	notWantErr := false
 	serializeUseCase := usecase.NewMockSerializeModelUseCase[*struct{}, *struct{}](ctrl)
-	getAndUpdateUseCase := usecase.NewMockGetAndUpdateModelUseCase[*struct{}, *struct{}, *MockUpdateInput](ctrl)
+	getAndUpdateUseCase := usecase.NewMockGetAndUpdateModelUseCase[*struct{}, *struct{}, *MockUpdateInput](
+		ctrl,
+	)
 
 	getAndUpdateUseCase.EXPECT().GetAndUpdate(
 		gomock.Eq(ctx),
@@ -96,7 +99,14 @@ func Test_getUpdateHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getUpdateHandler(tt.args.getAndUpdateUseCase, tt.args.serializeUseCase, tt.args.l, tt.args.wrapReadParamsError, tt.args.wrapReadQueryError, tt.args.wrapReadBodyError)
+			got := getUpdateHandler(
+				tt.args.getAndUpdateUseCase,
+				tt.args.serializeUseCase,
+				tt.args.l,
+				tt.args.wrapReadParamsError,
+				tt.args.wrapReadQueryError,
+				tt.args.wrapReadBodyError,
+			)
 
 			handler := NewHandler()
 			handler.Put("/test-put", got)

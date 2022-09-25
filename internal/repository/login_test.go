@@ -5,12 +5,13 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewLoginRepository(t *testing.T) {
@@ -54,9 +55,9 @@ func Test_loginRepository_Get(t *testing.T) {
 	ctx := context.Background()
 	client := testutils.GetSqlite3TestClient(ctx, t)
 	defer client.Close()
-	userA, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
+	userA, err := factory.GetUserFactory().Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
-	_, err = factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
+	_, err = factory.GetUserFactory().Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 	testFirstName := "test"
 	testIsActive := true
@@ -124,7 +125,7 @@ func Test_loginRepository_Login(t *testing.T) {
 	require.NoError(t, err)
 	defer client.Close()
 	require.NoError(t, client.Schema.Create(ctx))
-	userA, err := factory.UserFactory.Create(ctx, client.User.Create(), map[string]any{})
+	userA, err := factory.GetUserFactory().Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 
 	tests := []struct {

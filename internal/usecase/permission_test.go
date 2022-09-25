@@ -22,8 +22,10 @@ func Test_basePermissionCheckerUseCase_Check(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "WantErrTrue",
-			fields:  fields{checkFunc: func(ctx context.Context, a any) error { return errors.New("") }},
+			name: "WantErrTrue",
+			fields: fields{
+				checkFunc: func(ctx context.Context, a any) error { return errors.New("") },
+			},
 			args:    args{ctx: ctx, u: nil},
 			wantErr: true,
 		},
@@ -42,7 +44,11 @@ func Test_basePermissionCheckerUseCase_Check(t *testing.T) {
 			}
 			err := l.Check(tt.args.ctx, tt.args.u)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}
@@ -63,8 +69,10 @@ func Test_basePermissionCheckerUseCase_And(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "WantErrTrue",
-			fields: fields{checkFunc: func(ctx context.Context, a any) error { return errors.New("") }},
+			name: "WantErrTrue",
+			fields: fields{
+				checkFunc: func(ctx context.Context, a any) error { return errors.New("") },
+			},
 			args: args{checker: &basePermissionCheckerUseCase[any]{
 				checkFunc: func(ctx context.Context, a any) error { return nil },
 			}},
@@ -87,7 +95,11 @@ func Test_basePermissionCheckerUseCase_And(t *testing.T) {
 			}
 			got := l.And(tt.args.checker)
 			if err := got.Check(ctx, nil); (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}
@@ -108,8 +120,10 @@ func Test_basePermissionCheckerUseCase_Or(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:   "WantErrFalse",
-			fields: fields{checkFunc: func(ctx context.Context, a any) error { return errors.New("") }},
+			name: "WantErrFalse",
+			fields: fields{
+				checkFunc: func(ctx context.Context, a any) error { return errors.New("") },
+			},
 			args: args{checker: &basePermissionCheckerUseCase[any]{
 				checkFunc: func(ctx context.Context, a any) error { return nil },
 			}},
@@ -124,7 +138,11 @@ func Test_basePermissionCheckerUseCase_Or(t *testing.T) {
 			}
 			got := l.Or(tt.args.checker)
 			if err := got.Check(ctx, nil); (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}
@@ -146,7 +164,11 @@ func Test_NewAllowAnyPermissionChecker(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewAllowAnyPermissionChecker[any]()
 			if err := got.Check(ctx, nil); (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}
@@ -174,7 +196,11 @@ func Test_NewDisallowAnyPermissionChecker(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewDisallowAnyPermissionChecker[any](tt.args.err)
 			if err := got.Check(ctx, nil); (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}
@@ -202,7 +228,11 @@ func Test_NewDisallowZeroPermissionChecker(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewDisallowZeroPermissionChecker[*struct{}](tt.args.err)
 			if err := got.Check(ctx, nil); (err != nil) != tt.wantErr {
-				t.Errorf("basePermissionCheckerUseCase.Check() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf(
+					"basePermissionCheckerUseCase.Check() error = %v, wantErr %v",
+					err,
+					tt.wantErr,
+				)
 			}
 		})
 	}

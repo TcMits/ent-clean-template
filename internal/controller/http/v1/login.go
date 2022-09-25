@@ -3,48 +3,50 @@ package v1
 import (
 	"fmt"
 
+	"github.com/kataras/iris/v12"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/kataras/iris/v12"
 )
 
 const (
-	loginSubPath        = "/login"
-	refreshTokenSubPath = "/refresh-token"
-	verifyTokenSubPath  = "/verify-token"
+	_loginSubPath        = "/login"
+	_refreshTokenSubPath = "/refresh-token"
+	_verifyTokenSubPath  = "/verify-token"
 
-	loginRouteName        = "login"
-	refreshTokenRouteName = "refreshToken"
-	verifyTokenRouteName  = "verifyToken"
+	_loginRouteName        = "login"
+	_refreshTokenRouteName = "refreshToken"
+	_verifyTokenRouteName  = "verifyToken"
 )
 
 var (
 	_wrapInvalidLoginInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getLoginHandler - ctx.ReadBody: %w", err),
-			defaultInvalidErrorTranslateKey,
+			_defaultInvalidErrorTranslateKey,
 			translationFunc,
-			defaultInvalidErrorMessage,
-			UscaseInputValidationError,
+			_defaultInvalidErrorMessage,
+			_uscaseInputValidationError,
 		)
 	}
 	_wrapInvalidRefreshInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getRefreshTokenHandler - ctx.ReadBody: %w", err),
-			defaultInvalidErrorTranslateKey,
+			_defaultInvalidErrorTranslateKey,
 			translationFunc,
-			defaultInvalidErrorMessage,
-			UscaseInputValidationError,
+			_defaultInvalidErrorMessage,
+			_uscaseInputValidationError,
 		)
 	}
 	_wrapInvalidVerifyTokenInput = func(translationFunc model.TranslateFunc, err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getVerifyTokenHandler - ctx.ReadBody: %w", err),
-			defaultInvalidErrorTranslateKey,
+			_defaultInvalidErrorTranslateKey,
 			translationFunc,
-			defaultInvalidErrorMessage,
-			UscaseInputValidationError,
+			_defaultInvalidErrorMessage,
+			_uscaseInputValidationError,
 		)
 	}
 )
@@ -57,16 +59,9 @@ type verifyTokenRequest struct {
 	Token string `json:"token" validate:"required"`
 }
 
-func RegisterLoginController[
-	PLoginInputType interface{ *LoginInputType },
-	JWTAuthenticatedPayloadType any,
-	PRefreshTokenInputType interface{ *RefreshTokenInputType },
-	UserType,
-	LoginInputType,
-	RefreshTokenInputType any,
-](
+func RegisterLoginController(
 	handler iris.Party,
-	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
+	useCase usecase.LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User],
 	l logger.Interface,
 ) {
 	if handler == nil {
@@ -78,9 +73,9 @@ func RegisterLoginController[
 	if l == nil {
 		panic("l is required")
 	}
-	handler.Post(loginSubPath, getLoginHandler(useCase, l)).Name = loginRouteName
-	handler.Post(refreshTokenSubPath, getRefreshTokenHandler(useCase, l)).Name = refreshTokenRouteName
-	handler.Post(verifyTokenSubPath, getVerifyTokenHandler(useCase, l)).Name = verifyTokenRouteName
+	handler.Post(_loginSubPath, getLoginHandler(useCase, l)).Name = _loginRouteName
+	handler.Post(_refreshTokenSubPath, getRefreshTokenHandler(useCase, l)).Name = _refreshTokenRouteName
+	handler.Post(_verifyTokenSubPath, getVerifyTokenHandler(useCase, l)).Name = _verifyTokenRouteName
 }
 
 func getLoginHandler[
@@ -119,7 +114,6 @@ func getRefreshTokenHandler[
 ](
 	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
 	l logger.Interface,
-
 ) iris.Handler {
 	return func(ctx iris.Context) {
 		refreshTokenInput := PRefreshTokenInputType(new(RefreshTokenInputType))
@@ -146,7 +140,6 @@ func getVerifyTokenHandler[
 ](
 	useCase usecase.LoginUseCase[PLoginInputType, JWTAuthenticatedPayloadType, PRefreshTokenInputType, UserType],
 	l logger.Interface,
-
 ) iris.Handler {
 	return func(ctx iris.Context) {
 		verifyTokenInput := new(verifyTokenRequest)

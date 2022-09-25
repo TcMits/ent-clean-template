@@ -10,7 +10,7 @@ import (
 //go:generate mockgen -source=interfaces.go -destination=./mocks.go -package=repository
 
 type (
-	// database
+	// database.
 	TransactionRepository interface {
 		// return client, commit function, rollback function, error
 		Start(context.Context) (*ent.Client, func() error, func() error, error)
@@ -28,7 +28,15 @@ type (
 		List(context.Context, int, int, OrderInputType, WhereInputType) ([]ModelType, error)
 	}
 	ListWithClientModelRepository[ModelType, OrderInputType, WhereInputType any] interface {
-		ListWithClient(context.Context, *ent.Client, int, int, OrderInputType, WhereInputType, bool) ([]ModelType, error)
+		ListWithClient(
+			context.Context,
+			*ent.Client,
+			int,
+			int,
+			OrderInputType,
+			WhereInputType,
+			bool,
+		) ([]ModelType, error)
 	}
 	CreateModelRepository[ModelType, CreateInputType any] interface {
 		Create(context.Context, CreateInputType) (ModelType, error)
@@ -40,7 +48,12 @@ type (
 		Update(context.Context, ModelType, UpdateInputType) (ModelType, error)
 	}
 	UpdateWithClientModelRepository[ModelType, UpdateInputType any] interface {
-		UpdateWithClient(context.Context, *ent.Client, ModelType, UpdateInputType) (ModelType, error)
+		UpdateWithClient(
+			context.Context,
+			*ent.Client,
+			ModelType,
+			UpdateInputType,
+		) (ModelType, error)
 	}
 	DeleteModelRepository[ModelType any] interface {
 		Delete(context.Context, ModelType) error
@@ -52,7 +65,7 @@ type (
 		Login(context.Context, LoginInputType) (UserType, error)
 	}
 
-	// files
+	// files.
 	ReadFileRepository interface {
 		Read(context.Context, string, io.Writer, int64, int64) (int64, error)
 	}

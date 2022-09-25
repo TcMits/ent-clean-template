@@ -29,7 +29,7 @@ type (
 
 	// Log -.
 	Log struct {
-		Level string `env-required:"true" yaml:"log_level"   env:"LOG_LEVEL"`
+		Level string `env-required:"true" yaml:"log_level" env:"LOG_LEVEL"`
 	}
 
 	// PG -.
@@ -38,9 +38,9 @@ type (
 		URL     string `env-required:"true"                 env:"PG_URL"`
 	}
 
-	// Usecases
+	// Usecases.
 	LoginUseCase struct {
-		Secret string `env-required:"true"                 env:"LOGIN_USECASE_SECRET"`
+		Secret string `env-required:"true" env:"LOGIN_USECASE_SECRET"`
 	}
 )
 

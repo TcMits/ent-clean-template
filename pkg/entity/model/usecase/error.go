@@ -15,7 +15,8 @@ func (e *UseCaseError) Error() string { return e.err.Error() }
 func (e *UseCaseError) Unwrap() error { return e.err }
 
 func NewUseCaseError(
-	err error, key string, defaultError string, code string, args ...any) *UseCaseError {
+	err error, key string, defaultError string, code string, args ...any,
+) *UseCaseError {
 	return &UseCaseError{
 		args:         args,
 		key:          key,

@@ -5,12 +5,14 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/internal/testutils"
-	"github.com/TcMits/ent-clean-template/internal/usecase"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+
+	"github.com/TcMits/ent-clean-template/internal/testutils"
+	"github.com/TcMits/ent-clean-template/internal/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
+	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 )
 
 func Test_LoginHandler(t *testing.T) {
@@ -19,7 +21,7 @@ func Test_LoginHandler(t *testing.T) {
 	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
 	u := usecase.NewMockLoginUseCase[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+		*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User,
 	](ctrl)
 
 	u.EXPECT().Login(
@@ -28,7 +30,7 @@ func Test_LoginHandler(t *testing.T) {
 			Password: "12345678",
 		}),
 	).Return(
-		new(struct{}), nil,
+		new(useCaseModel.JWTAuthenticatedPayload), nil,
 	).AnyTimes()
 
 	u.EXPECT().Login(
@@ -43,19 +45,17 @@ func Test_LoginHandler(t *testing.T) {
 	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
-	](handler, u, l)
+	RegisterLoginController(handler, u, l)
 	handler.Build()
 
 	e := httptest.New(t, handler)
-	e.POST(loginSubPath).WithForm(
+	e.POST(_loginSubPath).WithForm(
 		useCaseModel.LoginInput{
 			Username: "tsolution",
 			Password: "12345678",
 		},
 	).Expect().Status(iris.StatusOK)
-	e.POST(loginSubPath).WithForm(
+	e.POST(_loginSubPath).WithForm(
 		useCaseModel.LoginInput{
 			Username: "tsolution",
 			Password: "1234567",
@@ -69,7 +69,7 @@ func Test_RefreshTokenHandler(t *testing.T) {
 	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
 	u := usecase.NewMockLoginUseCase[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+		*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User,
 	](ctrl)
 
 	u.EXPECT().RefreshToken(
@@ -93,20 +93,18 @@ func Test_RefreshTokenHandler(t *testing.T) {
 	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
-	](handler, u, l)
+	RegisterLoginController(handler, u, l)
 	handler.Build()
 
 	e := httptest.New(t, handler)
 
-	e.POST(refreshTokenSubPath).WithJSON(
+	e.POST(_refreshTokenSubPath).WithJSON(
 		useCaseModel.RefreshTokenInput{
 			RefreshToken: "test",
 			RefreshKey:   "test",
 		},
 	).Expect().Status(iris.StatusOK)
-	e.POST(refreshTokenSubPath).WithJSON(
+	e.POST(_refreshTokenSubPath).WithJSON(
 		useCaseModel.RefreshTokenInput{
 			RefreshToken: "tes",
 			RefreshKey:   "test",
@@ -120,13 +118,13 @@ func Test_VerifyTokenHandler(t *testing.T) {
 	defer ctrl.Finish()
 	l := &testutils.NullLogger{}
 	u := usecase.NewMockLoginUseCase[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
+		*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User,
 	](ctrl)
 
 	u.EXPECT().VerifyToken(
 		gomock.Eq(ctx), gomock.Eq("test"),
 	).Return(
-		new(struct{}), nil,
+		new(model.User), nil,
 	).AnyTimes()
 
 	u.EXPECT().VerifyToken(
@@ -138,18 +136,16 @@ func Test_VerifyTokenHandler(t *testing.T) {
 	).AnyTimes()
 
 	handler := NewHandler()
-	RegisterLoginController[
-		*useCaseModel.LoginInput, *struct{}, *useCaseModel.RefreshTokenInput, *struct{},
-	](handler, u, l)
+	RegisterLoginController(handler, u, l)
 
 	handler.Build()
 	e := httptest.New(t, handler)
-	e.POST(verifyTokenSubPath).WithForm(
+	e.POST(_verifyTokenSubPath).WithForm(
 		verifyTokenRequest{
 			Token: "test",
 		},
 	).Expect().Status(iris.StatusOK)
-	e.POST(verifyTokenSubPath).WithForm(
+	e.POST(_verifyTokenSubPath).WithForm(
 		verifyTokenRequest{
 			Token: "tes",
 		},

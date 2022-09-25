@@ -7,7 +7,7 @@ import (
 )
 
 // ValidatePassword validates a plain password against the model's password.
-func ValidatePassword(passwordHash string, password string) bool {
+func ValidatePassword(passwordHash, password string) bool {
 	bytePassword := []byte(password)
 	bytePasswordHash := []byte(passwordHash)
 

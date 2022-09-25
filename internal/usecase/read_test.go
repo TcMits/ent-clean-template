@@ -6,8 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/golang/mock/gomock"
+
+	"github.com/TcMits/ent-clean-template/internal/repository"
 )
 
 func Test_getModelUseCase_Get(t *testing.T) {
@@ -346,7 +347,13 @@ func Test_listModelUseCase_List(t *testing.T) {
 				toRepoOrderInputFunc: tt.fields.toRepoOrderInputFunc,
 				wrapListErrorFunc:    tt.fields.wrapListErrorFunc,
 			}
-			got, err := l.List(tt.args.ctx, tt.args.limit, tt.args.offset, tt.args.orderInput, tt.args.whereInput)
+			got, err := l.List(
+				tt.args.ctx,
+				tt.args.limit,
+				tt.args.offset,
+				tt.args.orderInput,
+				tt.args.whereInput,
+			)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("listModelUseCase.List() error = %v, wantErr %v", err, tt.wantErr)
 				return

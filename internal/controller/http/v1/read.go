@@ -3,22 +3,27 @@ package v1
 import (
 	"strconv"
 
+	"github.com/kataras/iris/v12"
+
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/url"
-	"github.com/kataras/iris/v12"
 )
 
 const (
 	defaultLimit = 10
 )
 
-var defaultLimitOffsetInput = &limitOffsetQueryInput{Limit: defaultLimit, Offset: 0, WithCount: false}
+var defaultLimitOffsetInput = &limitOffsetQueryInput{
+	Limit:     defaultLimit,
+	Offset:    0,
+	WithCount: false,
+}
 
 type limitOffsetQueryInput struct {
-	Limit     int  `url:"limit" validate:"min=0,max=2000"`
-	Offset    int  `url:"offset" validate:"min=0"`
+	Limit     int  `url:"limit"      validate:"min=0,max=2000"`
+	Offset    int  `url:"offset"     validate:"min=0"`
 	WithCount bool `url:"with_count"`
 }
 

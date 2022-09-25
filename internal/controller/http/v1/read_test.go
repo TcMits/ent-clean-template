@@ -5,18 +5,19 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kataras/iris/v12/httptest"
+
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/golang/mock/gomock"
-	"github.com/kataras/iris/v12/httptest"
 )
 
 type MockWhereInput struct {
 	ID             *string `param:"id"`
-	WantError      *bool   `url:"want_error"`
-	WantCountError *bool   `url:"want_count_error"`
+	WantError      *bool   `           url:"want_error"`
+	WantCountError *bool   `           url:"want_count_error"`
 }
 
 func Test_getDetailHandler(t *testing.T) {
@@ -84,7 +85,13 @@ func Test_getDetailHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getDetailHandler(tt.args.getUseCase, tt.args.serializeUseCase, tt.args.l, tt.args.wrapReadParamsError, tt.args.wrapReadQueryError)
+			got := getDetailHandler(
+				tt.args.getUseCase,
+				tt.args.serializeUseCase,
+				tt.args.l,
+				tt.args.wrapReadParamsError,
+				tt.args.wrapReadQueryError,
+			)
 
 			handler := NewHandler()
 			handler.Get("/test", got)
@@ -213,7 +220,14 @@ func Test_getListHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getListHandler(tt.args.listUseCase, tt.args.countUseCase, tt.args.serializeUseCase, tt.args.l, tt.args.wrapReadParamsError, tt.args.wrapReadQueryError)
+			got := getListHandler(
+				tt.args.listUseCase,
+				tt.args.countUseCase,
+				tt.args.serializeUseCase,
+				tt.args.l,
+				tt.args.wrapReadParamsError,
+				tt.args.wrapReadQueryError,
+			)
 
 			handler := NewHandler()
 			handler.Get("/test", got)

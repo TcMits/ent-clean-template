@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+    golang:
+        build:
+            context: .
+            dockerfile: ./compose/production/golang/Dockerfile
+        image: golang
+        container_name: golang
+        env_file:
+            - ./.envs/.production/.golang
+            - ./.envs/.production/.postgres
+        depends_on:
+            postgres:
+                condition: service_healthy
+        ports:
+            - 8080:8080
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:8080/ping/"]
+
+    postgres:
+        build:
+            context: .
+            dockerfile: ./compose/production/postgres/Dockerfile
+        image: postgres_db
+        container_name: postgres_db
+        command: postgres
+        volumes:
+            - type: volume
+              source: db
+              target: /var/lib/postgresql/data
+        env_file:
+            - ./.envs/.production/.postgres
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+
+volumes:
+    db:

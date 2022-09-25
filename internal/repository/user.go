@@ -5,10 +5,12 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
-type urr = *ent.UserReadRepository
-type ucr = *ent.UserCreateRepository
-type uur = *ent.UserUpdateRepository
-type udr = *ent.UserDeleteRepository
+type (
+	urr = *ent.UserReadRepository
+	ucr = *ent.UserCreateRepository
+	uur = *ent.UserUpdateRepository
+	udr = *ent.UserDeleteRepository
+)
 
 type userRepository struct {
 	urr

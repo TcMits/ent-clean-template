@@ -5,13 +5,14 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/golang/mock/gomock"
+	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/httptest"
+
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/golang/mock/gomock"
-	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/httptest"
 )
 
 func Test_Permission(t *testing.T) {
@@ -58,5 +59,5 @@ func Test_Permission(t *testing.T) {
 	e := httptest.New(t, handler)
 
 	e.GET("/test").Expect().Status(iris.StatusForbidden)
-	e.GET("/test").WithHeader(AuthHeaderKey, JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
+	e.GET("/test").WithHeader(_authHeaderKey, _JWTPrefix+" "+"test").Expect().Status(iris.StatusOK)
 }

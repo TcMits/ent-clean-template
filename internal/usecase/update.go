@@ -16,7 +16,10 @@ import (
 var (
 	_wrapStartUpdateTransactionError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("updateModelInTransactionUseCase - Update - u.transactionRepository.Start: %w", err),
+			fmt.Errorf(
+				"updateModelInTransactionUseCase - Update - u.transactionRepository.Start: %w",
+				err,
+			),
 			"internal.usecase.update.updateModelInTransactionUseCase.Update.StartUpdateTransactionError",
 			"Can't update now",
 			DBError,
@@ -24,7 +27,10 @@ var (
 	}
 	_wrapCommitUpdateError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("updateModelInTransactionUseCase - Update - u.transactionRepository.Commit: %w", err),
+			fmt.Errorf(
+				"updateModelInTransactionUseCase - Update - u.transactionRepository.Commit: %w",
+				err,
+			),
 			"internal.usecase.update.updateModelInTransactionUseCase.Update.CommitUpdateError",
 			"Can't update now",
 			DBError,
@@ -32,7 +38,10 @@ var (
 	}
 	_wrapRollbackUpdateError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("updateModelInTransactionUseCase - Update - u.transactionRepository.Rollback: %w", err),
+			fmt.Errorf(
+				"updateModelInTransactionUseCase - Update - u.transactionRepository.Rollback: %w",
+				err,
+			),
 			"internal.usecase.update.updateModelInTransactionUseCase.Update.RollbackUpdateError",
 			"Can't update now",
 			DBError,
@@ -46,17 +55,17 @@ type UpdateFile struct {
 	Reader   io.Reader
 }
 
-type UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType) (RepoUpdateInputType, error)
-type UpdateInTransactionValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType, *ent.Client) (RepoUpdateInputType, error)
-type UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType any] func(context.Context, UpdateInputType) (UseCaseUpdateInputType, []*UpdateFile, error)
+type (
+	UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any]              func(context.Context, ModelType, UpdateInputType) (RepoUpdateInputType, error)
+	UpdateInTransactionValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType any] func(context.Context, ModelType, UpdateInputType, *ent.Client) (RepoUpdateInputType, error)
+	UpdateWithFileValidateFunc[UpdateInputType, UseCaseUpdateInputType any]              func(context.Context, UpdateInputType) (UseCaseUpdateInputType, []*UpdateFile, error)
+)
 
-type updateModelUseCase[ModelType, WhereInputType, UpdateInputType, RepoWhereInputType, RepoUpdateInputType any] struct {
-	repository           repository.UpdateModelRepository[ModelType, RepoUpdateInputType]
-	getRepository        repository.GetModelRepository[ModelType, RepoWhereInputType]
-	toRepoWhereInputFunc ConverFunc[WhereInputType, RepoWhereInputType]
-	validateFunc         UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType]
-	wrapGetErrorFunc     func(error) error
-	wrapUpdateErrorFunc  func(error) error
+type updateModelUseCase[ModelType, WhereInputType, UpdateInputType, RepoUpdateInputType any] struct {
+	getUseCase          GetModelUseCase[ModelType, WhereInputType]
+	repository          repository.UpdateModelRepository[ModelType, RepoUpdateInputType]
+	validateFunc        UpdateValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType]
+	wrapUpdateErrorFunc func(error) error
 }
 
 type updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputType, RepoWhereInputType, RepoUpdateInputType any] struct {
@@ -79,16 +88,12 @@ type getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType
 	l                   logger.Interface
 }
 
-func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) GetAndUpdate(
+func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _]) GetAndUpdate(
 	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
 ) (ModelType, error) {
-	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, whereInput)
+	instance, err := u.getUseCase.Get(ctx, whereInput)
 	if err != nil {
 		return generic.Zero[ModelType](), err
-	}
-	instance, err := u.getRepository.Get(ctx, repoWhereInput)
-	if err != nil {
-		return generic.Zero[ModelType](), u.wrapGetErrorFunc(err)
 	}
 	repoUpdateInput, err := u.validateFunc(ctx, instance, updateInput)
 	if err != nil {
@@ -102,7 +107,9 @@ func (u *updateModelUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) G
 }
 
 func (u *updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputType, _, _]) GetAndUpdate(
-	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
+	ctx context.Context,
+	whereInput WhereInputType,
+	updateInput UpdateInputType,
 ) (instance ModelType, err error) {
 	client, commitFunc, rollbackFunc, err := u.transactionRepository.Start(ctx)
 	if err != nil {
@@ -135,7 +142,12 @@ func (u *updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputT
 	}
 
 	// get instance
-	oldInstance, err := u.getRepository.GetWithClient(ctx, client, repoWhereInput, u.selectForUpdate)
+	oldInstance, err := u.getRepository.GetWithClient(
+		ctx,
+		client,
+		repoWhereInput,
+		u.selectForUpdate,
+	)
 	if err != nil {
 		err = u.wrapGetErrorFunc(err)
 		return
@@ -157,7 +169,9 @@ func (u *updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputT
 }
 
 func (u *getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInputType, _]) GetAndUpdate(
-	ctx context.Context, whereInput WhereInputType, updateInput UpdateInputType,
+	ctx context.Context,
+	whereInput WhereInputType,
+	updateInput UpdateInputType,
 ) (ModelType, error) {
 	useCaseUpdateInput, files, err := u.validateFunc(ctx, updateInput)
 	if err != nil {
@@ -181,7 +195,10 @@ func (u *getAndUpdateModelWithFileUseCase[ModelType, WhereInputType, UpdateInput
 					u.l.Error(fileErr)
 					continue
 				}
-				u.l.Info("getAndUpdateModelWithFileUseCase - GetAndUpdate - u.getAndUpdateUseCase.GetAndUpdate: Upload %d bytes", n)
+				u.l.Info(
+					"getAndUpdateModelWithFileUseCase - GetAndUpdate - u.getAndUpdateUseCase.GetAndUpdate: Upload %d bytes",
+					n,
+				)
 			}
 		}()
 	}

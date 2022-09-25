@@ -14,3 +14,5 @@ WORKDIR /ent-clean-template
 COPY go.mod go.sum /ent-clean-template/
 RUN go mod download
 RUN go install github.com/cosmtrek/air@latest
+
+ENTRYPOINT ["/entrypoint"]

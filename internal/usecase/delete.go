@@ -11,7 +11,10 @@ import (
 var (
 	_wrapStartDeleteTransactionError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("deleteModelInTransactionUseCase - Delete - u.transactionRepository.Start: %w", err),
+			fmt.Errorf(
+				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Start: %w",
+				err,
+			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.StartDeleteTransactionError",
 			"Can't delete now",
 			DBError,
@@ -19,7 +22,10 @@ var (
 	}
 	_wrapCommitDeleteError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("deleteModelInTransactionUseCase - Delete - u.transactionRepository.Commit: %w", err),
+			fmt.Errorf(
+				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Commit: %w",
+				err,
+			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.CommitDeleteError",
 			"Can't delete now",
 			DBError,
@@ -27,7 +33,10 @@ var (
 	}
 	_wrapRollbackDeleteError = func(err error) error {
 		return useCaseModel.NewUseCaseError(
-			fmt.Errorf("deleteModelInTransactionUseCase - Delete - u.transactionRepository.Rollback: %w", err),
+			fmt.Errorf(
+				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Rollback: %w",
+				err,
+			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.RollbackDeleteError",
 			"Can't delete now",
 			DBError,
@@ -36,11 +45,9 @@ var (
 )
 
 type deleteModelUseCase[ModelType, WhereInputType, RepoWhereInputType any] struct {
-	repository           repository.DeleteModelRepository[ModelType]
-	getRepository        repository.GetModelRepository[ModelType, RepoWhereInputType]
-	toRepoWhereInputFunc ConverFunc[WhereInputType, RepoWhereInputType]
-	wrapGetErrorFunc     func(error) error
-	wrapDeleteErrorFunc  func(error) error
+	getUseCase          GetModelUseCase[ModelType, WhereInputType]
+	repository          repository.DeleteModelRepository[ModelType]
+	wrapDeleteErrorFunc func(error) error
 }
 
 type deleteModelInTransactionUseCase[ModelType, WhereInputType, RepoWhereInputType any] struct {
@@ -56,13 +63,9 @@ type deleteModelInTransactionUseCase[ModelType, WhereInputType, RepoWhereInputTy
 func (u *deleteModelUseCase[ModelType, WhereInputType, _]) GetAndDelete(
 	ctx context.Context, input WhereInputType,
 ) error {
-	repoWhereInput, err := u.toRepoWhereInputFunc(ctx, input)
+	instance, err := u.getUseCase.Get(ctx, input)
 	if err != nil {
 		return err
-	}
-	instance, err := u.getRepository.Get(ctx, repoWhereInput)
-	if err != nil {
-		return u.wrapGetErrorFunc(err)
 	}
 	err = u.repository.Delete(ctx, instance)
 	if err != nil {

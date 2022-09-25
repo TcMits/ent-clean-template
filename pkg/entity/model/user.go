@@ -15,18 +15,24 @@ var OrderableColumns = []string{
 
 // User is the model entity for the User schema.
 type User = ent.User
-type PredicateUser = predicate.User
-type UserQuery = ent.UserQuery
-type UserMutation = ent.UserMutation
-type UserCreate = ent.UserCreate
-type UserUpdate = ent.UserUpdate
-type UserUpdateOne = ent.UserUpdateOne
-type UserCreateInput = ent.UserCreateInput
-type UserUpdateInput = ent.UserUpdateInput
-type UserWhereInput = ent.UserWhereInput
-type UserOrderInput = ent.UserOrderInput
-type UserSerializer = ent.UserSerializer
 
-var descCreateTimeOrderField, _ = ent.ParseOrderField(ent.OrderDirectionDescPrefix + user.FieldCreateTime)
-var DefaultUserWhereInput = &UserWhereInput{}
-var DefaultUserOrderInput = &UserOrderInput{descCreateTimeOrderField}
+type (
+	PredicateUser   = predicate.User
+	UserQuery       = ent.UserQuery
+	UserMutation    = ent.UserMutation
+	UserCreate      = ent.UserCreate
+	UserUpdate      = ent.UserUpdate
+	UserUpdateOne   = ent.UserUpdateOne
+	UserCreateInput = ent.UserCreateInput
+	UserUpdateInput = ent.UserUpdateInput
+	UserWhereInput  = ent.UserWhereInput
+	UserOrderInput  = ent.UserOrderInput
+	UserSerializer  = ent.UserSerializer
+)
+
+var (
+	descCreateTimeOrderField, _ = ent.ParseOrderField(
+		ent.OrderDirectionDescPrefix + user.FieldCreateTime,
+	)
+	DefaultUserOrderInput = &UserOrderInput{descCreateTimeOrderField}
+)

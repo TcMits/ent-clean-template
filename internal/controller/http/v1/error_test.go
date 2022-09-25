@@ -5,14 +5,15 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/kataras/iris/v12"
+	"github.com/kataras/iris/v12/httptest"
+
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
-	"github.com/go-playground/validator/v10"
-	"github.com/kataras/iris/v12"
-	"github.com/kataras/iris/v12/httptest"
 )
 
 type InputStruct struct {
@@ -59,7 +60,7 @@ func Test_getCodeFromError(t *testing.T) {
 			args: args{
 				err: errors.New("test"),
 			},
-			want: UnknownError,
+			want: _unknownError,
 		},
 	}
 	for _, tt := range tests {
@@ -101,8 +102,8 @@ func Test_getStatusCodeFromCode(t *testing.T) {
 			want: iris.StatusInternalServerError,
 		},
 		{
-			name: "UnknownError",
-			args: args{code: UnknownError},
+			name: "_unknownError",
+			args: args{code: _unknownError},
 			want: iris.StatusInternalServerError,
 		},
 		{
@@ -111,8 +112,8 @@ func Test_getStatusCodeFromCode(t *testing.T) {
 			want: iris.StatusBadRequest,
 		},
 		{
-			name: "UscaseInputValidationError",
-			args: args{code: UscaseInputValidationError},
+			name: "_uscaseInputValidationError",
+			args: args{code: _uscaseInputValidationError},
 			want: iris.StatusBadRequest,
 		},
 		{
@@ -183,11 +184,11 @@ func Test_logError(t *testing.T) {
 			},
 		},
 		{
-			name: "UnknownError",
+			name: "_unknownError",
 			args: args{
 				err:  errors.New("test"),
 				l:    testutils.NullLogger{},
-				code: UnknownError,
+				code: _unknownError,
 			},
 		},
 		{
@@ -199,11 +200,11 @@ func Test_logError(t *testing.T) {
 			},
 		},
 		{
-			name: "UscaseInputValidationError",
+			name: "_uscaseInputValidationError",
 			args: args{
 				err:  errors.New("test"),
 				l:    testutils.NullLogger{},
-				code: UscaseInputValidationError,
+				code: _uscaseInputValidationError,
 			},
 		},
 		{
@@ -302,10 +303,10 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			},
 			want: model.NewTranslatableError(
 				errs,
-				defaultInvalidErrorTranslateKey,
+				_defaultInvalidErrorTranslateKey,
 				tr,
-				defaultInvalidErrorMessage,
-				UscaseInputValidationError,
+				_defaultInvalidErrorMessage,
+				_uscaseInputValidationError,
 			),
 		},
 		{
@@ -320,24 +321,44 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 				"Message",
 				tr,
 				"Message",
-				UscaseInputValidationError,
+				_uscaseInputValidationError,
 			),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := translatableErrorFromValidationErrors(tt.args.inputStructure, tt.args.errs, tt.args.tr)
+			got := translatableErrorFromValidationErrors(
+				tt.args.inputStructure,
+				tt.args.errs,
+				tt.args.tr,
+			)
 			if !reflect.DeepEqual(got.Error(), tt.want.Error()) {
-				t.Errorf("translatableErrorFromValidationErrors() = %v, want %v", got.Error(), tt.want.Error())
+				t.Errorf(
+					"translatableErrorFromValidationErrors() = %v, want %v",
+					got.Error(),
+					tt.want.Error(),
+				)
 			}
 			if !reflect.DeepEqual(got.Key(), tt.want.Key()) {
-				t.Errorf("translatableErrorFromValidationErrors() = %v, want %v", got.Key(), tt.want.Key())
+				t.Errorf(
+					"translatableErrorFromValidationErrors() = %v, want %v",
+					got.Key(),
+					tt.want.Key(),
+				)
 			}
 			if !reflect.DeepEqual(got.DefaultError(), tt.want.DefaultError()) {
-				t.Errorf("translatableErrorFromValidationErrors() = %v, want %v", got.DefaultError(), tt.want.DefaultError())
+				t.Errorf(
+					"translatableErrorFromValidationErrors() = %v, want %v",
+					got.DefaultError(),
+					tt.want.DefaultError(),
+				)
 			}
 			if !reflect.DeepEqual(got.Code(), tt.want.Code()) {
-				t.Errorf("translatableErrorFromValidationErrors() = %v, want %v", got.Code(), tt.want.Code())
+				t.Errorf(
+					"translatableErrorFromValidationErrors() = %v, want %v",
+					got.Code(),
+					tt.want.Code(),
+				)
 			}
 		})
 	}
@@ -380,7 +401,13 @@ func Test_handleBindingError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			routeHandler := func(irisCtx iris.Context) {
-				handleBindingError(irisCtx, tt.args.err, tt.args.l, tt.args.input, tt.args.wrapTranslateError)
+				handleBindingError(
+					irisCtx,
+					tt.args.err,
+					tt.args.l,
+					tt.args.input,
+					tt.args.wrapTranslateError,
+				)
 			}
 			handler := NewHandler()
 			handler.Get("/", routeHandler)
