@@ -18,7 +18,7 @@ const (
 	_attempts   = 20
 
 	// HTTP REST
-	_v1SubPath           = "/v1"
+	_v1SubPath           = "/api/v1"
 	_loginSubPath        = _v1SubPath + "/login"
 	_refreshTokenSubPath = _v1SubPath + "/refresh-token"
 	_verifyTokenSubPath  = _v1SubPath + "/verify-token"

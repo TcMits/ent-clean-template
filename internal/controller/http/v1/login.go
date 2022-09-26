@@ -28,7 +28,7 @@ var (
 			_defaultInvalidErrorTranslateKey,
 			translationFunc,
 			_defaultInvalidErrorMessage,
-			_uscaseInputValidationError,
+			_usecaseInputValidationError,
 		)
 	}
 	_wrapInvalidRefreshInput = func(translationFunc model.TranslateFunc, err error) error {
@@ -37,7 +37,7 @@ var (
 			_defaultInvalidErrorTranslateKey,
 			translationFunc,
 			_defaultInvalidErrorMessage,
-			_uscaseInputValidationError,
+			_usecaseInputValidationError,
 		)
 	}
 	_wrapInvalidVerifyTokenInput = func(translationFunc model.TranslateFunc, err error) error {
@@ -46,18 +46,10 @@ var (
 			_defaultInvalidErrorTranslateKey,
 			translationFunc,
 			_defaultInvalidErrorMessage,
-			_uscaseInputValidationError,
+			_usecaseInputValidationError,
 		)
 	}
 )
-
-type refreshTokenResponse struct {
-	Token string `json:"token"`
-}
-
-type verifyTokenRequest struct {
-	Token string `json:"token" validate:"required"`
-}
 
 func RegisterLoginController(
 	handler iris.Party,
@@ -73,8 +65,65 @@ func RegisterLoginController(
 	if l == nil {
 		panic("l is required")
 	}
+	registerLogin(handler, useCase, l)
+	registerRefreshToken(handler, useCase, l)
+	registerVerifyToken(handler, useCase, l)
+}
+
+// @Summary Login endpoint
+// @Tags    login
+// @Accept  mpfd,x-www-form-urlencoded,json
+// @Produce json
+// @Param   payload body     useCaseModel.LoginInput true "Payload"
+// @Param   payload formData useCaseModel.LoginInput true "Payload"
+// @Success 200     {object} useCaseModel.JWTAuthenticatedPayload
+// @Failure 400     {object} errorResponse
+// @Failure 401     {object} errorResponse
+// @Failure 500     {object} errorResponse
+// @Router  /login [post]
+func registerLogin(
+	handler iris.Party,
+	useCase usecase.LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User],
+	l logger.Interface,
+) {
 	handler.Post(_loginSubPath, getLoginHandler(useCase, l)).Name = _loginRouteName
+}
+
+// @Summary Refresh token endpoint
+// @Tags    refresh-token
+// @Accept  mpfd,x-www-form-urlencoded,json
+// @Produce json
+// @Param   payload body     useCaseModel.RefreshTokenInput true "Payload"
+// @Param   payload formData useCaseModel.RefreshTokenInput true "Payload"
+// @Success 200     {object} refreshTokenResponse
+// @Failure 400     {object} errorResponse
+// @Failure 401     {object} errorResponse
+// @Failure 500     {object} errorResponse
+// @Router  /refresh-token [post]
+func registerRefreshToken(
+	handler iris.Party,
+	useCase usecase.LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User],
+	l logger.Interface,
+) {
 	handler.Post(_refreshTokenSubPath, getRefreshTokenHandler(useCase, l)).Name = _refreshTokenRouteName
+}
+
+// @Summary Verify token endpoint
+// @Tags    verify-token
+// @Accept  mpfd,x-www-form-urlencoded,json
+// @Produce json
+// @Param   payload body     verifyTokenRequest true "Payload"
+// @Param   payload formData verifyTokenRequest true "Payload"
+// @Success 200     {object} emptyResponse
+// @Failure 400     {object} errorResponse
+// @Failure 401     {object} errorResponse
+// @Failure 500     {object} errorResponse
+// @Router  /verify-token [post]
+func registerVerifyToken(
+	handler iris.Party,
+	useCase usecase.LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User],
+	l logger.Interface,
+) {
 	handler.Post(_verifyTokenSubPath, getVerifyTokenHandler(useCase, l)).Name = _verifyTokenRouteName
 }
 

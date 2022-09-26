@@ -112,8 +112,8 @@ func Test_getStatusCodeFromCode(t *testing.T) {
 			want: iris.StatusBadRequest,
 		},
 		{
-			name: "_uscaseInputValidationError",
-			args: args{code: _uscaseInputValidationError},
+			name: "_usecaseInputValidationError",
+			args: args{code: _usecaseInputValidationError},
 			want: iris.StatusBadRequest,
 		},
 		{
@@ -200,11 +200,11 @@ func Test_logError(t *testing.T) {
 			},
 		},
 		{
-			name: "_uscaseInputValidationError",
+			name: "_usecaseInputValidationError",
 			args: args{
 				err:  errors.New("test"),
 				l:    testutils.NullLogger{},
-				code: _uscaseInputValidationError,
+				code: _usecaseInputValidationError,
 			},
 		},
 		{
@@ -306,7 +306,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 				_defaultInvalidErrorTranslateKey,
 				tr,
 				_defaultInvalidErrorMessage,
-				_uscaseInputValidationError,
+				_usecaseInputValidationError,
 			),
 		},
 		{
@@ -321,7 +321,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 				"Message",
 				tr,
 				"Message",
-				_uscaseInputValidationError,
+				_usecaseInputValidationError,
 			),
 		},
 	}

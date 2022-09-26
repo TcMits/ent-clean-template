@@ -14,9 +14,8 @@ var OrderableColumns = []string{
 }
 
 // User is the model entity for the User schema.
-type User = ent.User
-
 type (
+	User            = ent.User
 	PredicateUser   = predicate.User
 	UserQuery       = ent.UserQuery
 	UserMutation    = ent.UserMutation

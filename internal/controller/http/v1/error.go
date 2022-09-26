@@ -13,19 +13,14 @@ import (
 )
 
 const (
-	_unknownError               = "UNKNOWN"
-	_uscaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
+	_unknownError                = "UNKNOWN"
+	_usecaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
 )
 
 const (
 	_defaultInvalidErrorTranslateKey = "internal.controller.http.v1.error.InvalidError"
 	_defaultInvalidErrorMessage      = "One or more fields failed to be validated"
 )
-
-type errorResponse struct {
-	Message string `json:"message"`
-	Code    string `json:"code"`
-}
 
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
@@ -43,7 +38,7 @@ func getStatusCodeFromCode(code string) int {
 		return iris.StatusUnauthorized
 	case usecase.InternalServerError, _unknownError:
 		return iris.StatusInternalServerError
-	case usecase.ValidationError, _uscaseInputValidationError:
+	case usecase.ValidationError, _usecaseInputValidationError:
 		return iris.StatusBadRequest
 	case usecase.NotFoundError:
 		return iris.StatusNotFound
@@ -64,7 +59,7 @@ func logError(err error, code string, l logger.Interface) {
 		usecase.AuthenticationError,
 		usecase.ValidationError,
 		usecase.NotFoundError,
-		_uscaseInputValidationError:
+		_usecaseInputValidationError:
 		l.Info(logErr.Error())
 	case usecase.DBError:
 		l.Warn(logErr.Error())
@@ -119,7 +114,7 @@ func translatableErrorFromValidationErrors(
 		}
 	}
 	return model.NewTranslatableError(
-		err, translateKey, tr, defaultErrorMessage, _uscaseInputValidationError,
+		err, translateKey, tr, defaultErrorMessage, _usecaseInputValidationError,
 	)
 }
 

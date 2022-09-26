@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"time"
 
 	"github.com/TcMits/ent-clean-template/copygen"
 	"github.com/TcMits/ent-clean-template/ent"
@@ -13,6 +14,7 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
+	"github.com/google/uuid"
 )
 
 const (
@@ -81,6 +83,21 @@ type (
 	getPublicMeUseCase                 struct{}
 	validateUpdateInputPublicMeUseCase struct {
 		repository repository.GetModelRepository[*model.User, *model.UserWhereInput]
+	}
+
+	// reflect on docs generation
+	publicMeUseCaseUpdateSerializedInfo struct {
+		ID          uuid.UUID `json:"id,omitempty"`
+		CreateTime  time.Time `json:"create_time,omitempty"`
+		UpdateTime  time.Time `json:"update_time,omitempty"`
+		Username    string    `json:"username,omitempty"`
+		FirstName   string    `json:"first_name,omitempty"`
+		LastName    string    `json:"last_name,omitempty"`
+		Email       string    `json:"email,omitempty"`
+		IsStaff     bool      `json:"is_staff,omitempty"`
+		IsSuperuser bool      `json:"is_superuser,omitempty"`
+		IsActive    bool      `json:"is_active,omitempty"`
+		Self        string    `json:"self,omitempty"`
 	}
 )
 
@@ -186,6 +203,7 @@ func NewPublicMeUseCase(
 	GetAndUpdateModelUseCase[*model.User, *struct{}, *useCaseModel.PublicMeUseCaseUpdateInput]
 	SerializeModelUseCase[*model.User, map[string]any]
 } {
+	// original user fields
 	columns := []string{
 		user.FieldID,
 		user.FieldCreateTime,

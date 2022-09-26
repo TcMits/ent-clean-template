@@ -14,10 +14,10 @@ const (
 )
 
 type PublicMeUseCaseUpdateInput struct {
-	Username  *string `json:"username,omitempty"   form:"username,omitempty"   validate:"alphanum,min=1,max=128"`
+	Username  *string `json:"username,omitempty"   form:"username,omitempty"   validate:"alphanum,min=1,max=128"` // username has to be unique
 	FirstName *string `json:"first_name,omitempty" form:"first_name,omitempty" validate:"max=128"`
 	LastName  *string `json:"last_name,omitempty"  form:"last_name,omitempty"  validate:"max=128"`
-	Email     *string `json:"email,omitempty"      form:"email,omitempty"      validate:"email"`
+	Email     *string `json:"email,omitempty"      form:"email,omitempty"      validate:"email"` // email has to be unique
 }
 
 func (i *PublicMeUseCaseUpdateInput) GetErrorMessageFromStructField(

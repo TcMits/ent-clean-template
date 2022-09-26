@@ -23,10 +23,23 @@ var _wrapPublicMeReadBodyError = func(translationFunc model.TranslateFunc, err e
 		_defaultInvalidErrorTranslateKey,
 		translationFunc,
 		_defaultInvalidErrorMessage,
-		_uscaseInputValidationError,
+		_usecaseInputValidationError,
 	)
 }
 
+// @Summary Me endpoints
+// @Tags    me
+// @Accept  mpfd,x-www-form-urlencoded,json
+// @Produce json
+// @Success 200 {object} usecase.publicMeUseCaseUpdateSerializedInfo
+// @Failure 400 {object} errorResponse
+// @Failure 403 {object} errorResponse
+// @Failure 500 {object} errorResponse
+// @Router  /me [get]
+// @Param   payload body     useCaseModel.PublicMeUseCaseUpdateInput true "Payload"
+// @Param   payload formData useCaseModel.PublicMeUseCaseUpdateInput true "Payload"
+// @Router  /me [put]
+// @Router  /me [patch]
 func RegisterPublicMeController(
 	handler iris.Party,
 	getUseCase usecase.GetModelUseCase[*model.User, *struct{}],

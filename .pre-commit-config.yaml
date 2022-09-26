@@ -6,6 +6,5 @@
     - id: go-imports
     - id: validate-toml
     - id: no-go-testing
-    - id: go-critic
     - id: go-mod-tidy
 
