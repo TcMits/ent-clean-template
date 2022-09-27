@@ -24,13 +24,13 @@ go test -cover -race $(go list ./... | grep -v /integration_test/)
 
 ## Overview
 
-Swagger urls:
+### Swagger urls
 
 ```
 /api/v1/swagger
 ```
 
-Default urls:
+### Default urls
 
 ----
 Login endpoint
