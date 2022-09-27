@@ -21,7 +21,6 @@ func TestNewLoginRepository(t *testing.T) {
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
 	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
 
 	tests := []struct {
 		name string
@@ -54,7 +53,6 @@ func Test_loginRepository_Get(t *testing.T) {
 	// Create an SQLite memory database and generate the schema.
 	ctx := context.Background()
 	client := testutils.GetSqlite3TestClient(ctx, t)
-	defer client.Close()
 	userA, err := factory.GetUserFactory().Create(ctx, client.User.Create(), map[string]any{})
 	require.NoError(t, err)
 	_, err = factory.GetUserFactory().Create(ctx, client.User.Create(), map[string]any{})

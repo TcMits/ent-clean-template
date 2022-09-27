@@ -75,6 +75,6 @@ func RegisterV1HTTPServices(
 	{
 		RegisterLoginController(h, loginUseCase, l)
 		RegisterPublicMeController(h, publicMeUseCase, publicMeUseCase, publicMeUseCase, l)
-		RegisterDocsController(h)
+		RegisterDocsController(h, l)
 	}
 }

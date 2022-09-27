@@ -7,16 +7,12 @@ import (
 	"testing"
 
 	. "github.com/Eun/go-hit"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMe(t *testing.T) {
 	client := getEntClient(t)
 	ctx := context.Background()
-	u, err := factory.GetUserFactory().Create(ctx, client.User.Create(), nil)
-	require.NoError(t, err)
-	defer client.User.Delete().Exec(ctx)
+	u := createUser(t, ctx, client, nil)
 
 	token := ""
 	Test(t, getAccessTokenISteps(u.Username, "12345678", &token)...)

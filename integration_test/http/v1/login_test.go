@@ -7,16 +7,12 @@ import (
 	"testing"
 
 	. "github.com/Eun/go-hit"
-	"github.com/TcMits/ent-clean-template/pkg/entity/factory"
-	"github.com/stretchr/testify/require"
 )
 
 func TestLogin(t *testing.T) {
 	client := getEntClient(t)
 	ctx := context.Background()
-	u, err := factory.GetUserFactory().Create(ctx, client.User.Create(), nil)
-	require.NoError(t, err)
-	defer client.User.Delete().Exec(ctx)
+	u := createUser(t, ctx, client, nil)
 
 	tests := []struct {
 		name string
@@ -109,9 +105,7 @@ func TestLogin(t *testing.T) {
 func TestRefreshToken(t *testing.T) {
 	client := getEntClient(t)
 	ctx := context.Background()
-	u, err := factory.GetUserFactory().Create(ctx, client.User.Create(), nil)
-	require.NoError(t, err)
-	defer client.User.Delete().Exec(ctx)
+	u := createUser(t, ctx, client, nil)
 
 	refreshToken := ""
 	refreshKey := ""
@@ -187,9 +181,7 @@ func TestRefreshToken(t *testing.T) {
 func TestVerifyToken(t *testing.T) {
 	client := getEntClient(t)
 	ctx := context.Background()
-	u, err := factory.GetUserFactory().Create(ctx, client.User.Create(), nil)
-	require.NoError(t, err)
-	defer client.User.Delete().Exec(ctx)
+	u := createUser(t, ctx, client, nil)
 
 	token := ""
 

@@ -17,5 +17,8 @@ func GetSqlite3TestClient(ctx context.Context, t *testing.T) *ent.Client {
 	client, err := ent.Open("sqlite3", "file:"+memoryName+"?mode=memory&cache=shared&_fk=1")
 	require.NoError(t, err)
 	require.NoError(t, client.Schema.Create(ctx))
+	t.Cleanup(func() {
+		client.Close()
+	})
 	return client
 }
