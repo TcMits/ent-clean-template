@@ -24,6 +24,22 @@ go test -cover -race $(go list ./... | grep -v /integration_test/)
 
 ## Overview
 
+### Web framework
+[Iris](https://www.iris-go.com/) is an efficient and well-designed, cross-platform, web framework with robust set of features. Build your own high-performance web applications and APIs powered by unlimited potentials and portability.
+
+### Database - ORM
+[ent](https://entgo.io/docs/getting-started/) is a simple, yet powerful entity framework for Go, that makes it easy to build and maintain applications with large data-models and sticks with the following principles:
+
+-   Easily model database schema as a graph structure.
+-   Define schema as a programmatic Go code.
+-   Static typing based on code generation.
+-   Database queries and graph traversals are easy to write.
+-   Simple to extend and customize using Go templates.
+
+
+### File system
+[go-storage](https://github.com/beyondstorage/go-storage) is a **vendor-neutral** storage library for Go.
+
 ### Swagger urls
 
 ```
@@ -206,3 +222,4 @@ Me endpoint
   "code": "string"
 }
 ```
+

@@ -45,7 +45,6 @@ func Run(cfg *config.Config) {
 		userRepository, userRepository, tool.GetIrisReverseFunc("publicMe", handler),
 	)
 
-	// RegisterV1HTTPServices
 	v1.RegisterV1HTTPServices(handler, loginUseCase, publicMeUseCase, l)
 
 	if err := handler.Build(); err != nil {
