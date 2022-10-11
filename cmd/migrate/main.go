@@ -12,9 +12,10 @@ import (
 
 func main() {
 	// Configuration
+	log.Println("[INFO] migrate")
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("Config error: %s", err)
+		log.Fatalf("config error: %s", err)
 	}
 
 	client, err := datastore.NewClient(cfg.PG.URL, cfg.PG.PoolMax)
@@ -23,6 +24,7 @@ func main() {
 	}
 	defer client.Close()
 	createDBSchema(client)
+	log.Println("[INFO] finish migrations")
 }
 
 func createDBSchema(client *ent.Client) {

@@ -23,7 +23,11 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -o /bin/app .
 
 # step3: copy from builder
-FROM scratch
+FROM golang:1.19-bullseye 
+
+RUN apt-get install curl
+
+WORKDIR /
 
 COPY --from=builder /bin/app /app
 COPY --from=builder /bin/migrate /migrate

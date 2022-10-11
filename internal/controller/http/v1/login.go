@@ -166,7 +166,7 @@ func getRefreshTokenHandler[
 ) iris.Handler {
 	return func(ctx iris.Context) {
 		refreshTokenInput := PRefreshTokenInputType(new(RefreshTokenInputType))
-		if err := ctx.ReadJSON(refreshTokenInput); err != nil {
+		if err := ctx.ReadBody(refreshTokenInput); err != nil {
 			handleBindingError(ctx, err, l, refreshTokenInput, _wrapInvalidRefreshInput)
 			return
 		}
