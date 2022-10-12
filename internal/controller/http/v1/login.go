@@ -22,29 +22,29 @@ const (
 )
 
 var (
-	_wrapInvalidLoginInput = func(translationFunc model.TranslateFunc, err error) error {
+	_wrapInvalidLoginInput = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getLoginHandler - ctx.ReadBody: %w", err),
 			_defaultInvalidErrorTranslateKey,
-			translationFunc,
+			nil,
 			_defaultInvalidErrorMessage,
 			_usecaseInputValidationError,
 		)
 	}
-	_wrapInvalidRefreshInput = func(translationFunc model.TranslateFunc, err error) error {
+	_wrapInvalidRefreshInput = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getRefreshTokenHandler - ctx.ReadBody: %w", err),
 			_defaultInvalidErrorTranslateKey,
-			translationFunc,
+			nil,
 			_defaultInvalidErrorMessage,
 			_usecaseInputValidationError,
 		)
 	}
-	_wrapInvalidVerifyTokenInput = func(translationFunc model.TranslateFunc, err error) error {
+	_wrapInvalidVerifyTokenInput = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("v1 - getVerifyTokenHandler - ctx.ReadBody: %w", err),
 			_defaultInvalidErrorTranslateKey,
-			translationFunc,
+			nil,
 			_defaultInvalidErrorMessage,
 			_usecaseInputValidationError,
 		)

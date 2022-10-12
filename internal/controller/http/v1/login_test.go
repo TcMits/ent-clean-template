@@ -39,8 +39,8 @@ func Test_LoginHandler(t *testing.T) {
 			Password: "1234567",
 		}),
 	).Return(
-		nil, useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		nil, model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 
@@ -87,8 +87,8 @@ func Test_RefreshTokenHandler(t *testing.T) {
 			RefreshKey:   "test",
 		}),
 	).Return(
-		"", useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		"", model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 
@@ -130,8 +130,8 @@ func Test_VerifyTokenHandler(t *testing.T) {
 	u.EXPECT().VerifyToken(
 		gomock.Eq(ctx), gomock.Eq("tes"),
 	).Return(
-		nil, useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		nil, model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 

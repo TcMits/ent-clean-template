@@ -10,7 +10,6 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
 
@@ -23,7 +22,7 @@ func Test_getCreateHandler(t *testing.T) {
 		createUseCase     usecase.CreateModelUseCase[*struct{}, *MockCreateInput]
 		serializeUseCase  usecase.SerializeModelUseCase[*struct{}, *struct{}]
 		l                 logger.Interface
-		wrapReadBodyError func(model.TranslateFunc, error) error
+		wrapReadBodyError func(error) error
 		createInput       *MockCreateInput
 	}
 
@@ -71,7 +70,7 @@ func Test_getCreateHandler(t *testing.T) {
 				createUseCase:     createUseCase,
 				serializeUseCase:  serializeUseCase,
 				l:                 testutils.NullLogger{},
-				wrapReadBodyError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadBodyError: func(err error) error { return errors.New("") },
 				createInput:       new(MockCreateInput),
 			},
 		},
@@ -81,7 +80,7 @@ func Test_getCreateHandler(t *testing.T) {
 				createUseCase:     createUseCase,
 				serializeUseCase:  serializeUseCase,
 				l:                 testutils.NullLogger{},
-				wrapReadBodyError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadBodyError: func(err error) error { return errors.New("") },
 				createInput:       &MockCreateInput{WantErr: &wantErr},
 			},
 		},

@@ -17,11 +17,11 @@ const (
 	_publicMeRouteName = "publicMe"
 )
 
-var _wrapPublicMeReadBodyError = func(translationFunc model.TranslateFunc, err error) error {
+var _wrapPublicMeReadBodyError = func(err error) error {
 	return model.NewTranslatableError(
 		fmt.Errorf("v1 - RegisterPublicMeController: %w", err),
 		_defaultInvalidErrorTranslateKey,
-		translationFunc,
+		nil,
 		_defaultInvalidErrorMessage,
 		_usecaseInputValidationError,
 	)
@@ -51,15 +51,15 @@ func RegisterPublicMeController(
 		getUseCase,
 		serializeUseCase,
 		l,
-		func(tf model.TranslateFunc, err error) error { return err },
-		func(tf model.TranslateFunc, err error) error { return err },
+		func(err error) error { return err },
+		func(err error) error { return err },
 	)
 	updateHandler := getUpdateHandler(
 		getAndUpdateUseCase,
 		serializeUseCase,
 		l,
-		func(tf model.TranslateFunc, err error) error { return err },
-		func(tf model.TranslateFunc, err error) error { return err },
+		func(err error) error { return err },
+		func(err error) error { return err },
 		_wrapPublicMeReadBodyError,
 	)
 	isAuthenticatedMiddleware := middleware.Permission(

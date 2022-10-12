@@ -8,7 +8,6 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	modelUseCase "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
 
@@ -76,8 +75,14 @@ func handleError(ctx iris.Context, err error, l logger.Interface) {
 	logError(err, code, l)
 
 	switch foundedError := err.(type) {
-	case *modelUseCase.UseCaseError:
-		translatableErr := model.TranslatableErrorFromUseCaseError(foundedError, ctx.Tr)
+	case model.TranslatableError:
+		translatableErr := foundedError.SetTranslateFunc(ctx.Tr)
+		ctx.StopWithJSON(statusCode, errorResponse{
+			Code:    code,
+			Message: translatableErr.Error(),
+		})
+	case *model.TranslatableError:
+		translatableErr := foundedError.SetTranslateFunc(ctx.Tr)
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: translatableErr.Error(),
@@ -123,12 +128,12 @@ func handleBindingError(
 	err error,
 	l logger.Interface,
 	input any,
-	wrapTranslateError func(model.TranslateFunc, error) error,
+	wrapTranslateError func(error) error,
 ) {
 	if errs, ok := err.(validator.ValidationErrors); ok {
 		err = translatableErrorFromValidationErrors(input, errs, ctx.Tr)
 	} else if wrapTranslateError != nil {
-		err = wrapTranslateError(ctx.Tr, err)
+		err = wrapTranslateError(err)
 	}
 	handleError(ctx, err, l)
 }

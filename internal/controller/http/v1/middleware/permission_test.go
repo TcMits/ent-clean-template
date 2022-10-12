@@ -11,6 +11,7 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
@@ -26,8 +27,8 @@ func Test_Permission(t *testing.T) {
 	u.EXPECT().VerifyToken(
 		gomock.Eq(ctx), gomock.Eq(""),
 	).Return(
-		nil, useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		nil, model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 
@@ -46,8 +47,8 @@ func Test_Permission(t *testing.T) {
 			ctx.StopWithJSON(iris.StatusForbidden, iris.Map{})
 		},
 		testutils.NullLogger{}, usecase.NewDisallowZeroPermissionChecker[*struct{}](
-			useCaseModel.NewUseCaseError(
-				errors.New(""), "test", "test", usecase.PermissionDeniedError,
+			model.NewTranslatableError(
+				errors.New(""), "test", nil, "test", usecase.PermissionDeniedError,
 			),
 		)))
 	handler.Get("/test", func(ctx iris.Context) {

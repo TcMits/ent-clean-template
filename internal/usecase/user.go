@@ -24,55 +24,61 @@ const (
 
 var (
 	_wrapGetPublicMeUseUserIsNotAuthenticatedError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("getPublicMeUseCase - Get - ctx.Value: %w", err),
 			"internal.usecase.user.getPublicMeUseCase.Get.UserIsNotAuthenticatedError",
+			nil,
 			"Permission denied",
 			PermissionDeniedError,
 		)
 	}
 	_wrapUpdatePublicMeUseCaseUpdateError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewPublicMeUseCase: %w", err),
 			"internal.usecase.user.NewPublicMeUseCase.UpdateError",
+			nil,
 			"Can't update now",
 			DBError,
 		)
 	}
 	_wrapValidateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"validateUpdateInputPublicMeUseCase - validateEmail - u.repository.Get: %w",
 				err,
 			),
 			"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateEmail.EmailIsAlreadyRegisteredError",
+			nil,
 			"Email is registered",
 			ValidationError,
 		)
 	}
 	_wrapValidateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"validateUpdateInputPublicMeUseCase - validateUsername - u.repository.Get: %w",
 				err,
 			),
 			"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateUsername.UsernameIsAlreadyRegisteredError",
+			nil,
 			"Username is registered",
 			ValidationError,
 		)
 	}
 	_wrapIsAuthenticatedPermissionCheckerUserIsNotAuthenticatedError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsAuthenticatedPermissionChecker: %w", err),
 			"internal.usecase.user.NewIsAuthenticatedPermissionChecker.UserIsNotAuthenticatedError",
+			nil,
 			"Permission denied",
 			PermissionDeniedError,
 		)
 	}
 	_wrapIsSuperuserPermissionCheckerUserIsNotSuperuserError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsSuperuserPermissionChecker: %w", err),
 			"internal.usecase.user.NewIsSuperuserPermissionChecker.UserIsNotSuperuserError",
+			nil,
 			"Permission denied",
 			PermissionDeniedError,
 		)

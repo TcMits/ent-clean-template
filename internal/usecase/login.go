@@ -28,41 +28,46 @@ const (
 
 var (
 	_wrapInvalidLoginInputError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.repository.Login: %w", err),
 			"internal.usecase.login.loginUseCase.Login.InvalidLoginInput",
+			nil,
 			"Your username or password is incorrect",
 			AuthenticationError,
 		)
 	}
 	_wrapFailedAccessTokenCreation = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
 			"internal.usecase.login.loginUseCase.Login.FailedTokenCreation",
+			nil,
 			"Can't login now",
 			InternalServerError,
 		)
 	}
 	_wrapFailedRefreshTokenCreation = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
 			"internal.usecase.login.loginUseCase.Login.FailedTokenCreation",
+			nil,
 			"Can't login now",
 			InternalServerError,
 		)
 	}
 	_wrapInvalidRefreshToken = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - RefreshToken - l.parseRefreshToken: %w", err),
 			"internal.usecase.login.loginUseCase.Login.InvalidRefreshToken",
+			nil,
 			"Authentication failed",
 			AuthenticationError,
 		)
 	}
 	_wrapInvalidAccessToken = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - RefreshToken - l.parseAccessToken: %w", err),
 			"internal.usecase.login.loginUseCase.Login.InvalidAccessToken",
+			nil,
 			"Authentication failed",
 			AuthenticationError,
 		)

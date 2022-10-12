@@ -5,39 +5,42 @@ import (
 	"fmt"
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 )
 
 var (
 	_wrapStartDeleteTransactionError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Start: %w",
 				err,
 			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.StartDeleteTransactionError",
+			nil,
 			"Can't delete now",
 			DBError,
 		)
 	}
 	_wrapCommitDeleteError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Commit: %w",
 				err,
 			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.CommitDeleteError",
+			nil,
 			"Can't delete now",
 			DBError,
 		)
 	}
 	_wrapRollbackDeleteError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Rollback: %w",
 				err,
 			),
 			"internal.usecase.delete.deleteModelInTransactionUseCase.Delete.RollbackDeleteError",
+			nil,
 			"Can't delete now",
 			DBError,
 		)

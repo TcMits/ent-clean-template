@@ -10,7 +10,6 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
 
@@ -19,8 +18,8 @@ func Test_getDeleteHandler(t *testing.T) {
 		getAndDeleteUseCase usecase.GetAndDeleteModelUseCase[*struct{}, *MockWhereInput]
 		serializeUseCase    usecase.SerializeModelUseCase[*struct{}, *struct{}]
 		l                   logger.Interface
-		wrapReadParamsError func(model.TranslateFunc, error) error
-		wrapReadQueryError  func(model.TranslateFunc, error) error
+		wrapReadParamsError func(error) error
+		wrapReadQueryError  func(error) error
 		whereInput          *MockWhereInput
 	}
 
@@ -68,8 +67,8 @@ func Test_getDeleteHandler(t *testing.T) {
 				getAndDeleteUseCase: getAndDeleteUseCase,
 				serializeUseCase:    serializeUseCase,
 				l:                   testutils.NullLogger{},
-				wrapReadParamsError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadQueryError:  func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadParamsError: func(err error) error { return errors.New("") },
+				wrapReadQueryError:  func(err error) error { return errors.New("") },
 				whereInput:          new(MockWhereInput),
 			},
 		},
@@ -79,8 +78,8 @@ func Test_getDeleteHandler(t *testing.T) {
 				getAndDeleteUseCase: getAndDeleteUseCase,
 				serializeUseCase:    serializeUseCase,
 				l:                   testutils.NullLogger{},
-				wrapReadParamsError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadQueryError:  func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadParamsError: func(err error) error { return errors.New("") },
+				wrapReadQueryError:  func(err error) error { return errors.New("") },
 				whereInput:          &MockWhereInput{WantError: &wantErr},
 			},
 		},

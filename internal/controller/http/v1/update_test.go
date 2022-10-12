@@ -10,7 +10,6 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
 
@@ -23,9 +22,9 @@ func Test_getUpdateHandler(t *testing.T) {
 		getAndUpdateUseCase usecase.GetAndUpdateModelUseCase[*struct{}, *struct{}, *MockUpdateInput]
 		serializeUseCase    usecase.SerializeModelUseCase[*struct{}, *struct{}]
 		l                   logger.Interface
-		wrapReadParamsError func(model.TranslateFunc, error) error
-		wrapReadQueryError  func(model.TranslateFunc, error) error
-		wrapReadBodyError   func(model.TranslateFunc, error) error
+		wrapReadParamsError func(error) error
+		wrapReadQueryError  func(error) error
+		wrapReadBodyError   func(error) error
 		updateInput         *MockUpdateInput
 	}
 
@@ -78,9 +77,9 @@ func Test_getUpdateHandler(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateUseCase,
 				serializeUseCase:    serializeUseCase,
 				l:                   testutils.NullLogger{},
-				wrapReadParamsError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadQueryError:  func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadBodyError:   func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadParamsError: func(err error) error { return errors.New("") },
+				wrapReadQueryError:  func(err error) error { return errors.New("") },
+				wrapReadBodyError:   func(err error) error { return errors.New("") },
 				updateInput:         new(MockUpdateInput),
 			},
 		},
@@ -90,9 +89,9 @@ func Test_getUpdateHandler(t *testing.T) {
 				getAndUpdateUseCase: getAndUpdateUseCase,
 				serializeUseCase:    serializeUseCase,
 				l:                   testutils.NullLogger{},
-				wrapReadParamsError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadQueryError:  func(tf model.TranslateFunc, err error) error { return errors.New("") },
-				wrapReadBodyError:   func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapReadParamsError: func(err error) error { return errors.New("") },
+				wrapReadQueryError:  func(err error) error { return errors.New("") },
+				wrapReadBodyError:   func(err error) error { return errors.New("") },
 				updateInput:         &MockUpdateInput{WantError: &wantErr},
 			},
 		},

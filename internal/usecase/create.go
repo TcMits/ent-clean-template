@@ -8,41 +8,44 @@ import (
 
 	"github.com/TcMits/ent-clean-template/ent"
 	"github.com/TcMits/ent-clean-template/internal/repository"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 )
 
 var (
 	_wrapStartCreateTransactionError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Start: %w",
 				err,
 			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.StartCreateTransactionError",
+			nil,
 			"Can't create now",
 			DBError,
 		)
 	}
 	_wrapCommitCreateError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Commit: %w",
 				err,
 			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.CommitCreateError",
+			nil,
 			"Can't create now",
 			DBError,
 		)
 	}
 	_wrapRollbackCreateError = func(err error) error {
-		return useCaseModel.NewUseCaseError(
+		return model.NewTranslatableError(
 			fmt.Errorf(
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Rollback: %w",
 				err,
 			),
 			"internal.usecase.create.createModelInTransactionUseCase.Create.RollbackCreateError",
+			nil,
 			"Can't create now",
 			DBError,
 		)

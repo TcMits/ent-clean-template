@@ -12,7 +12,6 @@ import (
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 )
 
@@ -258,8 +257,8 @@ func Test_handleError(t *testing.T) {
 		{
 			name: "UsecaseError",
 			args: args{
-				err: useCaseModel.NewUseCaseError(
-					errors.New(""), "test", "test", usecase.AuthenticationError,
+				err: model.NewTranslatableError(
+					errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 				),
 				l: testutils.NullLogger{},
 			},
@@ -369,7 +368,7 @@ func Test_handleBindingError(t *testing.T) {
 		err                error
 		l                  logger.Interface
 		input              any
-		wrapTranslateError func(model.TranslateFunc, error) error
+		wrapTranslateError func(error) error
 	}
 
 	validate := validator.New()
@@ -385,7 +384,7 @@ func Test_handleBindingError(t *testing.T) {
 				err:                errs,
 				l:                  testutils.NullLogger{},
 				input:              new(struct{}),
-				wrapTranslateError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapTranslateError: func(err error) error { return errors.New("") },
 			},
 		},
 		{
@@ -394,7 +393,7 @@ func Test_handleBindingError(t *testing.T) {
 				err:                errors.New(""),
 				l:                  testutils.NullLogger{},
 				input:              new(struct{}),
-				wrapTranslateError: func(tf model.TranslateFunc, err error) error { return errors.New("") },
+				wrapTranslateError: func(err error) error { return errors.New("") },
 			},
 		},
 	}

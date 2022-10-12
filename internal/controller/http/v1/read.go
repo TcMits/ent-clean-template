@@ -6,7 +6,6 @@ import (
 	"github.com/kataras/iris/v12"
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
-	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/url"
 )
@@ -92,8 +91,8 @@ func getDetailHandler[
 	getUseCase usecase.GetModelUseCase[ModelType, PWhereInputType],
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
-	wrapReadParamsError func(model.TranslateFunc, error) error,
-	wrapReadQueryError func(model.TranslateFunc, error) error,
+	wrapReadParamsError func(error) error,
+	wrapReadQueryError func(error) error,
 ) iris.Handler {
 	return func(ctx iris.Context) {
 		whereInput := PWhereInputType(new(WhereInputType))
@@ -129,8 +128,8 @@ func getListHandler[
 	serializeUseCase usecase.SerializeModelUseCase[ModelType, SerializedType],
 	l logger.Interface,
 
-	wrapReadParamsError func(model.TranslateFunc, error) error,
-	wrapReadQueryError func(model.TranslateFunc, error) error,
+	wrapReadParamsError func(error) error,
+	wrapReadQueryError func(error) error,
 ) iris.Handler {
 	return func(ctx iris.Context) {
 		whereInput := PWhereInputType(new(WhereInputType))

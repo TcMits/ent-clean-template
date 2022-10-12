@@ -11,6 +11,7 @@ import (
 	"github.com/kataras/iris/v12/httptest"
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 )
@@ -26,8 +27,8 @@ func Test_Auth(t *testing.T) {
 	u.EXPECT().VerifyToken(
 		gomock.Eq(ctx), gomock.Eq(""),
 	).Return(
-		nil, useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		nil, model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 
@@ -40,8 +41,8 @@ func Test_Auth(t *testing.T) {
 	u.EXPECT().VerifyToken(
 		gomock.Eq(ctx), gomock.Eq("tes"),
 	).Return(
-		nil, useCaseModel.NewUseCaseError(
-			errors.New(""), "test", "test", usecase.AuthenticationError,
+		nil, model.NewTranslatableError(
+			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
 		),
 	).AnyTimes()
 
