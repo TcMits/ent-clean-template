@@ -17,6 +17,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/kataras/iris/v12 v12.2.0-beta4.0.20220815102844-9821cbe6d881
 	github.com/mattn/go-sqlite3 v1.14.15
+	github.com/nicksnyder/go-i18n/v2 v2.2.0
 	github.com/rs/zerolog v1.27.0
 	github.com/stretchr/testify v1.8.0
 	github.com/swaggo/swag v1.8.6

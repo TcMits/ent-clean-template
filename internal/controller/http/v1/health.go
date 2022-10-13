@@ -1,6 +1,8 @@
 package v1
 
-import "github.com/kataras/iris/v12"
+import (
+	"github.com/kataras/iris/v12"
+)
 
 const (
 	_healthCheckSubPath   = "/ping"

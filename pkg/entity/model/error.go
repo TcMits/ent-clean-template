@@ -1,28 +1,29 @@
 package model
 
+import "github.com/nicksnyder/go-i18n/v2/i18n"
+
 var _ error = new(TranslatableError)
 
 type TranslateFunc func(string, ...any) string
 
 type TranslatableError struct {
 	args          []any
-	key           string
 	err           error
+	i18nMessage   *i18n.Message
 	translateFunc TranslateFunc
-	defaultError  string
 	code          string
 }
 
 func (e TranslatableError) Error() string {
 	errMsg := ""
-	if e.translateFunc == nil {
-		errMsg = e.translateFunc(e.key, e.args...)
+	if e.translateFunc == nil && e.i18nMessage != nil {
+		errMsg = e.translateFunc(e.i18nMessage.ID, e.args...)
 	}
 	if errMsg != "" {
 		return errMsg
 	}
-	if e.defaultError != "" {
-		return e.defaultError
+	if e.i18nMessage != nil {
+		return e.i18nMessage.Other
 	}
 	return e.err.Error()
 }
@@ -31,29 +32,21 @@ func (e *TranslatableError) Unwrap() error { return e.err }
 
 func NewTranslatableError(
 	err error,
-	key string,
-	translateFunc TranslateFunc,
-	defaultError string,
+	i18nMessage *i18n.Message,
 	code string,
+	translateFunc TranslateFunc,
 	args ...any,
 ) *TranslatableError {
 	return &TranslatableError{
 		args:          args,
-		key:           key,
 		err:           err,
+		i18nMessage:   i18nMessage,
 		translateFunc: translateFunc,
-		defaultError:  defaultError,
 		code:          code,
 	}
 }
 
-func (e *TranslatableError) Key() string  { return e.key }
 func (e *TranslatableError) Code() string { return e.code }
-func (e *TranslatableError) Args() []any  { return e.args }
-
-func (e *TranslatableError) DefaultError() string { return e.defaultError }
-
-func (e *TranslatableError) TranslateFunc() TranslateFunc { return e.translateFunc }
 
 func (e TranslatableError) SetTranslateFunc(
 	t TranslateFunc,

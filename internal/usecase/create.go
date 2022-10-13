@@ -11,19 +11,34 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 var (
+	// i18n messages
+	_startCreateTransactionErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.create.createModelInTransactionUseCase.Create.StartCreateTransactionError",
+		Other: "Can't create now",
+	}
+	_commitCreateErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.create.createModelInTransactionUseCase.Create.CommitCreateError",
+		Other: "Can't create now",
+	}
+	_rollbackCreateErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.create.createModelInTransactionUseCase.Create.RollbackCreateError",
+		Other: "Can't create now",
+	}
+
+	// wrap errors
 	_wrapStartCreateTransactionError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Start: %w",
 				err,
 			),
-			"internal.usecase.create.createModelInTransactionUseCase.Create.StartCreateTransactionError",
-			nil,
-			"Can't create now",
+			_startCreateTransactionErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 	_wrapCommitCreateError = func(err error) error {
@@ -32,10 +47,9 @@ var (
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Commit: %w",
 				err,
 			),
-			"internal.usecase.create.createModelInTransactionUseCase.Create.CommitCreateError",
-			nil,
-			"Can't create now",
+			_commitCreateErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 	_wrapRollbackCreateError = func(err error) error {
@@ -44,10 +58,9 @@ var (
 				"createModelInTransactionUseCase - Create - u.transactionRepository.Rollback: %w",
 				err,
 			),
-			"internal.usecase.create.createModelInTransactionUseCase.Create.RollbackCreateError",
-			nil,
-			"Can't create now",
+			_rollbackCreateErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 )

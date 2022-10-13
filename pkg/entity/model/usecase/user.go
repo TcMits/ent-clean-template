@@ -1,16 +1,28 @@
 package usecase
 
-const (
-	_defaultInvalidErrorTranslateKey                          = "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidError"
-	_defaultInvalidErrorMessage                               = "One or more fields failed to be validated"
-	_publicMeUseCaseUpdateInputInvalidUsernameTranslateKey    = "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidUsernameError"
-	_publicMeUseCaseUpdateInputInvalidUsernameDefaultMessage  = "Invalid username"
-	_publicMeUseCaseUpdateInputInvalidFirstNameTranslateKey   = "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidFirstNameError"
-	_publicMeUseCaseUpdateInputInvalidFirstNameDefaultMessage = "Invalid first name"
-	_publicMeUseCaseUpdateInputInvalidLastNameTranslateKey    = "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidLastNameError"
-	_publicMeUseCaseUpdateInputInvalidLastNameDefaultMessage  = "Invalid last name"
-	_publicMeUseCaseUpdateInputInvalidEmailTranslateKey       = "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidEmailError"
-	_publicMeUseCaseUpdateInputInvalidEmailDefaultMessage     = "Invalid email"
+import "github.com/nicksnyder/go-i18n/v2/i18n"
+
+var (
+	_defaultInvalidErrorMsg = &i18n.Message{
+		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidError",
+		Other: "One or more fields failed to be validated",
+	}
+	_publicMeUseCaseUpdateInputInvalidUsernameMsg = &i18n.Message{
+		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidUsernameError",
+		Other: "Invalid username",
+	}
+	_publicMeUseCaseUpdateInputInvalidFirstNameMsg = &i18n.Message{
+		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidFirstNameError",
+		Other: "Invalid first name",
+	}
+	_publicMeUseCaseUpdateInputInvalidLastNameMsg = &i18n.Message{
+		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidLastNameError",
+		Other: "Invalid last name",
+	}
+	_publicMeUseCaseUpdateInputInvalidEmailMsg = &i18n.Message{
+		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidEmailError",
+		Other: "Invalid email",
+	}
 )
 
 type PublicMeUseCaseUpdateInput struct {
@@ -22,17 +34,17 @@ type PublicMeUseCaseUpdateInput struct {
 
 func (i *PublicMeUseCaseUpdateInput) GetErrorMessageFromStructField(
 	fieldName string,
-) (string, string) {
+) *i18n.Message {
 	switch fieldName {
 	case "Username":
-		return _publicMeUseCaseUpdateInputInvalidUsernameTranslateKey, _publicMeUseCaseUpdateInputInvalidUsernameDefaultMessage
+		return _publicMeUseCaseUpdateInputInvalidUsernameMsg
 	case "FirstName":
-		return _publicMeUseCaseUpdateInputInvalidFirstNameTranslateKey, _publicMeUseCaseUpdateInputInvalidFirstNameDefaultMessage
+		return _publicMeUseCaseUpdateInputInvalidFirstNameMsg
 	case "LastName":
-		return _publicMeUseCaseUpdateInputInvalidLastNameTranslateKey, _publicMeUseCaseUpdateInputInvalidLastNameDefaultMessage
+		return _publicMeUseCaseUpdateInputInvalidLastNameMsg
 	case "Email":
-		return _publicMeUseCaseUpdateInputInvalidEmailTranslateKey, _publicMeUseCaseUpdateInputInvalidEmailDefaultMessage
+		return _publicMeUseCaseUpdateInputInvalidEmailMsg
 	default:
-		return _defaultInvalidErrorTranslateKey, _defaultInvalidErrorMessage
+		return _defaultInvalidErrorMsg
 	}
 }

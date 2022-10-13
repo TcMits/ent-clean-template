@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
@@ -16,10 +17,10 @@ const (
 	_usecaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
 )
 
-const (
-	_defaultInvalidErrorTranslateKey = "internal.controller.http.v1.error.InvalidError"
-	_defaultInvalidErrorMessage      = "One or more fields failed to be validated"
-)
+var _defaultInvalidErrorMessage = &i18n.Message{
+	ID:    "internal.controller.http.v1.error.InvalidError",
+	Other: "One or more fields failed to be validated",
+}
 
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
@@ -104,23 +105,20 @@ func translatableErrorFromValidationErrors(
 	inputStructure any, errs validator.ValidationErrors, tr model.TranslateFunc,
 ) *model.TranslatableError {
 	verboser, ok := inputStructure.(interface {
-		GetErrorMessageFromStructField(string) (string, string)
+		GetErrorMessageFromStructField(string) *i18n.Message
 	})
 	var err error = errs
-	translateKey := _defaultInvalidErrorTranslateKey
-	defaultErrorMessage := _defaultInvalidErrorMessage
+	i18nMessage := _defaultInvalidErrorMessage
 	if ok {
 		for _, validationErr := range errs {
 			err = validationErr
-			translateKey, defaultErrorMessage = verboser.GetErrorMessageFromStructField(
+			i18nMessage = verboser.GetErrorMessageFromStructField(
 				validationErr.StructField(),
 			)
 			break
 		}
 	}
-	return model.NewTranslatableError(
-		err, translateKey, tr, defaultErrorMessage, _usecaseInputValidationError,
-	)
+	return model.NewTranslatableError(err, i18nMessage, _usecaseInputValidationError, tr)
 }
 
 func handleBindingError(

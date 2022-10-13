@@ -20,10 +20,9 @@ const (
 var _wrapPublicMeReadBodyError = func(err error) error {
 	return model.NewTranslatableError(
 		fmt.Errorf("v1 - RegisterPublicMeController: %w", err),
-		_defaultInvalidErrorTranslateKey,
-		nil,
 		_defaultInvalidErrorMessage,
 		_usecaseInputValidationError,
+		nil,
 	)
 }
 

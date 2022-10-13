@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
@@ -28,7 +29,10 @@ func Test_Permission(t *testing.T) {
 		gomock.Eq(ctx), gomock.Eq(""),
 	).Return(
 		nil, model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 
@@ -48,7 +52,10 @@ func Test_Permission(t *testing.T) {
 		},
 		testutils.NullLogger{}, usecase.NewDisallowZeroPermissionChecker[*struct{}](
 			model.NewTranslatableError(
-				errors.New(""), "test", nil, "test", usecase.PermissionDeniedError,
+				errors.New(""), &i18n.Message{
+					ID:    "test",
+					Other: "test",
+				}, usecase.AuthenticationError, nil,
 			),
 		)))
 	handler.Get("/test", func(ctx iris.Context) {

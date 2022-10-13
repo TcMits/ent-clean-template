@@ -15,6 +15,7 @@ import (
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 	"github.com/google/uuid"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const (
@@ -23,22 +24,47 @@ const (
 )
 
 var (
+	// i18n message
+	_getPublicMeUseUserIsNotAuthenticatedErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.getPublicMeUseCase.Get.UserIsNotAuthenticatedError",
+		Other: "Permission denied",
+	}
+	_updatePublicMeUseCaseUpdateErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.NewPublicMeUseCase.UpdateError",
+		Other: "Can't update now",
+	}
+	_validateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.validateUpdateInputPublicMeUseCase.validateEmail.EmailIsAlreadyRegisteredError",
+		Other: "Email is registered",
+	}
+	_validateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.validateUpdateInputPublicMeUseCase.validateUsername.UsernameIsAlreadyRegisteredError",
+		Other: "Username is registered",
+	}
+	_isAuthenticatedPermissionCheckerUserIsNotAuthenticatedErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.NewIsAuthenticatedPermissionChecker.UserIsNotAuthenticatedError",
+		Other: "Permission denied",
+	}
+	_isSuperuserPermissionCheckerUserIsNotSuperuserErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.user.NewIsSuperuserPermissionChecker.UserIsNotSuperuserError",
+		Other: "Permission denied",
+	}
+
+	// wrap error
 	_wrapGetPublicMeUseUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("getPublicMeUseCase - Get - ctx.Value: %w", err),
-			"internal.usecase.user.getPublicMeUseCase.Get.UserIsNotAuthenticatedError",
-			nil,
-			"Permission denied",
+			_getPublicMeUseUserIsNotAuthenticatedErrorMsg,
 			PermissionDeniedError,
+			nil,
 		)
 	}
 	_wrapUpdatePublicMeUseCaseUpdateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewPublicMeUseCase: %w", err),
-			"internal.usecase.user.NewPublicMeUseCase.UpdateError",
-			nil,
-			"Can't update now",
+			_updatePublicMeUseCaseUpdateErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 	_wrapValidateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredError = func(err error) error {
@@ -47,10 +73,9 @@ var (
 				"validateUpdateInputPublicMeUseCase - validateEmail - u.repository.Get: %w",
 				err,
 			),
-			"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateEmail.EmailIsAlreadyRegisteredError",
-			nil,
-			"Email is registered",
+			_validateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredErrorMsg,
 			ValidationError,
+			nil,
 		)
 	}
 	_wrapValidateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredError = func(err error) error {
@@ -59,28 +84,25 @@ var (
 				"validateUpdateInputPublicMeUseCase - validateUsername - u.repository.Get: %w",
 				err,
 			),
-			"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateUsername.UsernameIsAlreadyRegisteredError",
-			nil,
-			"Username is registered",
+			_validateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredErrorMsg,
 			ValidationError,
+			nil,
 		)
 	}
 	_wrapIsAuthenticatedPermissionCheckerUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsAuthenticatedPermissionChecker: %w", err),
-			"internal.usecase.user.NewIsAuthenticatedPermissionChecker.UserIsNotAuthenticatedError",
-			nil,
-			"Permission denied",
+			_isAuthenticatedPermissionCheckerUserIsNotAuthenticatedErrorMsg,
 			PermissionDeniedError,
+			nil,
 		)
 	}
 	_wrapIsSuperuserPermissionCheckerUserIsNotSuperuserError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsSuperuserPermissionChecker: %w", err),
-			"internal.usecase.user.NewIsSuperuserPermissionChecker.UserIsNotSuperuserError",
-			nil,
-			"Permission denied",
+			_isSuperuserPermissionCheckerUserIsNotSuperuserErrorMsg,
 			PermissionDeniedError,
+			nil,
 		)
 	}
 )

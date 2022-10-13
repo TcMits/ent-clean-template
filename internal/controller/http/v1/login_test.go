@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
@@ -40,7 +41,10 @@ func Test_LoginHandler(t *testing.T) {
 		}),
 	).Return(
 		nil, model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 
@@ -88,7 +92,10 @@ func Test_RefreshTokenHandler(t *testing.T) {
 		}),
 	).Return(
 		"", model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 
@@ -131,7 +138,10 @@ func Test_VerifyTokenHandler(t *testing.T) {
 		gomock.Eq(ctx), gomock.Eq("tes"),
 	).Return(
 		nil, model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 

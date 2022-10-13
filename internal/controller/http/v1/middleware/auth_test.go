@@ -9,6 +9,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
@@ -28,7 +29,10 @@ func Test_Auth(t *testing.T) {
 		gomock.Eq(ctx), gomock.Eq(""),
 	).Return(
 		nil, model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 
@@ -42,7 +46,10 @@ func Test_Auth(t *testing.T) {
 		gomock.Eq(ctx), gomock.Eq("tes"),
 	).Return(
 		nil, model.NewTranslatableError(
-			errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+			errors.New(""), &i18n.Message{
+				ID:    "test",
+				Other: "test",
+			}, usecase.AuthenticationError, nil,
 		),
 	).AnyTimes()
 

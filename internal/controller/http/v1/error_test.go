@@ -8,6 +8,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/httptest"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/testutils"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
@@ -23,8 +24,11 @@ type InputStructWithErrMessage struct {
 	Message string `validate:"min=2"`
 }
 
-func (*InputStructWithErrMessage) GetErrorMessageFromStructField(key string) (string, string) {
-	return "Message", "Message"
+func (*InputStructWithErrMessage) GetErrorMessageFromStructField(key string) *i18n.Message {
+	return &i18n.Message{
+		ID:    "Message",
+		Other: "Message",
+	}
 }
 
 type TestErrorWithCode struct{}
@@ -258,7 +262,10 @@ func Test_handleError(t *testing.T) {
 			name: "UsecaseError",
 			args: args{
 				err: model.NewTranslatableError(
-					errors.New(""), "test", nil, "test", usecase.AuthenticationError,
+					errors.New(""), &i18n.Message{
+						ID:    "test",
+						Other: "test",
+					}, usecase.AuthenticationError, nil,
 				),
 				l: testutils.NullLogger{},
 			},
@@ -302,10 +309,9 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			},
 			want: model.NewTranslatableError(
 				errs,
-				_defaultInvalidErrorTranslateKey,
-				tr,
 				_defaultInvalidErrorMessage,
 				_usecaseInputValidationError,
+				tr,
 			),
 		},
 		{
@@ -317,10 +323,12 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			},
 			want: model.NewTranslatableError(
 				errs_with_message[0],
-				"Message",
-				tr,
-				"Message",
+				&i18n.Message{
+					ID:    "Message",
+					Other: "Message",
+				},
 				_usecaseInputValidationError,
+				tr,
 			),
 		},
 	}
@@ -336,27 +344,6 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 					"translatableErrorFromValidationErrors() = %v, want %v",
 					got.Error(),
 					tt.want.Error(),
-				)
-			}
-			if !reflect.DeepEqual(got.Key(), tt.want.Key()) {
-				t.Errorf(
-					"translatableErrorFromValidationErrors() = %v, want %v",
-					got.Key(),
-					tt.want.Key(),
-				)
-			}
-			if !reflect.DeepEqual(got.DefaultError(), tt.want.DefaultError()) {
-				t.Errorf(
-					"translatableErrorFromValidationErrors() = %v, want %v",
-					got.DefaultError(),
-					tt.want.DefaultError(),
-				)
-			}
-			if !reflect.DeepEqual(got.Code(), tt.want.Code()) {
-				t.Errorf(
-					"translatableErrorFromValidationErrors() = %v, want %v",
-					got.Code(),
-					tt.want.Code(),
 				)
 			}
 		})

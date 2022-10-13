@@ -22,6 +22,11 @@ Unit tests (can be run in CI):
 go test -cover -race $(go list ./... | grep -v /integration_test/)
 ```
 
+Generate locale files:
+```sh
+goi18n extract -sourceLanguage=en-US -outdir=./locales/en-US/ -format=yaml ./
+```
+
 ## Overview
 
 ### Web framework

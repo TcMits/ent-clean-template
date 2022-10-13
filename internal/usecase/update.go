@@ -11,19 +11,34 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	"github.com/TcMits/ent-clean-template/pkg/infrastructure/logger"
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 var (
+	// i18n messages
+	_startUpdateTransactionErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.update.updateModelInTransactionUseCase.Update.StartUpdateTransactionError",
+		Other: "Can't update now",
+	}
+	_commitUpdateErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.update.updateModelInTransactionUseCase.Update.CommitUpdateError",
+		Other: "Can't update now",
+	}
+	_rollbackUpdateErrorMsg = &i18n.Message{
+		ID:    "internal.usecase.update.updateModelInTransactionUseCase.Update.RollbackUpdateError",
+		Other: "Can't update now",
+	}
+
+	// wrap error
 	_wrapStartUpdateTransactionError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
 				"updateModelInTransactionUseCase - Update - u.transactionRepository.Start: %w",
 				err,
 			),
-			"internal.usecase.update.updateModelInTransactionUseCase.Update.StartUpdateTransactionError",
-			nil,
-			"Can't update now",
+			_startUpdateTransactionErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 	_wrapCommitUpdateError = func(err error) error {
@@ -32,10 +47,9 @@ var (
 				"updateModelInTransactionUseCase - Update - u.transactionRepository.Commit: %w",
 				err,
 			),
-			"internal.usecase.update.updateModelInTransactionUseCase.Update.CommitUpdateError",
-			nil,
-			"Can't update now",
+			_commitUpdateErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 	_wrapRollbackUpdateError = func(err error) error {
@@ -44,10 +58,9 @@ var (
 				"updateModelInTransactionUseCase - Update - u.transactionRepository.Rollback: %w",
 				err,
 			),
-			"internal.usecase.update.updateModelInTransactionUseCase.Update.RollbackUpdateError",
-			nil,
-			"Can't update now",
+			_rollbackUpdateErrorMsg,
 			DBError,
+			nil,
 		)
 	}
 )
