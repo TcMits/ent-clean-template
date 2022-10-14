@@ -9,10 +9,12 @@ import (
 	jwtKit "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 
+	"github.com/TcMits/ent-clean-template/copygen"
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/jwt"
+	"github.com/TcMits/ent-clean-template/pkg/tool/password"
 )
 
 const (
@@ -27,9 +29,17 @@ const (
 )
 
 var (
-	_wrapInvalidLoginInputError = func(err error) error {
+	_wrapInvalidUsernameError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - Login - l.repository.Login: %w", err),
+			fmt.Errorf("loginUseCase - Login - l.getRepository.Get: %w", err),
+			_incorrectLoginInputMessage,
+			AuthenticationError,
+			nil,
+		)
+	}
+	_wrapInvalidPasswordError = func(err error) error {
+		return model.NewTranslatableError(
+			fmt.Errorf("loginUseCase - Login - password.ValidatePassword: %w", err),
 			_incorrectLoginInputMessage,
 			AuthenticationError,
 			nil,
@@ -70,23 +80,18 @@ var (
 )
 
 type loginUseCase struct {
-	repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 	getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 	secret        string
 }
 
 func NewLoginUseCase(
-	repository repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput],
 	getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput],
 	secret string,
 ) LoginUseCase[*useCaseModel.LoginInput, *useCaseModel.JWTAuthenticatedPayload, *useCaseModel.RefreshTokenInput, *model.User] {
-	if repository == nil {
-		panic("repository is required")
-	}
 	if getRepository == nil {
 		panic("getRepository is required")
 	}
-	return &loginUseCase{repository: repository, getRepository: getRepository, secret: secret}
+	return &loginUseCase{getRepository: getRepository, secret: secret}
 }
 
 func (*loginUseCase) getUserMapClaims(user *model.User) jwtKit.MapClaims {
@@ -178,9 +183,15 @@ func (l *loginUseCase) Login(
 	ctx context.Context,
 	loginInput *useCaseModel.LoginInput,
 ) (*useCaseModel.JWTAuthenticatedPayload, error) {
-	user, err := l.repository.Login(ctx, loginInput)
+	isActive := true
+	userWhereInput := &model.UserWhereInput{IsActive: &isActive}
+	copygen.LoginInputToUserWhereInput(userWhereInput, loginInput)
+	user, err := l.getRepository.Get(ctx, userWhereInput)
 	if err != nil {
-		return nil, _wrapInvalidLoginInputError(err)
+		return nil, _wrapInvalidUsernameError(err)
+	}
+	if !password.ValidatePassword(user.Password, loginInput.Password) {
+		return nil, _wrapInvalidPasswordError(errors.New("invalid password"))
 	}
 	accessToken, err := l.createAccessToken(user)
 	if err != nil {

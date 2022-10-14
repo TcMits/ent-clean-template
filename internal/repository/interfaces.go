@@ -61,9 +61,6 @@ type (
 	DeleteWithClientModelRepository[ModelType any] interface {
 		DeleteWithClient(context.Context, *ent.Client, ModelType) error
 	}
-	LoginRepository[UserType, WhereInputType, LoginInputType any] interface {
-		Login(context.Context, LoginInputType) (UserType, error)
-	}
 
 	// files.
 	ReadFileRepository interface {

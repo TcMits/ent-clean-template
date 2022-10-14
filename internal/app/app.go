@@ -30,14 +30,12 @@ func Run(cfg *config.Config) {
 
 	// repository
 	userRepository := repository.NewUserRepository(client)
-	loginRepository := repository.NewLoginRepository(client)
 
 	// HTTP Server
 	handler := v1.NewHandler()
 
 	// Usecase
 	loginUseCase := usecase.NewLoginUseCase(
-		loginRepository,
 		userRepository,
 		cfg.LoginUseCase.Secret,
 	)

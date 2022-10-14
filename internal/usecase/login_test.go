@@ -14,24 +14,20 @@ import (
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
+	"github.com/TcMits/ent-clean-template/pkg/tool/password"
 )
 
 func TestNewLoginUseCase(t *testing.T) {
 	type args struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 
 	want := loginUseCase{
-		repository:    loginRepository,
 		getRepository: getRepository,
 		secret:        "secret",
 	}
@@ -44,7 +40,6 @@ func TestNewLoginUseCase(t *testing.T) {
 		{
 			name: "Success",
 			args: args{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -53,7 +48,7 @@ func TestNewLoginUseCase(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewLoginUseCase(tt.args.repository, tt.args.getRepository, tt.args.secret); !reflect.DeepEqual(
+			if got := NewLoginUseCase(tt.args.getRepository, tt.args.secret); !reflect.DeepEqual(
 				got,
 				tt.want,
 			) {
@@ -65,7 +60,6 @@ func TestNewLoginUseCase(t *testing.T) {
 
 func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -75,9 +69,6 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -94,7 +85,6 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -111,7 +101,6 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -124,7 +113,6 @@ func Test_loginUseCase_getUserMapClaims(t *testing.T) {
 
 func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -136,9 +124,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -169,7 +154,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -186,7 +170,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "MissingID",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -203,7 +186,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongUUID",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -221,7 +203,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongUUID",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -239,7 +220,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 		{
 			name: "WrongKey",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "secret",
 			},
@@ -258,7 +238,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -280,7 +259,6 @@ func Test_loginUseCase_getUserFromMapClaims(t *testing.T) {
 
 func Test_loginUseCase_createAccessToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -291,9 +269,6 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -324,7 +299,6 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -337,7 +311,6 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -357,7 +330,6 @@ func Test_loginUseCase_createAccessToken(t *testing.T) {
 
 func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -368,9 +340,6 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -401,7 +370,6 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -412,7 +380,6 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -435,7 +402,6 @@ func Test_loginUseCase_createRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -447,9 +413,6 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -471,7 +434,6 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	).AnyTimes()
 
 	l := &loginUseCase{
-		repository:    loginRepository,
 		getRepository: getRepository,
 		secret:        "Dummy",
 	}
@@ -488,7 +450,6 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -502,7 +463,6 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -520,7 +480,6 @@ func Test_loginUseCase_parseAccessToken(t *testing.T) {
 
 func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -532,9 +491,6 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		ID:          uuid.New(),
@@ -556,7 +512,6 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	).AnyTimes()
 
 	l := &loginUseCase{
-		repository:    loginRepository,
 		getRepository: getRepository,
 		secret:        "Dummy",
 	}
@@ -573,7 +528,6 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -587,7 +541,6 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -605,7 +558,6 @@ func Test_loginUseCase_parseRefreshToken(t *testing.T) {
 
 func Test_loginUseCase_Login(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -617,15 +569,15 @@ func Test_loginUseCase_Login(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
+	p, err := password.GetHashPassword("12345678")
+	require.NoError(t, err)
 	u := &model.User{
 		Username:    "test",
 		ID:          uuid.New(),
 		Email:       "test@gmail.com",
 		JwtTokenKey: uuid.NewString(),
+		Password:    p,
 	}
 	isActive := true
 
@@ -636,25 +588,17 @@ func Test_loginUseCase_Login(t *testing.T) {
 	).AnyTimes()
 
 	getRepository.EXPECT().Get(
+		gomock.Eq(ctx),
+		gomock.Eq(&model.UserWhereInput{Username: &u.Username, IsActive: &isActive}),
+	).Return(
+		u, nil,
+	).AnyTimes()
+
+	getRepository.EXPECT().Get(
 		gomock.Eq(ctx), gomock.Any(),
 	).Return(
 		nil, errors.New(""),
 	).AnyTimes()
-
-	loginRepository.EXPECT().Login(
-		gomock.Eq(ctx), gomock.Eq(&useCaseModel.LoginInput{
-			Username: "test",
-			Password: "12345678",
-		}),
-	).Return(
-		u, nil,
-	)
-
-	loginRepository.EXPECT().Login(
-		gomock.Eq(ctx), gomock.Any(),
-	).Return(
-		nil, errors.New(""),
-	)
 
 	tests := []struct {
 		name    string
@@ -666,7 +610,6 @@ func Test_loginUseCase_Login(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -682,7 +625,6 @@ func Test_loginUseCase_Login(t *testing.T) {
 		{
 			name: "WrongPassword",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -700,7 +642,6 @@ func Test_loginUseCase_Login(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -727,7 +668,6 @@ func Test_loginUseCase_Login(t *testing.T) {
 
 func Test_loginUseCase_RefreshToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -739,9 +679,6 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		Username:    "test",
@@ -764,7 +701,6 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	).AnyTimes()
 
 	l := &loginUseCase{
-		repository:    loginRepository,
 		getRepository: getRepository,
 		secret:        "Dummy",
 	}
@@ -781,7 +717,6 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -795,7 +730,6 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
@@ -814,7 +748,6 @@ func Test_loginUseCase_RefreshToken(t *testing.T) {
 
 func Test_loginUseCase_VerifyToken(t *testing.T) {
 	type fields struct {
-		repository    repository.LoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput]
 		getRepository repository.GetModelRepository[*model.User, *model.UserWhereInput]
 		secret        string
 	}
@@ -826,9 +759,6 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 	ctx := context.Background()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
-	loginRepository := repository.NewMockLoginRepository[*model.User, *model.UserWhereInput, *useCaseModel.LoginInput](
-		ctrl,
-	)
 	getRepository := repository.NewMockGetModelRepository[*model.User, *model.UserWhereInput](ctrl)
 	u := &model.User{
 		Username:    "test",
@@ -851,7 +781,6 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 	).AnyTimes()
 
 	l := &loginUseCase{
-		repository:    loginRepository,
 		getRepository: getRepository,
 		secret:        "Dummy",
 	}
@@ -868,7 +797,6 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 		{
 			name: "Success",
 			fields: fields{
-				repository:    loginRepository,
 				getRepository: getRepository,
 				secret:        "Dummy",
 			},
@@ -882,7 +810,6 @@ func Test_loginUseCase_VerifyToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			l := &loginUseCase{
-				repository:    tt.fields.repository,
 				getRepository: tt.fields.getRepository,
 				secret:        tt.fields.secret,
 			}
