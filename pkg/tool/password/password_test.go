@@ -14,9 +14,9 @@ func TestValidatePassword(t *testing.T) {
 	testPassword := "test"
 	testPasswordHash, _ := GetHashPassword(testPassword)
 	tests := []struct {
-		name string
-		args args
-		want bool
+		name    string
+		args    args
+		wantErr bool
 	}{
 		{
 			name: "WrongPassword",
@@ -24,7 +24,7 @@ func TestValidatePassword(t *testing.T) {
 				passwordHash: "test",
 				password:     testPassword,
 			},
-			want: false,
+			wantErr: true,
 		},
 		{
 			name: "CorrectPassword",
@@ -32,13 +32,13 @@ func TestValidatePassword(t *testing.T) {
 				passwordHash: testPasswordHash,
 				password:     testPassword,
 			},
-			want: true,
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ValidatePassword(tt.args.passwordHash, tt.args.password); got != tt.want {
-				t.Errorf("ValidatePassword() = %v, want %v", got, tt.want)
+			if got := ValidatePassword(tt.args.passwordHash, tt.args.password); (got != nil) != tt.wantErr {
+				t.Errorf("ValidatePassword() = %v, wantErr %v", got, tt.wantErr)
 			}
 		})
 	}
@@ -78,7 +78,7 @@ func TestGetHashPassword(t *testing.T) {
 				t.Errorf("GetHashPassword() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !tt.wantErr && !ValidatePassword(got, tt.args.password) {
+			if (ValidatePassword(got, tt.args.password) != nil) != tt.wantErr {
 				t.Errorf("GetHashPassword() = %v, want %v", got, tt.want)
 			}
 		})

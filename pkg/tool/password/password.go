@@ -7,15 +7,12 @@ import (
 )
 
 // ValidatePassword validates a plain password against the model's password.
-func ValidatePassword(passwordHash, password string) bool {
+func ValidatePassword(passwordHash, password string) error {
 	bytePassword := []byte(password)
 	bytePasswordHash := []byte(passwordHash)
 
 	// comparing the password with the hash
-	err := bcrypt.CompareHashAndPassword(bytePasswordHash, bytePassword)
-
-	// nil means it is a match
-	return err == nil
+	return bcrypt.CompareHashAndPassword(bytePasswordHash, bytePassword)
 }
 
 // SetPassword sets cryptographically secure string to `model.Password`.

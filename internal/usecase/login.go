@@ -190,8 +190,8 @@ func (l *loginUseCase) Login(
 	if err != nil {
 		return nil, _wrapInvalidUsernameError(err)
 	}
-	if !password.ValidatePassword(user.Password, loginInput.Password) {
-		return nil, _wrapInvalidPasswordError(errors.New("invalid password"))
+	if err := password.ValidatePassword(user.Password, loginInput.Password); err != nil {
+		return nil, _wrapInvalidPasswordError(err)
 	}
 	accessToken, err := l.createAccessToken(user)
 	if err != nil {
