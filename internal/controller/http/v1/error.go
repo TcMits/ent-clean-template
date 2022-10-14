@@ -17,11 +17,6 @@ const (
 	_usecaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
 )
 
-var _defaultInvalidErrorMessage = &i18n.Message{
-	ID:    "internal.controller.http.v1.error.InvalidError",
-	Other: "One or more fields failed to be validated",
-}
-
 func getCodeFromError(err error) string {
 	haveCodeErr, ok := err.(interface{ Code() string })
 	if !ok {
@@ -70,6 +65,12 @@ func logError(err error, code string, l logger.Interface) {
 	}
 }
 
+func getTranslateFunc(tr func(string, ...any) string) model.TranslateFunc {
+	return func(m *i18n.Message, a ...any) string {
+		return tr(m.ID, a...)
+	}
+}
+
 func handleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
@@ -77,13 +78,13 @@ func handleError(ctx iris.Context, err error, l logger.Interface) {
 
 	switch foundedError := err.(type) {
 	case model.TranslatableError:
-		translatableErr := foundedError.SetTranslateFunc(ctx.Tr)
+		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: translatableErr.Error(),
 		})
 	case *model.TranslatableError:
-		translatableErr := foundedError.SetTranslateFunc(ctx.Tr)
+		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: translatableErr.Error(),
@@ -102,13 +103,13 @@ func HandleError(ctx iris.Context, err error, l logger.Interface) {
 }
 
 func translatableErrorFromValidationErrors(
-	inputStructure any, errs validator.ValidationErrors, tr model.TranslateFunc,
+	inputStructure any, errs validator.ValidationErrors,
 ) *model.TranslatableError {
 	verboser, ok := inputStructure.(interface {
 		GetErrorMessageFromStructField(string) *i18n.Message
 	})
 	var err error = errs
-	i18nMessage := _defaultInvalidErrorMessage
+	i18nMessage := _oneOrMoreFieldsFailedToBeValidatedMessage
 	if ok {
 		for _, validationErr := range errs {
 			err = validationErr
@@ -118,7 +119,7 @@ func translatableErrorFromValidationErrors(
 			break
 		}
 	}
-	return model.NewTranslatableError(err, i18nMessage, _usecaseInputValidationError, tr)
+	return model.NewTranslatableError(err, i18nMessage, _usecaseInputValidationError, nil)
 }
 
 func handleBindingError(
@@ -129,7 +130,7 @@ func handleBindingError(
 	wrapTranslateError func(error) error,
 ) {
 	if errs, ok := err.(validator.ValidationErrors); ok {
-		err = translatableErrorFromValidationErrors(input, errs, ctx.Tr)
+		err = translatableErrorFromValidationErrors(input, errs)
 	} else if wrapTranslateError != nil {
 		err = wrapTranslateError(err)
 	}

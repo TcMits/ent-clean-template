@@ -6,24 +6,9 @@ import (
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 var (
-	// i18n messages
-	_startDeleteTransactionErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.delete.deleteModelInTransactionUseCase.Delete.StartDeleteTransactionError",
-		Other: "Can't delete now",
-	}
-	_commitDeleteErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.delete.deleteModelInTransactionUseCase.Delete.CommitDeleteError",
-		Other: "Can't delete now",
-	}
-	_rollbackDeleteErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.delete.deleteModelInTransactionUseCase.Delete.RollbackDeleteError",
-		Other: "Can't delete now",
-	}
-
 	// wrap error
 	_wrapStartDeleteTransactionError = func(err error) error {
 		return model.NewTranslatableError(
@@ -31,7 +16,7 @@ var (
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Start: %w",
 				err,
 			),
-			_startDeleteTransactionErrorMsg,
+			_canNotDeleteNowMessage,
 			DBError,
 			nil,
 		)
@@ -42,7 +27,7 @@ var (
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Commit: %w",
 				err,
 			),
-			_commitDeleteErrorMsg,
+			_canNotDeleteNowMessage,
 			DBError,
 			nil,
 		)
@@ -53,7 +38,7 @@ var (
 				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Rollback: %w",
 				err,
 			),
-			_rollbackDeleteErrorMsg,
+			_canNotDeleteNowMessage,
 			DBError,
 			nil,
 		)

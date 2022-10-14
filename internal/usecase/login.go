@@ -8,7 +8,6 @@ import (
 
 	jwtKit "github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 
 	"github.com/TcMits/ent-clean-template/internal/repository"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
@@ -28,33 +27,10 @@ const (
 )
 
 var (
-	// i18n messages
-	_invalidLoginInputErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.login.loginUseCase.Login.InvalidLoginInput",
-		Other: "Your username or password is incorrect",
-	}
-	_failedAccessTokenCreationMsg = &i18n.Message{
-		ID:    "internal.usecase.login.loginUseCase.Login.FailedTokenCreation",
-		Other: "Can't login now",
-	}
-	_failedRefreshTokenCreationMsg = &i18n.Message{
-		ID:    "internal.usecase.login.loginUseCase.Login.FailedTokenCreation",
-		Other: "Can't login now",
-	}
-	_invalidRefreshTokenMsg = &i18n.Message{
-		ID:    "internal.usecase.login.loginUseCase.Login.InvalidRefreshToken",
-		Other: "Authentication failed",
-	}
-	_invalidAccessTokenMsg = &i18n.Message{
-		ID:    "internal.usecase.login.loginUseCase.Login.InvalidAccessToken",
-		Other: "Authentication failed",
-	}
-
-	// wrap error
 	_wrapInvalidLoginInputError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.repository.Login: %w", err),
-			_invalidLoginInputErrorMsg,
+			_incorrectLoginInputMessage,
 			AuthenticationError,
 			nil,
 		)
@@ -62,7 +38,7 @@ var (
 	_wrapFailedAccessTokenCreation = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
-			_failedAccessTokenCreationMsg,
+			_canNotLoginNowMessage,
 			InternalServerError,
 			nil,
 		)
@@ -70,7 +46,7 @@ var (
 	_wrapFailedRefreshTokenCreation = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
-			_failedRefreshTokenCreationMsg,
+			_canNotLoginNowMessage,
 			InternalServerError,
 			nil,
 		)
@@ -78,7 +54,7 @@ var (
 	_wrapInvalidRefreshToken = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - RefreshToken - l.parseRefreshToken: %w", err),
-			_invalidRefreshTokenMsg,
+			_authenticationFailedMessage,
 			AuthenticationError,
 			nil,
 		)
@@ -86,7 +62,7 @@ var (
 	_wrapInvalidAccessToken = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("loginUseCase - RefreshToken - l.parseAccessToken: %w", err),
-			_invalidAccessTokenMsg,
+			_authenticationFailedMessage,
 			AuthenticationError,
 			nil,
 		)

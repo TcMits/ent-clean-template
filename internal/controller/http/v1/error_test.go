@@ -293,7 +293,6 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 
 	errs := validate.Struct(&InputStruct{Message: "1"}).(validator.ValidationErrors)
 	errs_with_message := validate.Struct(&InputStructWithErrMessage{Message: "1"}).(validator.ValidationErrors)
-	tr := func(string, ...any) string { return "" }
 
 	tests := []struct {
 		name string
@@ -305,13 +304,12 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			args: args{
 				inputStructure: new(InputStruct),
 				errs:           errs,
-				tr:             tr,
 			},
 			want: model.NewTranslatableError(
 				errs,
-				_defaultInvalidErrorMessage,
+				_oneOrMoreFieldsFailedToBeValidatedMessage,
 				_usecaseInputValidationError,
-				tr,
+				nil,
 			),
 		},
 		{
@@ -319,7 +317,6 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			args: args{
 				inputStructure: new(InputStructWithErrMessage),
 				errs:           errs_with_message,
-				tr:             tr,
 			},
 			want: model.NewTranslatableError(
 				errs_with_message[0],
@@ -328,7 +325,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 					Other: "Message",
 				},
 				_usecaseInputValidationError,
-				tr,
+				nil,
 			),
 		},
 	}
@@ -337,7 +334,6 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			got := translatableErrorFromValidationErrors(
 				tt.args.inputStructure,
 				tt.args.errs,
-				tt.args.tr,
 			)
 			if !reflect.DeepEqual(got.Error(), tt.want.Error()) {
 				t.Errorf(

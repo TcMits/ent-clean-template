@@ -2,29 +2,6 @@ package usecase
 
 import "github.com/nicksnyder/go-i18n/v2/i18n"
 
-var (
-	_defaultInvalidErrorMsg = &i18n.Message{
-		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidError",
-		Other: "One or more fields failed to be validated",
-	}
-	_publicMeUseCaseUpdateInputInvalidUsernameMsg = &i18n.Message{
-		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidUsernameError",
-		Other: "Invalid username",
-	}
-	_publicMeUseCaseUpdateInputInvalidFirstNameMsg = &i18n.Message{
-		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidFirstNameError",
-		Other: "Invalid first name",
-	}
-	_publicMeUseCaseUpdateInputInvalidLastNameMsg = &i18n.Message{
-		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidLastNameError",
-		Other: "Invalid last name",
-	}
-	_publicMeUseCaseUpdateInputInvalidEmailMsg = &i18n.Message{
-		ID:    "pkg.entity.model.usecase.user.PublicMeUseCaseUpdateInput.GetErrorMessageFromStructField.InvalidEmailError",
-		Other: "Invalid email",
-	}
-)
-
 type PublicMeUseCaseUpdateInput struct {
 	Username  *string `json:"username,omitempty"   form:"username,omitempty"   validate:"alphanum,min=1,max=128"` // username has to be unique
 	FirstName *string `json:"first_name,omitempty" form:"first_name,omitempty" validate:"max=128"`
@@ -37,14 +14,14 @@ func (i *PublicMeUseCaseUpdateInput) GetErrorMessageFromStructField(
 ) *i18n.Message {
 	switch fieldName {
 	case "Username":
-		return _publicMeUseCaseUpdateInputInvalidUsernameMsg
+		return _invalidUsernameMessage
 	case "FirstName":
-		return _publicMeUseCaseUpdateInputInvalidFirstNameMsg
+		return _invalidFirstNameMessage
 	case "LastName":
-		return _publicMeUseCaseUpdateInputInvalidLastNameMsg
+		return _invalidLastNameMessage
 	case "Email":
-		return _publicMeUseCaseUpdateInputInvalidEmailMsg
+		return _invalidEmailMessage
 	default:
-		return _defaultInvalidErrorMsg
+		return _oneOrMoreFieldsFailedToBeValidatedMessage
 	}
 }

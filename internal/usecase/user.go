@@ -15,7 +15,6 @@ import (
 	useCaseModel "github.com/TcMits/ent-clean-template/pkg/entity/model/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/tool/lazy"
 	"github.com/google/uuid"
-	"github.com/nicksnyder/go-i18n/v2/i18n"
 )
 
 const (
@@ -24,37 +23,10 @@ const (
 )
 
 var (
-	// i18n message
-	_getPublicMeUseUserIsNotAuthenticatedErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.getPublicMeUseCase.Get.UserIsNotAuthenticatedError",
-		Other: "Permission denied",
-	}
-	_updatePublicMeUseCaseUpdateErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.NewPublicMeUseCase.UpdateError",
-		Other: "Can't update now",
-	}
-	_validateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.validateUpdateInputPublicMeUseCase.validateEmail.EmailIsAlreadyRegisteredError",
-		Other: "Email is registered",
-	}
-	_validateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.validateUpdateInputPublicMeUseCase.validateUsername.UsernameIsAlreadyRegisteredError",
-		Other: "Username is registered",
-	}
-	_isAuthenticatedPermissionCheckerUserIsNotAuthenticatedErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.NewIsAuthenticatedPermissionChecker.UserIsNotAuthenticatedError",
-		Other: "Permission denied",
-	}
-	_isSuperuserPermissionCheckerUserIsNotSuperuserErrorMsg = &i18n.Message{
-		ID:    "internal.usecase.user.NewIsSuperuserPermissionChecker.UserIsNotSuperuserError",
-		Other: "Permission denied",
-	}
-
-	// wrap error
 	_wrapGetPublicMeUseUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("getPublicMeUseCase - Get - ctx.Value: %w", err),
-			_getPublicMeUseUserIsNotAuthenticatedErrorMsg,
+			_authenticationFailedMessage,
 			PermissionDeniedError,
 			nil,
 		)
@@ -62,7 +34,7 @@ var (
 	_wrapUpdatePublicMeUseCaseUpdateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewPublicMeUseCase: %w", err),
-			_updatePublicMeUseCaseUpdateErrorMsg,
+			_canNotCreateNowMessage,
 			DBError,
 			nil,
 		)
@@ -73,7 +45,7 @@ var (
 				"validateUpdateInputPublicMeUseCase - validateEmail - u.repository.Get: %w",
 				err,
 			),
-			_validateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredErrorMsg,
+			_emailIsRegisteredMessage,
 			ValidationError,
 			nil,
 		)
@@ -84,7 +56,7 @@ var (
 				"validateUpdateInputPublicMeUseCase - validateUsername - u.repository.Get: %w",
 				err,
 			),
-			_validateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredErrorMsg,
+			_usernameIsRegisteredMessage,
 			ValidationError,
 			nil,
 		)
@@ -92,7 +64,7 @@ var (
 	_wrapIsAuthenticatedPermissionCheckerUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsAuthenticatedPermissionChecker: %w", err),
-			_isAuthenticatedPermissionCheckerUserIsNotAuthenticatedErrorMsg,
+			_permissionDeniedMessage,
 			PermissionDeniedError,
 			nil,
 		)
@@ -100,7 +72,7 @@ var (
 	_wrapIsSuperuserPermissionCheckerUserIsNotSuperuserError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf("usecase - NewIsSuperuserPermissionChecker: %w", err),
-			_isSuperuserPermissionCheckerUserIsNotSuperuserErrorMsg,
+			_permissionDeniedMessage,
 			PermissionDeniedError,
 			nil,
 		)

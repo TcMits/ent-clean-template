@@ -4,7 +4,7 @@ import "github.com/nicksnyder/go-i18n/v2/i18n"
 
 var _ error = new(TranslatableError)
 
-type TranslateFunc func(string, ...any) string
+type TranslateFunc func(*i18n.Message, ...any) string
 
 type TranslatableError struct {
 	args          []any
@@ -16,8 +16,8 @@ type TranslatableError struct {
 
 func (e TranslatableError) Error() string {
 	errMsg := ""
-	if e.translateFunc == nil && e.i18nMessage != nil {
-		errMsg = e.translateFunc(e.i18nMessage.ID, e.args...)
+	if e.translateFunc != nil && e.i18nMessage != nil {
+		errMsg = e.translateFunc(e.i18nMessage, e.args...)
 	}
 	if errMsg != "" {
 		return errMsg
