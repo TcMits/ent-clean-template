@@ -19,7 +19,7 @@ const (
 
 var _wrapPublicMeReadBodyError = func(err error) error {
 	return model.NewTranslatableError(
-		fmt.Errorf("v1 - RegisterPublicMeController: %w", err),
+		fmt.Errorf("internal.controller.http.v1.user.RegisterPublicMeController: %w", err),
 		_oneOrMoreFieldsFailedToBeValidatedMessage,
 		_usecaseInputValidationError,
 		nil,

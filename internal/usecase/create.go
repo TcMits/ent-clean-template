@@ -18,7 +18,7 @@ var (
 	_wrapStartCreateTransactionError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"createModelInTransactionUseCase - Create - u.transactionRepository.Start: %w",
+				"internal.usecase.create.createModelInTransactionUseCase.Create: %w",
 				err,
 			),
 			_canNotCreateNowMessage,
@@ -29,7 +29,7 @@ var (
 	_wrapCommitCreateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"createModelInTransactionUseCase - Create - u.transactionRepository.Commit: %w",
+				"internal.usecase.create.createModelInTransactionUseCase.Create: %w",
 				err,
 			),
 			_canNotCreateNowMessage,
@@ -40,7 +40,7 @@ var (
 	_wrapRollbackCreateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"createModelInTransactionUseCase - Create - u.transactionRepository.Rollback: %w",
+				"internal.usecase.create.createModelInTransactionUseCase.Create: %w",
 				err,
 			),
 			_canNotCreateNowMessage,

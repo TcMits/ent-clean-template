@@ -167,7 +167,7 @@ func Test_updateModelInTransactionUseCase_Update(t *testing.T) {
 		repository            repository.UpdateWithClientModelRepository[*struct{}, *struct{}]
 		getRepository         repository.GetWithClientModelRepository[*struct{}, *struct{}]
 		transactionRepository repository.TransactionRepository
-		toRepoWhereInputFunc  ConverFunc[*struct{}, *struct{}]
+		toRepoWhereInputFunc  ConvertFunc[*struct{}, *struct{}]
 		validateFunc          UpdateInTransactionValidateFunc[*struct{}, *struct{}, *struct{}]
 		selectForUpdate       bool
 		wrapGetErrorFunc      func(error) error

@@ -31,7 +31,7 @@ const (
 var (
 	_wrapInvalidUsernameError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - Login - l.getRepository.Get: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.Login: %w", err),
 			_incorrectLoginInputMessage,
 			AuthenticationError,
 			nil,
@@ -39,7 +39,7 @@ var (
 	}
 	_wrapInvalidPasswordError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - Login - password.ValidatePassword: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.Login: %w", err),
 			_incorrectLoginInputMessage,
 			AuthenticationError,
 			nil,
@@ -47,7 +47,7 @@ var (
 	}
 	_wrapFailedAccessTokenCreation = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.Login: %w", err),
 			_canNotLoginNowMessage,
 			InternalServerError,
 			nil,
@@ -55,7 +55,7 @@ var (
 	}
 	_wrapFailedRefreshTokenCreation = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - Login - l.createAccessToken: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.Login: %w", err),
 			_canNotLoginNowMessage,
 			InternalServerError,
 			nil,
@@ -63,7 +63,7 @@ var (
 	}
 	_wrapInvalidRefreshToken = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - RefreshToken - l.parseRefreshToken: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.RefreshToken: %w", err),
 			_authenticationFailedMessage,
 			AuthenticationError,
 			nil,
@@ -71,7 +71,7 @@ var (
 	}
 	_wrapInvalidAccessToken = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("loginUseCase - RefreshToken - l.parseAccessToken: %w", err),
+			fmt.Errorf("internal.usecase.LoginUseCase.VerifyToken: %w", err),
 			_authenticationFailedMessage,
 			AuthenticationError,
 			nil,

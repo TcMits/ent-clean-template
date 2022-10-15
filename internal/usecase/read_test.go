@@ -14,7 +14,7 @@ import (
 func Test_getModelUseCase_Get(t *testing.T) {
 	type fields struct {
 		repository           repository.GetModelRepository[*struct{}, *struct{}]
-		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConvertFunc[*struct{}, *struct{}]
 		wrapGetErrorFunc     func(error) error
 	}
 	type args struct {
@@ -115,7 +115,7 @@ func Test_getModelUseCase_Get(t *testing.T) {
 func Test_countModelUseCase_Count(t *testing.T) {
 	type fields struct {
 		repository           repository.CountModelRepository[*struct{}]
-		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConvertFunc[*struct{}, *struct{}]
 		wrapCountErrorFunc   func(error) error
 	}
 	type args struct {
@@ -216,8 +216,8 @@ func Test_countModelUseCase_Count(t *testing.T) {
 func Test_listModelUseCase_List(t *testing.T) {
 	type fields struct {
 		repository           repository.ListModelRepository[*struct{}, *struct{}, *struct{}]
-		toRepoWhereInputFunc ConverFunc[*struct{}, *struct{}]
-		toRepoOrderInputFunc ConverFunc[*struct{}, *struct{}]
+		toRepoWhereInputFunc ConvertFunc[*struct{}, *struct{}]
+		toRepoOrderInputFunc ConvertFunc[*struct{}, *struct{}]
 		wrapListErrorFunc    func(error) error
 	}
 	type args struct {

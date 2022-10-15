@@ -13,7 +13,7 @@ var (
 	_wrapStartDeleteTransactionError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Start: %w",
+				"internal.usecase.delete.deleteModelInTransactionUseCase.GetAndDelete: %w",
 				err,
 			),
 			_canNotDeleteNowMessage,
@@ -24,7 +24,7 @@ var (
 	_wrapCommitDeleteError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Commit: %w",
+				"internal.usecase.delete.deleteModelInTransactionUseCase.GetAndDelete: %w",
 				err,
 			),
 			_canNotDeleteNowMessage,
@@ -35,7 +35,7 @@ var (
 	_wrapRollbackDeleteError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"deleteModelInTransactionUseCase - Delete - u.transactionRepository.Rollback: %w",
+				"internal.usecase.delete.deleteModelInTransactionUseCase.GetAndDelete: %w",
 				err,
 			),
 			_canNotDeleteNowMessage,
@@ -55,7 +55,7 @@ type deleteModelInTransactionUseCase[ModelType, WhereInputType, RepoWhereInputTy
 	repository            repository.DeleteWithClientModelRepository[ModelType]
 	getRepository         repository.GetWithClientModelRepository[ModelType, RepoWhereInputType]
 	transactionRepository repository.TransactionRepository
-	toRepoWhereInputFunc  ConverFunc[WhereInputType, RepoWhereInputType]
+	toRepoWhereInputFunc  ConvertFunc[WhereInputType, RepoWhereInputType]
 	selectForUpdate       bool
 	wrapGetErrorFunc      func(error) error
 	wrapDeleteErrorFunc   func(error) error

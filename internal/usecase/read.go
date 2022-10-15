@@ -7,24 +7,24 @@ import (
 	"github.com/TcMits/ent-clean-template/pkg/tool/generic"
 )
 
-type ConverFunc[FromType, ToType any] func(context.Context, FromType) (ToType, error)
+type ConvertFunc[FromType, ToType any] func(context.Context, FromType) (ToType, error)
 
 type getModelUseCase[ModelType, WhereInputType, RepoWhereInputType any] struct {
 	repository           repository.GetModelRepository[ModelType, RepoWhereInputType]
-	toRepoWhereInputFunc ConverFunc[WhereInputType, RepoWhereInputType]
+	toRepoWhereInputFunc ConvertFunc[WhereInputType, RepoWhereInputType]
 	wrapGetErrorFunc     func(error) error
 }
 
 type countModelUseCase[WhereInputType, RepoWhereInputType any] struct {
 	repository           repository.CountModelRepository[RepoWhereInputType]
-	toRepoWhereInputFunc ConverFunc[WhereInputType, RepoWhereInputType]
+	toRepoWhereInputFunc ConvertFunc[WhereInputType, RepoWhereInputType]
 	wrapCountErrorFunc   func(error) error
 }
 
 type listModelUseCase[ModelType, OrderInputType, WhereInputType, RepoOrderInputType, RepoWhereInputType any] struct {
 	repository           repository.ListModelRepository[ModelType, RepoOrderInputType, RepoWhereInputType]
-	toRepoWhereInputFunc ConverFunc[WhereInputType, RepoWhereInputType]
-	toRepoOrderInputFunc ConverFunc[OrderInputType, RepoOrderInputType]
+	toRepoWhereInputFunc ConvertFunc[WhereInputType, RepoWhereInputType]
+	toRepoOrderInputFunc ConvertFunc[OrderInputType, RepoOrderInputType]
 	wrapListErrorFunc    func(error) error
 }
 

@@ -24,7 +24,7 @@ const (
 var (
 	_wrapInvalidLoginInput = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("v1 - getLoginHandler - ctx.ReadBody: %w", err),
+			fmt.Errorf("internal.controller.http.v1.login.getLoginHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
 			_usecaseInputValidationError,
 			nil,
@@ -32,7 +32,7 @@ var (
 	}
 	_wrapInvalidRefreshInput = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("v1 - getRefreshTokenHandler - ctx.ReadBody: %w", err),
+			fmt.Errorf("internal.controller.http.v1.login.getRefreshTokenHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
 			_usecaseInputValidationError,
 			nil,
@@ -40,7 +40,7 @@ var (
 	}
 	_wrapInvalidVerifyTokenInput = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("v1 - getVerifyTokenHandler - ctx.ReadBody: %w", err),
+			fmt.Errorf("internal.controller.http.v1.login.getVerifyTokenHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
 			_usecaseInputValidationError,
 			nil,

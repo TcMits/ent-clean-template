@@ -25,7 +25,7 @@ const (
 var (
 	_wrapGetPublicMeUseUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("getPublicMeUseCase - Get - ctx.Value: %w", err),
+			fmt.Errorf("internal.usecase.user.getPublicMeUseCase.Get: %w", err),
 			_authenticationFailedMessage,
 			PermissionDeniedError,
 			nil,
@@ -33,7 +33,7 @@ var (
 	}
 	_wrapUpdatePublicMeUseCaseUpdateError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("usecase - NewPublicMeUseCase: %w", err),
+			fmt.Errorf("internal.usecase.user.NewPublicMeUseCase: %w", err),
 			_canNotCreateNowMessage,
 			DBError,
 			nil,
@@ -42,7 +42,7 @@ var (
 	_wrapValidateUpdateInputPublicMeUseCaseEmailIsAlreadyRegisteredError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"validateUpdateInputPublicMeUseCase - validateEmail - u.repository.Get: %w",
+				"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateEmail: %w",
 				err,
 			),
 			_emailIsRegisteredMessage,
@@ -53,7 +53,7 @@ var (
 	_wrapValidateUpdateInputPublicMeUseCaseUsernameIsAlreadyRegisteredError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"validateUpdateInputPublicMeUseCase - validateUsername - u.repository.Get: %w",
+				"internal.usecase.user.validateUpdateInputPublicMeUseCase.validateUsername: %w",
 				err,
 			),
 			_usernameIsRegisteredMessage,
@@ -63,7 +63,7 @@ var (
 	}
 	_wrapIsAuthenticatedPermissionCheckerUserIsNotAuthenticatedError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("usecase - NewIsAuthenticatedPermissionChecker: %w", err),
+			fmt.Errorf("internal.usecase.user.NewIsAuthenticatedPermissionChecker: %w", err),
 			_permissionDeniedMessage,
 			PermissionDeniedError,
 			nil,
@@ -71,7 +71,7 @@ var (
 	}
 	_wrapIsSuperuserPermissionCheckerUserIsNotSuperuserError = func(err error) error {
 		return model.NewTranslatableError(
-			fmt.Errorf("usecase - NewIsSuperuserPermissionChecker: %w", err),
+			fmt.Errorf("internal.usecase.user.NewIsSuperuserPermissionChecker: %w", err),
 			_permissionDeniedMessage,
 			PermissionDeniedError,
 			nil,

@@ -105,7 +105,7 @@ func Test_deleteModelInTransactionUseCase_Delete(t *testing.T) {
 		repository            repository.DeleteWithClientModelRepository[*struct{}]
 		getRepository         repository.GetWithClientModelRepository[*struct{}, *struct{}]
 		transactionRepository repository.TransactionRepository
-		toRepoWhereInputFunc  ConverFunc[*struct{}, *struct{}]
+		toRepoWhereInputFunc  ConvertFunc[*struct{}, *struct{}]
 		selectForUpdate       bool
 		wrapGetErrorFunc      func(error) error
 		wrapDeleteErrorFunc   func(error) error

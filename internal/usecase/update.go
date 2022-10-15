@@ -17,7 +17,7 @@ var (
 	_wrapStartUpdateTransactionError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"updateModelInTransactionUseCase - Update - u.transactionRepository.Start: %w",
+				"internal.usecase.update.updateModelInTransactionUseCase.GetAndUpdate: %w",
 				err,
 			),
 			_canNotUpdateNowMessage,
@@ -28,7 +28,7 @@ var (
 	_wrapCommitUpdateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"updateModelInTransactionUseCase - Update - u.transactionRepository.Commit: %w",
+				"internal.usecase.update.updateModelInTransactionUseCase.GetAndUpdate: %w",
 				err,
 			),
 			_canNotUpdateNowMessage,
@@ -39,7 +39,7 @@ var (
 	_wrapRollbackUpdateError = func(err error) error {
 		return model.NewTranslatableError(
 			fmt.Errorf(
-				"updateModelInTransactionUseCase - Update - u.transactionRepository.Rollback: %w",
+				"internal.usecase.update.updateModelInTransactionUseCase.GetAndUpdate: %w",
 				err,
 			),
 			_canNotUpdateNowMessage,
@@ -72,7 +72,7 @@ type updateModelInTransactionUseCase[ModelType, WhereInputType, UpdateInputType,
 	repository            repository.UpdateWithClientModelRepository[ModelType, RepoUpdateInputType]
 	getRepository         repository.GetWithClientModelRepository[ModelType, RepoWhereInputType]
 	transactionRepository repository.TransactionRepository
-	toRepoWhereInputFunc  ConverFunc[WhereInputType, RepoWhereInputType]
+	toRepoWhereInputFunc  ConvertFunc[WhereInputType, RepoWhereInputType]
 	validateFunc          UpdateInTransactionValidateFunc[ModelType, UpdateInputType, RepoUpdateInputType]
 	selectForUpdate       bool
 	wrapGetErrorFunc      func(error) error
