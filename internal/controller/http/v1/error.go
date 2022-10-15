@@ -1,8 +1,6 @@
 package v1
 
 import (
-	"errors"
-
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -45,23 +43,19 @@ func getStatusCodeFromCode(code string) int {
 }
 
 func logError(err error, code string, l logger.Interface) {
-	logErr := err
-	if unwrapedErr := errors.Unwrap(err); unwrapedErr != nil {
-		logErr = unwrapedErr
-	}
 	switch code {
 	case usecase.PermissionDeniedError,
 		usecase.AuthenticationError,
 		usecase.ValidationError,
 		usecase.NotFoundError,
 		_usecaseInputValidationError:
-		l.Info(logErr.Error())
+		l.Info(err.Error())
 	case usecase.DBError:
-		l.Warn(logErr.Error())
+		l.Warn(err.Error())
 	case usecase.InternalServerError, _unknownError:
 		l.Error(err)
 	default:
-		l.Info(logErr.Error())
+		l.Info(err.Error())
 	}
 }
 
@@ -74,22 +68,24 @@ func getTranslateFunc(tr func(string, ...any) string) model.TranslateFunc {
 func handleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
-	logError(err, code, l)
 
 	switch foundedError := err.(type) {
 	case model.TranslatableError:
+		logError(foundedError.Unwrap(), code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: translatableErr.Error(),
 		})
 	case *model.TranslatableError:
+		logError(foundedError.Unwrap(), code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: translatableErr.Error(),
 		})
 	default:
+		logError(err, code, l)
 		ctx.StopWithJSON(statusCode, errorResponse{
 			Code:    code,
 			Message: foundedError.Error(),
