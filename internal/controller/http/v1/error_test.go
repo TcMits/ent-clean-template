@@ -24,7 +24,7 @@ type InputStructWithErrMessage struct {
 	Message string `validate:"min=2"`
 }
 
-func (*InputStructWithErrMessage) GetErrorMessageFromStructField(key string) *i18n.Message {
+func (*InputStructWithErrMessage) GetErrorMessageFromStructField(_ error) *i18n.Message {
 	return &i18n.Message{
 		ID:    "Message",
 		Other: "Message",

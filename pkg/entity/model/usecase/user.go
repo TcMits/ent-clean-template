@@ -1,6 +1,9 @@
 package usecase
 
-import "github.com/nicksnyder/go-i18n/v2/i18n"
+import (
+	"github.com/go-playground/validator/v10"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+)
 
 type PublicMeUseCaseUpdateInput struct {
 	Username  *string `json:"username,omitempty"   form:"username,omitempty"   validate:"alphanum,min=1,max=128"` // username has to be unique
@@ -9,9 +12,12 @@ type PublicMeUseCaseUpdateInput struct {
 	Email     *string `json:"email,omitempty"      form:"email,omitempty"      validate:"email"` // email has to be unique
 }
 
-func (i *PublicMeUseCaseUpdateInput) GetErrorMessageFromStructField(
-	fieldName string,
-) *i18n.Message {
+func (_ *PublicMeUseCaseUpdateInput) GetErrorMessageFromStructField(err error) *i18n.Message {
+	fieldName := ""
+	if validateErr, ok := err.(validator.FieldError); ok {
+		fieldName = validateErr.StructField()
+	}
+
 	switch fieldName {
 	case "Username":
 		return _invalidUsernameMessage

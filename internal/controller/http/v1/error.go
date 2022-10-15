@@ -102,16 +102,14 @@ func translatableErrorFromValidationErrors(
 	inputStructure any, errs validator.ValidationErrors,
 ) *model.TranslatableError {
 	verboser, ok := inputStructure.(interface {
-		GetErrorMessageFromStructField(string) *i18n.Message
+		GetErrorMessageFromStructField(error) *i18n.Message
 	})
 	var err error = errs
 	i18nMessage := _oneOrMoreFieldsFailedToBeValidatedMessage
 	if ok {
 		for _, validationErr := range errs {
 			err = validationErr
-			i18nMessage = verboser.GetErrorMessageFromStructField(
-				validationErr.StructField(),
-			)
+			i18nMessage = verboser.GetErrorMessageFromStructField(validationErr)
 			break
 		}
 	}
