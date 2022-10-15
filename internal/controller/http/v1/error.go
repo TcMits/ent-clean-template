@@ -68,29 +68,26 @@ func getTranslateFunc(tr func(string, ...any) string) model.TranslateFunc {
 func handleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
+	message := ""
 
 	switch foundedError := err.(type) {
 	case model.TranslatableError:
 		logError(foundedError.Unwrap(), code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
-		ctx.StopWithJSON(statusCode, errorResponse{
-			Code:    code,
-			Message: translatableErr.Error(),
-		})
+		message = translatableErr.Error()
 	case *model.TranslatableError:
 		logError(foundedError.Unwrap(), code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
-		ctx.StopWithJSON(statusCode, errorResponse{
-			Code:    code,
-			Message: translatableErr.Error(),
-		})
+		message = translatableErr.Error()
 	default:
 		logError(err, code, l)
-		ctx.StopWithJSON(statusCode, errorResponse{
-			Code:    code,
-			Message: foundedError.Error(),
-		})
+		message = foundedError.Error()
 	}
+
+	ctx.StopWithJSON(statusCode, errorResponse{
+		Code:    code,
+		Message: message,
+	})
 }
 
 // alias handleError.
