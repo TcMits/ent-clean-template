@@ -21,7 +21,7 @@ var _wrapPublicMeReadBodyError = func(err error) error {
 	return model.NewTranslatableError(
 		fmt.Errorf("internal.controller.http.v1.user.RegisterPublicMeController: %w", err),
 		_oneOrMoreFieldsFailedToBeValidatedMessage,
-		_usecaseInputValidationError,
+		_useCaseInputValidationError,
 		nil,
 	)
 }

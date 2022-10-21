@@ -560,6 +560,9 @@ const docTemplate = `{
                 "code": {
                     "type": "string"
                 },
+                "detail": {
+                    "type": "string"
+                },
                 "message": {
                     "type": "string"
                 }

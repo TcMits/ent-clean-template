@@ -25,7 +25,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 # step3: copy from builder
 FROM golang:1.19-bullseye 
 
-RUN apt-get install curl
+RUN apt-get update \
+    && apt-get install -y curl \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /
 

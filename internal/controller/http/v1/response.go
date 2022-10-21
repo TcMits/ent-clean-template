@@ -7,6 +7,7 @@ type (
 	errorResponse struct {
 		Message string `json:"message"`
 		Code    string `json:"code"`
+		Detail  string `json:"detail"`
 	}
 
 	// login

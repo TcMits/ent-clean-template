@@ -26,7 +26,7 @@ var (
 		return model.NewTranslatableError(
 			fmt.Errorf("internal.controller.http.v1.login.getLoginHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
-			_usecaseInputValidationError,
+			_useCaseInputValidationError,
 			nil,
 		)
 	}
@@ -34,7 +34,7 @@ var (
 		return model.NewTranslatableError(
 			fmt.Errorf("internal.controller.http.v1.login.getRefreshTokenHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
-			_usecaseInputValidationError,
+			_useCaseInputValidationError,
 			nil,
 		)
 	}
@@ -42,7 +42,7 @@ var (
 		return model.NewTranslatableError(
 			fmt.Errorf("internal.controller.http.v1.login.getVerifyTokenHandler: %w", err),
 			_oneOrMoreFieldsFailedToBeValidatedMessage,
-			_usecaseInputValidationError,
+			_useCaseInputValidationError,
 			nil,
 		)
 	}

@@ -115,8 +115,8 @@ func Test_getStatusCodeFromCode(t *testing.T) {
 			want: iris.StatusBadRequest,
 		},
 		{
-			name: "_usecaseInputValidationError",
-			args: args{code: _usecaseInputValidationError},
+			name: "_useCaseInputValidationError",
+			args: args{code: _useCaseInputValidationError},
 			want: iris.StatusBadRequest,
 		},
 		{
@@ -203,11 +203,11 @@ func Test_logError(t *testing.T) {
 			},
 		},
 		{
-			name: "_usecaseInputValidationError",
+			name: "_useCaseInputValidationError",
 			args: args{
 				err:  errors.New("test"),
 				l:    testutils.NullLogger{},
-				code: _usecaseInputValidationError,
+				code: _useCaseInputValidationError,
 			},
 		},
 		{
@@ -308,7 +308,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 			want: model.NewTranslatableError(
 				errs,
 				_oneOrMoreFieldsFailedToBeValidatedMessage,
-				_usecaseInputValidationError,
+				_useCaseInputValidationError,
 				nil,
 			),
 		},
@@ -324,7 +324,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 					ID:    "Message",
 					Other: "Message",
 				},
-				_usecaseInputValidationError,
+				_useCaseInputValidationError,
 				nil,
 			),
 		},

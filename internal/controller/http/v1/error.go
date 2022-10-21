@@ -12,7 +12,7 @@ import (
 
 const (
 	_unknownError                = "UNKNOWN"
-	_usecaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
+	_useCaseInputValidationError = "USECASE_INPUT_VALIDATION_ERROR"
 )
 
 func getCodeFromError(err error) string {
@@ -31,7 +31,7 @@ func getStatusCodeFromCode(code string) int {
 		return iris.StatusUnauthorized
 	case usecase.InternalServerError, _unknownError:
 		return iris.StatusInternalServerError
-	case usecase.ValidationError, _usecaseInputValidationError:
+	case usecase.ValidationError, _useCaseInputValidationError:
 		return iris.StatusBadRequest
 	case usecase.NotFoundError:
 		return iris.StatusNotFound
@@ -48,7 +48,7 @@ func logError(err error, code string, l logger.Interface) {
 		usecase.AuthenticationError,
 		usecase.ValidationError,
 		usecase.NotFoundError,
-		_usecaseInputValidationError:
+		_useCaseInputValidationError:
 		l.Info(err.Error())
 	case usecase.DBError:
 		l.Warn(err.Error())
@@ -69,24 +69,31 @@ func handleError(ctx iris.Context, err error, l logger.Interface) {
 	code := getCodeFromError(err)
 	statusCode := getStatusCodeFromCode(code)
 	message := ""
+	detail := ""
 
 	switch foundedError := err.(type) {
 	case model.TranslatableError:
-		logError(foundedError.Unwrap(), code, l)
+		unwrapErr := foundedError.Unwrap()
+		logError(unwrapErr, code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		message = translatableErr.Error()
+		detail = unwrapErr.Error()
 	case *model.TranslatableError:
-		logError(foundedError.Unwrap(), code, l)
+		unwrapErr := foundedError.Unwrap()
+		logError(unwrapErr, code, l)
 		translatableErr := foundedError.SetTranslateFunc(getTranslateFunc(ctx.Tr))
 		message = translatableErr.Error()
+		detail = unwrapErr.Error()
 	default:
 		logError(err, code, l)
 		message = foundedError.Error()
+		detail = message
 	}
 
 	ctx.StopWithJSON(statusCode, errorResponse{
 		Code:    code,
 		Message: message,
+		Detail:  detail,
 	})
 }
 
@@ -101,16 +108,14 @@ func translatableErrorFromValidationErrors(
 	verboser, ok := inputStructure.(interface {
 		GetErrorMessageFromStructField(error) *i18n.Message
 	})
-	var err error = errs
 	i18nMessage := _oneOrMoreFieldsFailedToBeValidatedMessage
 	if ok {
 		for _, validationErr := range errs {
-			err = validationErr
 			i18nMessage = verboser.GetErrorMessageFromStructField(validationErr)
 			break
 		}
 	}
-	return model.NewTranslatableError(err, i18nMessage, _usecaseInputValidationError, nil)
+	return model.NewTranslatableError(errs, i18nMessage, _useCaseInputValidationError, nil)
 }
 
 func handleBindingError(
