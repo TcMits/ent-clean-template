@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	_swaggerDocPath     = "/api/v1/swagger/doc.json"
+	_swaggerDocPath     = _v1SubPath + "/swagger/doc.json"
 	_swaggerSubPath     = "/swagger"
 	_swaggerWideSubPath = "/swagger/{any:path}"
 	_swaggerDocSubPath  = "/swagger/doc.json"

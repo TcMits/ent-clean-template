@@ -12,6 +12,8 @@ import (
 	"github.com/kataras/iris/v12/middleware/recover"
 )
 
+const _v1SubPath = "/api/v1"
+
 func NewHandler() *iris.Application {
 	handler := iris.New()
 
@@ -64,7 +66,7 @@ func RegisterV1HTTPServices(
 
 	// HTTP middlewares
 	h := handler.Party(
-		"/api/v1",
+		_v1SubPath,
 		cors.New().Handler(),
 		middleware.Logger(l),
 		middleware.Common(),
