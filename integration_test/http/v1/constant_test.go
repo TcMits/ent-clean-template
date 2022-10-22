@@ -27,7 +27,6 @@ const (
 	_verifyTokenSubPath  = _v1SubPath + "/verify-token"
 	_meSubPath           = _v1SubPath + "/me"
 	_docsSubPath         = _v1SubPath + "/swagger"
-	_docsIndexSubPath    = _docsSubPath + "/index.html"
 
 	// full path
 	_basePath         = "http://" + _host
@@ -36,7 +35,6 @@ const (
 	_verifyTokenPath  = _basePath + _verifyTokenSubPath
 	_mePath           = _basePath + _meSubPath
 	_docsPath         = _basePath + _docsSubPath
-	_docsIndexPath    = _basePath + _docsIndexSubPath
 
 	// request num
 	_requests = 10

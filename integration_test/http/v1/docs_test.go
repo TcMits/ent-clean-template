@@ -1,7 +1,6 @@
 package v1_test
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
@@ -9,17 +8,6 @@ import (
 )
 
 func TestDocs(t *testing.T) {
-	client := getEntClient(t)
-	ctx := context.Background()
-	isSuperuser := true
-	u := createUser(t, ctx, client, map[string]any{"IsSuperuser": &isSuperuser})
-	u2 := createUser(t, ctx, client, nil)
-
-	token := ""
-	token2 := ""
-	Test(t, getAccessTokenISteps(u.Username, "12345678", &token)...)
-	Test(t, getAccessTokenISteps(u2.Username, "12345678", &token2)...)
-
 	tests := []struct {
 		name string
 		args goHitArgs
@@ -28,45 +16,10 @@ func TestDocs(t *testing.T) {
 			name: "Success",
 			args: goHitArgs{
 				args: []IStep{
-					Description("Redirect Success"),
+					Description("Success"),
 					Get(_docsPath),
 					Send().Headers("Content-Type").Add("application/json"),
-					Expect().Status().Equal(http.StatusForbidden),
-				},
-			},
-		},
-		{
-			name: "IndexSuccess",
-			args: goHitArgs{
-				args: []IStep{
-					Description("Index Success"),
-					Get(_docsIndexPath),
-					Send().Headers("Content-Type").Add("application/json"),
-					getSendAuthenticationHeaderIStep(token),
 					Expect().Status().Equal(http.StatusOK),
-				},
-			},
-		},
-		{
-			name: "PermissionDeniedWithNonSuperuser",
-			args: goHitArgs{
-				args: []IStep{
-					Description("Index Success"),
-					Get(_docsIndexPath),
-					Send().Headers("Content-Type").Add("application/json"),
-					getSendAuthenticationHeaderIStep(token2),
-					Expect().Status().Equal(http.StatusForbidden),
-				},
-			},
-		},
-		{
-			name: "PermissionDeniedWithoutUser",
-			args: goHitArgs{
-				args: []IStep{
-					Description("Index Success"),
-					Get(_docsIndexPath),
-					Send().Headers("Content-Type").Add("application/json"),
-					Expect().Status().Equal(http.StatusForbidden),
 				},
 			},
 		},

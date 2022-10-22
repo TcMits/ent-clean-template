@@ -1,0 +1,430 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Swagger Example API
+  version: "1.0"
+servers:
+- url: //localhost:8080/api/v1
+paths:
+  /login:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_login_post_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_login_post_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_login_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/usecase.JWTAuthenticatedPayload'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Login endpoint
+      tags:
+      - login
+      x-codegen-request-body-name: payload
+  /me:
+    get:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/usecase.publicMeUseCaseUpdateSerializedInfo'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Me endpoints
+      tags:
+      - me
+      x-codegen-request-body-name: payload
+    patch:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/usecase.publicMeUseCaseUpdateSerializedInfo'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Me endpoints
+      tags:
+      - me
+      x-codegen-request-body-name: payload
+    put:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_me_get_request'
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/usecase.publicMeUseCaseUpdateSerializedInfo'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Forbidden
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Me endpoints
+      tags:
+      - me
+      x-codegen-request-body-name: payload
+  /refresh-token:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_refresh_token_post_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_refresh_token_post_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_refresh_token_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.refreshTokenResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Refresh token endpoint
+      tags:
+      - refresh-token
+      x-codegen-request-body-name: payload
+  /verify-token:
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/_verify_token_post_request'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/_verify_token_post_request'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/_verify_token_post_request'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.emptyResponse'
+          description: OK
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Bad Request
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Unauthorized
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/v1.errorResponse'
+          description: Internal Server Error
+      summary: Verify token endpoint
+      tags:
+      - verify-token
+      x-codegen-request-body-name: payload
+components:
+  schemas:
+    usecase.JWTAuthenticatedPayload:
+      example:
+        access_token: access_token
+        refresh_token: refresh_token
+        refresh_key: refresh_key
+      properties:
+        access_token:
+          type: string
+        refresh_key:
+          type: string
+        refresh_token:
+          type: string
+      type: object
+    usecase.LoginInput:
+      properties:
+        password:
+          minLength: 1
+          type: string
+        username:
+          maxLength: 128
+          minLength: 1
+          type: string
+      required:
+      - password
+      - username
+      type: object
+    usecase.PublicMeUseCaseUpdateInput:
+      properties:
+        email:
+          description: email has to be unique
+          type: string
+        first_name:
+          maxLength: 128
+          type: string
+        last_name:
+          maxLength: 128
+          type: string
+        username:
+          description: username has to be unique
+          maxLength: 128
+          minLength: 1
+          type: string
+      type: object
+    usecase.RefreshTokenInput:
+      properties:
+        refresh_key:
+          type: string
+        refresh_token:
+          type: string
+      required:
+      - refresh_key
+      - refresh_token
+      type: object
+    usecase.publicMeUseCaseUpdateSerializedInfo:
+      example:
+        update_time: update_time
+        is_active: true
+        is_superuser: true
+        create_time: create_time
+        is_staff: true
+        last_name: last_name
+        self: self
+        id: id
+        first_name: first_name
+        email: email
+        username: username
+      properties:
+        create_time:
+          type: string
+        email:
+          type: string
+        first_name:
+          type: string
+        id:
+          type: string
+        is_active:
+          type: boolean
+        is_staff:
+          type: boolean
+        is_superuser:
+          type: boolean
+        last_name:
+          type: string
+        self:
+          type: string
+        update_time:
+          type: string
+        username:
+          type: string
+      type: object
+    v1.emptyResponse:
+      type: object
+    v1.errorResponse:
+      properties:
+        code:
+          type: string
+        detail:
+          type: string
+        message:
+          type: string
+      type: object
+    v1.refreshTokenResponse:
+      example:
+        token: token
+      properties:
+        token:
+          type: string
+      type: object
+    v1.verifyTokenRequest:
+      properties:
+        token:
+          type: string
+      required:
+      - token
+      type: object
+    _login_post_request:
+      properties:
+        password:
+          minLength: 1
+          type: string
+        username:
+          maxLength: 128
+          minLength: 1
+          type: string
+      required:
+      - password
+      - username
+    _me_get_request:
+      properties:
+        email:
+          description: email has to be unique
+          type: string
+        first_name:
+          maxLength: 128
+          type: string
+        last_name:
+          maxLength: 128
+          type: string
+        username:
+          description: username has to be unique
+          maxLength: 128
+          minLength: 1
+          type: string
+    _refresh_token_post_request:
+      properties:
+        refresh_key:
+          type: string
+        refresh_token:
+          type: string
+      required:
+      - refresh_key
+      - refresh_token
+    _verify_token_post_request:
+      properties:
+        token:
+          type: string
+      required:
+      - token
+x-original-swagger-version: "2.0"

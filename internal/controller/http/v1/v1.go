@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"github.com/TcMits/ent-clean-template/docs"
 	"github.com/TcMits/ent-clean-template/internal/controller/http/v1/middleware"
 	"github.com/TcMits/ent-clean-template/internal/usecase"
 	"github.com/TcMits/ent-clean-template/pkg/entity/model"
@@ -34,12 +33,20 @@ func NewHandler() *iris.Application {
 	return handler
 }
 
-// @contact.name  API Support
-// @contact.url   http://www.swagger.io/support
+// @title Swagger Example API
+// @version 1.0
+// @description This is a sample server.
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
 // @contact.email support@swagger.io
 
 // @license.name Apache 2.0
-// @license.url  http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host localhost:8080
+// @BasePath /api/v1
 func RegisterV1HTTPServices(
 	handler iris.Party,
 	// adding more usecases here
@@ -54,14 +61,6 @@ func RegisterV1HTTPServices(
 ) {
 	handler.UseRouter(recover.New())
 	RegisterHealthCheckController(handler)
-
-	// programmatically set swagger info
-	docs.SwaggerInfo.Title = "Swagger API"
-	docs.SwaggerInfo.Description = ""
-	docs.SwaggerInfo.Version = "2.0"
-	docs.SwaggerInfo.Host = "localhost:8080"
-	docs.SwaggerInfo.BasePath = "/api/v1"
-	docs.SwaggerInfo.Schemes = []string{"http", "https"}
 
 	// HTTP middlewares
 	h := handler.Party(

@@ -27,6 +27,44 @@ Generate locale files:
 goi18n extract -sourceLanguage=en-US -outdir=./locales/en-US/ -format=yaml ./
 ```
 
+Generate docs files:
+```sh
+swag init -g ./internal/controller/http/v1/v1.go -o ./docs/v2
+```
+
+Convert OpenApi v2 to v3 (yaml):
+```sh
+# https://github.com/swaggo/swag/issues/386
+docker run --rm -v $(PWD)/docs:/work openapitools/openapi-generator-cli:latest-release \
+	  generate -i /work/v2/swagger.yaml -o /work/v3 -g openapi-yaml --minimal-update \
+    && mv ./docs/v3/openapi/openapi.yaml ./docs/v3/ \
+    && rm ./docs/v3/README.md \
+    && rm ./docs/v3/.openapi-generator-ignore \
+    && rm -rf ./docs/v3/.openapi-generator \
+    && rm -rf ./docs/v3/openapi
+```
+
+Convert OpenApi v2 to v3 (json):
+```sh
+# https://github.com/swaggo/swag/issues/386
+docker run --rm -v $(PWD)/docs:/work openapitools/openapi-generator-cli:latest-release \
+	  generate -i /work/v2/swagger.json -o /work/v3 -g openapi --minimal-update \
+    && rm ./docs/v3/README.md \
+    && rm ./docs/v3/.openapi-generator-ignore \
+    && rm -rf ./docs/v3/.openapi-generator 
+```
+
+### Changing between openapi v1/v2:
+Change [docs.go](https://github.com/TcMits/ent-clean-template/blob/master/docs/docs.go)
+
+```go
+package docs
+
+import _ "github.com/TcMits/ent-clean-template/docs/v3" // replace this
+// import _ "github.com/TcMits/ent-clean-template/docs/v2"
+```
+
+
 ## Overview
 
 ### Web framework
