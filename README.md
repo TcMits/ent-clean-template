@@ -54,7 +54,7 @@ docker run --rm -v $(PWD)/docs:/work openapitools/openapi-generator-cli:latest-r
     && rm -rf ./docs/v3/.openapi-generator 
 ```
 
-### Changing between openapi v1/v2:
+### Changing between openapi v2/v3:
 Change [docs.go](https://github.com/TcMits/ent-clean-template/blob/master/docs/docs.go)
 
 ```go
