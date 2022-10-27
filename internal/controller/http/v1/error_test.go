@@ -333,7 +333,7 @@ func Test_translatableErrorFromValidationErrors(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := translatableErrorFromValidationErrors(
 				tt.args.inputStructure,
-				tt.args.errs,
+				&tt.args.errs,
 			)
 			if !reflect.DeepEqual(got.Error(), tt.want.Error()) {
 				t.Errorf(

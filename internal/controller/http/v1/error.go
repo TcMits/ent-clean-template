@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"encoding/json"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
@@ -103,14 +105,14 @@ func HandleError(ctx iris.Context, err error, l logger.Interface) {
 }
 
 func translatableErrorFromValidationErrors(
-	inputStructure any, errs validator.ValidationErrors,
+	inputStructure any, errs *validator.ValidationErrors,
 ) *model.TranslatableError {
 	verboser, ok := inputStructure.(interface {
 		GetErrorMessageFromStructField(error) *i18n.Message
 	})
 	i18nMessage := _oneOrMoreFieldsFailedToBeValidatedMessage
 	if ok {
-		for _, validationErr := range errs {
+		for _, validationErr := range *errs {
 			i18nMessage = verboser.GetErrorMessageFromStructField(validationErr)
 			break
 		}
@@ -125,10 +127,18 @@ func handleBindingError(
 	input any,
 	wrapTranslateError func(error) error,
 ) {
-	if errs, ok := err.(validator.ValidationErrors); ok {
-		err = translatableErrorFromValidationErrors(input, errs)
-	} else if wrapTranslateError != nil {
-		err = wrapTranslateError(err)
+	var ae error
+	switch actualErr := err.(type) {
+	case validator.ValidationErrors:
+		ae = translatableErrorFromValidationErrors(input, &actualErr)
+	case *validator.ValidationErrors:
+		ae = translatableErrorFromValidationErrors(input, actualErr)
+	case *json.UnmarshalTypeError:
+		ae = model.NewTranslatableError(actualErr, _oneOrMoreFieldsFailedToBeValidatedMessage, _useCaseInputValidationError, nil)
+	default:
+		if wrapTranslateError != nil {
+			ae = wrapTranslateError(err)
+		}
 	}
-	handleError(ctx, err, l)
+	handleError(ctx, ae, l)
 }
