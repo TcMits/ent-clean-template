@@ -3,62 +3,24 @@
     {{ $updateInput := print $.Name "UpdateInput" }}
     type {{ $repository }} struct {
         client *Client
-        preUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $updateInput }}) error
-        postUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $.Name }}) error
         isAtomic bool
     }
 
     func New{{ $repository }}(
         client *Client,
-        preUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $updateInput }}) error,
-        postUpdateFunctions []func(context.Context, *Client, *{{ $.Name }}, *{{ $.Name }}) error,
         isAtomic bool,
     ) *{{ $repository }} {
         return &{{ $repository }}{
             client: client,
-            preUpdateFunctions: preUpdateFunctions,
-            postUpdateFunctions: postUpdateFunctions,
             isAtomic: isAtomic,
         }
-    }
-
-    func (r *{{ $repository }}) runPreUpdate(
-        ctx context.Context, client *Client, instance *{{ $.Name }}, i *{{ $updateInput }},
-    ) error {
-        for _, function := range r.preUpdateFunctions {
-          err := function(ctx, client, instance, i)
-          if err != nil {
-            return err
-          }
-        }
-        return nil
-    }
-
-    func (r *{{ $repository }}) runPostUpdate(
-        ctx context.Context, client *Client, oldInstance *{{ $.Name }}, newInstance *{{ $.Name }},
-    ) error {
-        for _, function := range r.postUpdateFunctions {
-          err := function(ctx, client, oldInstance, newInstance)
-          if err != nil {
-            return err
-          }
-        }
-        return nil
     }
 
     // using in Tx
     func (r *{{ $repository }}) UpdateWithClient(
         ctx context.Context, client *Client, instance *{{ $.Name }}, input *{{ $updateInput }},
     ) (*{{ $.Name }}, error) {
-        err := r.runPreUpdate(ctx, client, instance, input)
-        if err != nil {
-          return nil, err
-        }
         newInstance, err := client.{{ $.Name }}.UpdateOne(instance).SetInput(input).Save(ctx)
-        if err != nil {
-          return nil, err
-        }
-        err = r.runPostUpdate(ctx, client, instance, newInstance)
         if err != nil {
           return nil, err
         }

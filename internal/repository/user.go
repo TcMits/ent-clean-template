@@ -26,9 +26,9 @@ func NewUserRepository(client *ent.Client) ModelRepository[
 		panic("client is required")
 	}
 	return &userRepository{
-		ent.NewUserReadRepository(client, nil, nil, nil),
-		ent.NewUserCreateRepository(client, nil, nil, false),
-		ent.NewUserUpdateRepository(client, nil, nil, false),
-		ent.NewUserDeleteRepository(client, nil, nil, false),
+		ent.NewUserReadRepository(client),
+		ent.NewUserCreateRepository(client, false),
+		ent.NewUserUpdateRepository(client, false),
+		ent.NewUserDeleteRepository(client, false),
 	}
 }

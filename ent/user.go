@@ -207,59 +207,25 @@ func (u *User) String() string {
 }
 
 type UserCreateRepository struct {
-	client              *Client
-	preCreateFunctions  []func(context.Context, *Client, *UserCreateInput) error
-	postCreateFunctions []func(context.Context, *Client, *User) error
-	isAtomic            bool
+	client   *Client
+	isAtomic bool
 }
 
 func NewUserCreateRepository(
 	client *Client,
-	preCreateFunctions []func(context.Context, *Client, *UserCreateInput) error,
-	postCreateFunctions []func(context.Context, *Client, *User) error,
 	isAtomic bool,
 ) *UserCreateRepository {
 	return &UserCreateRepository{
-		client:              client,
-		preCreateFunctions:  preCreateFunctions,
-		postCreateFunctions: postCreateFunctions,
-		isAtomic:            isAtomic,
+		client:   client,
+		isAtomic: isAtomic,
 	}
-}
-
-func (r *UserCreateRepository) runPreCreate(ctx context.Context, client *Client, i *UserCreateInput) error {
-	for _, function := range r.preCreateFunctions {
-		err := function(ctx, client, i)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *UserCreateRepository) runPostCreate(ctx context.Context, client *Client, instance *User) error {
-	for _, function := range r.postCreateFunctions {
-		err := function(ctx, client, instance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // using in Tx
 func (r *UserCreateRepository) CreateWithClient(
 	ctx context.Context, client *Client, input *UserCreateInput,
 ) (*User, error) {
-	err := r.runPreCreate(ctx, client, input)
-	if err != nil {
-		return nil, err
-	}
 	instance, err := client.User.Create().SetInput(input).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	err = r.runPostCreate(ctx, client, instance)
 	if err != nil {
 		return nil, err
 	}
@@ -290,63 +256,25 @@ func (r *UserCreateRepository) Create(
 }
 
 type UserDeleteRepository struct {
-	client              *Client
-	preDeleteFunctions  []func(context.Context, *Client, *User) error
-	postDeleteFunctions []func(context.Context, *Client, *User) error
-	isAtomic            bool
+	client   *Client
+	isAtomic bool
 }
 
 func NewUserDeleteRepository(
 	client *Client,
-	preDeleteFunctions []func(context.Context, *Client, *User) error,
-	postDeleteFunctions []func(context.Context, *Client, *User) error,
 	isAtomic bool,
 ) *UserDeleteRepository {
 	return &UserDeleteRepository{
-		client:              client,
-		preDeleteFunctions:  preDeleteFunctions,
-		postDeleteFunctions: postDeleteFunctions,
-		isAtomic:            isAtomic,
+		client:   client,
+		isAtomic: isAtomic,
 	}
-}
-
-func (r *UserDeleteRepository) runPostDelete(
-	ctx context.Context, client *Client, instance *User,
-) error {
-	for _, function := range r.postDeleteFunctions {
-		err := function(ctx, client, instance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *UserDeleteRepository) runPreDelete(
-	ctx context.Context, client *Client, instance *User,
-) error {
-	for _, function := range r.preDeleteFunctions {
-		err := function(ctx, client, instance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // using in Tx
 func (r *UserDeleteRepository) DeleteWithClient(
 	ctx context.Context, client *Client, instance *User,
 ) error {
-	err := r.runPreDelete(ctx, client, instance)
-	if err != nil {
-		return err
-	}
-	err = client.User.DeleteOne(instance).Exec(ctx)
-	if err != nil {
-		return err
-	}
-	err = r.runPostDelete(ctx, client, instance)
+	err := client.User.DeleteOne(instance).Exec(ctx)
 	if err != nil {
 		return err
 	}
@@ -520,54 +448,15 @@ func (u *UserUpdateOne) SetInput(i *UserUpdateInput) *UserUpdateOne {
 }
 
 type UserReadRepository struct {
-	client             *Client
-	preReadFunctions   []func(context.Context, *Client, *UserQuery) error
-	postReadFunctions  []func(context.Context, *Client, *[]*User) error
-	postCountFunctions []func(context.Context, *Client, int) error
+	client *Client
 }
 
 func NewUserReadRepository(
 	client *Client,
-	preReadFunctions []func(context.Context, *Client, *UserQuery) error,
-	postReadFunctions []func(context.Context, *Client, *[]*User) error,
-	postCountFunctions []func(context.Context, *Client, int) error,
 ) *UserReadRepository {
 	return &UserReadRepository{
-		client:             client,
-		preReadFunctions:   preReadFunctions,
-		postReadFunctions:  postReadFunctions,
-		postCountFunctions: postCountFunctions,
+		client: client,
 	}
-}
-
-func (r *UserReadRepository) runPreRead(ctx context.Context, client *Client, q *UserQuery) error {
-	for _, function := range r.preReadFunctions {
-		err := function(ctx, client, q)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *UserReadRepository) runPostRead(ctx context.Context, client *Client, instances *[]*User) error {
-	for _, function := range r.postReadFunctions {
-		err := function(ctx, client, instances)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *UserReadRepository) runPostCount(ctx context.Context, client *Client, count int) error {
-	for _, function := range r.postCountFunctions {
-		err := function(ctx, client, count)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func (r *UserReadRepository) prepareQuery(
@@ -601,10 +490,6 @@ func (r *UserReadRepository) GetWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPreRead(ctx, client, q)
-	if err != nil {
-		return nil, err
-	}
 	if forUpdate {
 		q = q.ForUpdate()
 	}
@@ -612,15 +497,7 @@ func (r *UserReadRepository) GetWithClient(
 	if err != nil {
 		return nil, err
 	}
-	instances := []*User{instance}
-	err = r.runPostRead(ctx, client, &instances)
-	if err != nil {
-		return nil, err
-	}
-	if len(instances) != 1 {
-		return nil, fmt.Errorf("UserReadRepository- Get - r.runPreRead: Object not found")
-	}
-	return instances[0], nil
+	return instance, nil
 }
 
 // using in Tx
@@ -631,18 +508,10 @@ func (r *UserReadRepository) ListWithClient(
 	if err != nil {
 		return nil, err
 	}
-	err = r.runPreRead(ctx, client, q)
-	if err != nil {
-		return nil, err
-	}
 	if forUpdate {
 		q = q.ForUpdate()
 	}
 	instances, err := q.All(ctx)
-	if err != nil {
-		return nil, err
-	}
-	err = r.runPostRead(ctx, client, &instances)
 	if err != nil {
 		return nil, err
 	}
@@ -654,15 +523,7 @@ func (r *UserReadRepository) Count(ctx context.Context, w *UserWhereInput) (int,
 	if err != nil {
 		return 0, err
 	}
-	err = r.runPreRead(ctx, r.client, q)
-	if err != nil {
-		return 0, err
-	}
 	count, err := q.Count(ctx)
-	if err != nil {
-		return 0, err
-	}
-	err = r.runPostCount(ctx, r.client, count)
 	if err != nil {
 		return 0, err
 	}
@@ -771,63 +632,25 @@ func (s *UserSerializer) Serialize(ctx context.Context, u *User) map[string]any 
 }
 
 type UserUpdateRepository struct {
-	client              *Client
-	preUpdateFunctions  []func(context.Context, *Client, *User, *UserUpdateInput) error
-	postUpdateFunctions []func(context.Context, *Client, *User, *User) error
-	isAtomic            bool
+	client   *Client
+	isAtomic bool
 }
 
 func NewUserUpdateRepository(
 	client *Client,
-	preUpdateFunctions []func(context.Context, *Client, *User, *UserUpdateInput) error,
-	postUpdateFunctions []func(context.Context, *Client, *User, *User) error,
 	isAtomic bool,
 ) *UserUpdateRepository {
 	return &UserUpdateRepository{
-		client:              client,
-		preUpdateFunctions:  preUpdateFunctions,
-		postUpdateFunctions: postUpdateFunctions,
-		isAtomic:            isAtomic,
+		client:   client,
+		isAtomic: isAtomic,
 	}
-}
-
-func (r *UserUpdateRepository) runPreUpdate(
-	ctx context.Context, client *Client, instance *User, i *UserUpdateInput,
-) error {
-	for _, function := range r.preUpdateFunctions {
-		err := function(ctx, client, instance, i)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *UserUpdateRepository) runPostUpdate(
-	ctx context.Context, client *Client, oldInstance *User, newInstance *User,
-) error {
-	for _, function := range r.postUpdateFunctions {
-		err := function(ctx, client, oldInstance, newInstance)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // using in Tx
 func (r *UserUpdateRepository) UpdateWithClient(
 	ctx context.Context, client *Client, instance *User, input *UserUpdateInput,
 ) (*User, error) {
-	err := r.runPreUpdate(ctx, client, instance, input)
-	if err != nil {
-		return nil, err
-	}
 	newInstance, err := client.User.UpdateOne(instance).SetInput(input).Save(ctx)
-	if err != nil {
-		return nil, err
-	}
-	err = r.runPostUpdate(ctx, client, instance, newInstance)
 	if err != nil {
 		return nil, err
 	}

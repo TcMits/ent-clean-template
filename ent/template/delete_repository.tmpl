@@ -2,62 +2,24 @@
     {{ $repository := print $.Name "DeleteRepository" }}
     type {{ $repository }} struct {
         client *Client
-        preDeleteFunctions []func(context.Context, *Client, *{{ $.Name }}) error
-        postDeleteFunctions []func(context.Context, *Client, *{{ $.Name }}) error
         isAtomic bool
     }
 
     func New{{ $repository }}(
         client *Client,
-        preDeleteFunctions []func(context.Context, *Client, *{{ $.Name }}) error,
-        postDeleteFunctions []func(context.Context, *Client, *{{ $.Name }}) error,
         isAtomic bool,
     ) *{{ $repository }} {
         return &{{ $repository }}{
             client: client,
-            preDeleteFunctions: preDeleteFunctions,
-            postDeleteFunctions: postDeleteFunctions,
             isAtomic: isAtomic,
         }
-    }
-
-    func (r *{{ $repository }}) runPostDelete(
-        ctx context.Context, client *Client, instance *{{ $.Name }},
-    ) error {
-        for _, function := range r.postDeleteFunctions {
-          err := function(ctx, client, instance)
-          if err != nil {
-            return err
-          }
-        }
-        return nil
-    }
-
-    func (r *{{ $repository }}) runPreDelete(
-        ctx context.Context, client *Client, instance *{{ $.Name }},
-    ) error {
-        for _, function := range r.preDeleteFunctions {
-          err := function(ctx, client, instance)
-          if err != nil {
-            return err
-          }
-        }
-        return nil
     }
 
     // using in Tx
     func (r *{{ $repository }}) DeleteWithClient(
         ctx context.Context, client *Client, instance *{{ $.Name }},
     ) error {
-        err := r.runPreDelete(ctx, client, instance)
-        if err != nil {
-          return err
-        }
-        err = client.{{ $.Name }}.DeleteOne(instance).Exec(ctx)
-        if err != nil {
-          return err
-        }
-        err = r.runPostDelete(ctx, client, instance)
+        err := client.{{ $.Name }}.DeleteOne(instance).Exec(ctx)
         if err != nil {
           return err
         }

@@ -3,58 +3,24 @@
     {{ $createInput := print $.Name "CreateInput" }}
     type {{ $repository }} struct {
         client *Client
-        preCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error
-        postCreateFunctions []func(context.Context, *Client,  *{{ $.Name }}) error
         isAtomic bool
     }
 
     func New{{ $repository }}(
         client *Client, 
-        preCreateFunctions []func(context.Context, *Client, *{{ $createInput }}) error,
-        postCreateFunctions []func(context.Context, *Client,  *{{ $.Name }}) error,
         isAtomic bool,
     ) *{{ $repository }} {
         return &{{ $repository }}{
             client: client,
-            preCreateFunctions: preCreateFunctions,
-            postCreateFunctions: postCreateFunctions,
             isAtomic: isAtomic,
         }
-    }
-
-    func (r *{{ $repository }}) runPreCreate(ctx context.Context, client *Client, i *{{ $createInput }}) error {
-      for _, function := range r.preCreateFunctions {
-        err := function(ctx, client, i)
-        if err != nil {
-          return err
-        }
-      }
-      return nil
-    }
-
-    func (r *{{ $repository }}) runPostCreate(ctx context.Context, client *Client, instance *{{ $.Name }}) error {
-      for _, function := range r.postCreateFunctions {
-        err := function(ctx, client, instance)
-        if err != nil {
-          return err
-        }
-      }
-      return nil
     }
 
     // using in Tx
     func (r *{{ $repository }}) CreateWithClient(
         ctx context.Context, client *Client, input *{{ $createInput }},
     ) (*{{ $.Name }}, error) {
-        err := r.runPreCreate(ctx, client, input)
-        if err != nil {
-          return nil, err
-        }
         instance, err := client.{{ $.Name }}.Create().SetInput(input).Save(ctx)
-        if err != nil {
-          return nil, err
-        }
-        err = r.runPostCreate(ctx, client, instance)
         if err != nil {
           return nil, err
         }

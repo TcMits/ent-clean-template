@@ -5,53 +5,14 @@
     {{ $whereInput := $names.WhereInput }}
     type {{ $repository }} struct {
         client *Client
-        preReadFunctions []func(context.Context, *Client, *{{ $.QueryName }}) error
-        postReadFunctions []func(context.Context, *Client, *[]*{{ $.Name }}) error
-        postCountFunctions []func(context.Context, *Client, int) error
     }
 
     func New{{ $repository }}(
         client *Client,
-        preReadFunctions []func(context.Context, *Client, *{{ $.QueryName }}) error,
-        postReadFunctions []func(context.Context, *Client, *[]*{{ $.Name }}) error,
-        postCountFunctions []func(context.Context, *Client, int) error,
     ) *{{ $repository }} {
         return &{{ $repository }}{
             client: client,
-            preReadFunctions: preReadFunctions,
-            postReadFunctions: postReadFunctions,
-            postCountFunctions: postCountFunctions,
         }
-    }
-
-    func (r *{{ $repository }}) runPreRead(ctx context.Context, client *Client, q *{{ $.QueryName }}) error {
-      for _, function := range r.preReadFunctions {
-        err := function(ctx, client, q)
-        if err != nil {
-          return err
-        }
-      }
-      return nil
-    }
-
-    func (r *{{ $repository }}) runPostRead(ctx context.Context, client *Client, instances *[]*{{ $.Name }}) error {
-      for _, function := range r.postReadFunctions {
-        err := function(ctx, client, instances)
-        if err != nil {
-          return err
-        }
-      }
-      return nil
-    }
-
-    func (r *{{ $repository }}) runPostCount(ctx context.Context, client *Client, count int) error {
-      for _, function := range r.postCountFunctions {
-        err := function(ctx, client, count)
-        if err != nil {
-          return err
-        }
-      }
-      return nil
     }
 
     func (r *{{ $repository }}) prepareQuery(
@@ -85,10 +46,6 @@
         if err != nil {
             return nil, err
         }
-        err = r.runPreRead(ctx, client, q)
-        if err != nil {
-            return nil, err
-        }
         if forUpdate {
             q = q.ForUpdate()
         }
@@ -96,15 +53,7 @@
         if err != nil {
             return nil, err
         }
-        instances := []*{{ $.Name }}{instance}
-        err = r.runPostRead(ctx, client, &instances)
-        if err != nil {
-            return nil, err
-        }
-        if len(instances) != 1 {
-            return nil, fmt.Errorf("{{ $repository }}- Get - r.runPreRead: Object not found")
-        }
-        return instances[0], nil
+        return instance, nil
     }
 
     // using in Tx
@@ -115,18 +64,10 @@
         if err != nil {
             return nil, err
         }
-        err = r.runPreRead(ctx, client, q)
-        if err != nil {
-            return nil, err
-        }
         if forUpdate {
             q = q.ForUpdate()
         }
         instances, err := q.All(ctx)
-        if err != nil {
-            return nil, err
-        }
-        err = r.runPostRead(ctx, client, &instances)
         if err != nil {
             return nil, err
         }
@@ -138,15 +79,7 @@
         if err != nil {
             return 0, err
         }
-        err = r.runPreRead(ctx, r.client, q)
-        if err != nil {
-            return 0, err
-        }
         count, err := q.Count(ctx)
-        if err != nil {
-            return 0, err
-        }
-        err = r.runPostCount(ctx, r.client, count)
         if err != nil {
             return 0, err
         }
