@@ -25,14 +25,14 @@ type (
 		GetWithClient(context.Context, *ent.Client, WhereInputType, bool) (ModelType, error)
 	}
 	ListModelRepository[ModelType, OrderInputType, WhereInputType any] interface {
-		List(context.Context, int, int, OrderInputType, WhereInputType) ([]ModelType, error)
+		List(context.Context, *int, *int, OrderInputType, WhereInputType) ([]ModelType, error)
 	}
 	ListWithClientModelRepository[ModelType, OrderInputType, WhereInputType any] interface {
 		ListWithClient(
 			context.Context,
 			*ent.Client,
-			int,
-			int,
+			*int,
+			*int,
 			OrderInputType,
 			WhereInputType,
 			bool,

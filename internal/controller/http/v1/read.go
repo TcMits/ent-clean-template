@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	defaultLimit = 10
+	_defaultLimit = 10
 )
 
-var defaultLimitOffsetInput = &limitOffsetQueryInput{
-	Limit:     defaultLimit,
+var _defaultLimitOffsetInput = &limitOffsetQueryInput{
+	Limit:     _defaultLimit,
 	Offset:    0,
 	WithCount: false,
 }
@@ -37,10 +37,11 @@ func paginate[ModelType, OrderInputType, WhereInputType any](
 	req := ctx.Request()
 	context := req.Context()
 	paginateMeta := map[string]any{"next": nil, "previous": nil}
+	limit := limitOffsetInput.Limit + 1
 	instances, err := listUseCase.List(
 		context,
-		limitOffsetInput.Limit+1,
-		limitOffsetInput.Offset,
+		&limit,
+		&limitOffsetInput.Offset,
 		orderInput,
 		whereInput,
 	)
@@ -134,7 +135,7 @@ func getListHandler[
 	return func(ctx iris.Context) {
 		whereInput := PWhereInputType(new(WhereInputType))
 		orderInput := POrderInputType(new(OrderInputType))
-		limitOffsetInput := *defaultLimitOffsetInput
+		limitOffsetInput := *_defaultLimitOffsetInput
 		if err := ctx.ReadParams(whereInput); err != nil {
 			handleBindingError(ctx, err, l, whereInput, wrapReadParamsError)
 			return

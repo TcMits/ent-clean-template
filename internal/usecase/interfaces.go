@@ -12,7 +12,7 @@ type (
 		Serialize(context.Context, ModelType) SerializedType
 	}
 	ListModelUseCase[ModelType, OrderInput, WhereInput any] interface {
-		List(context.Context, int, int, OrderInput, WhereInput) ([]ModelType, error)
+		List(context.Context, *int, *int, OrderInput, WhereInput) ([]ModelType, error)
 	}
 	GetModelUseCase[ModelType, WhereInput any] interface {
 		Get(context.Context, WhereInput) (ModelType, error)

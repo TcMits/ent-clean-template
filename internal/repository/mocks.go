@@ -191,7 +191,7 @@ func (m *MockListModelRepository[ModelType, OrderInputType, WhereInputType]) EXP
 }
 
 // List mocks base method.
-func (m *MockListModelRepository[ModelType, OrderInputType, WhereInputType]) List(arg0 context.Context, arg1, arg2 int, arg3 OrderInputType, arg4 WhereInputType) ([]ModelType, error) {
+func (m *MockListModelRepository[ModelType, OrderInputType, WhereInputType]) List(arg0 context.Context, arg1, arg2 *int, arg3 OrderInputType, arg4 WhereInputType) ([]ModelType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]ModelType)
@@ -229,7 +229,7 @@ func (m *MockListWithClientModelRepository[ModelType, OrderInputType, WhereInput
 }
 
 // ListWithClient mocks base method.
-func (m *MockListWithClientModelRepository[ModelType, OrderInputType, WhereInputType]) ListWithClient(arg0 context.Context, arg1 *ent.Client, arg2, arg3 int, arg4 OrderInputType, arg5 WhereInputType, arg6 bool) ([]ModelType, error) {
+func (m *MockListWithClientModelRepository[ModelType, OrderInputType, WhereInputType]) ListWithClient(arg0 context.Context, arg1 *ent.Client, arg2, arg3 *int, arg4 OrderInputType, arg5 WhereInputType, arg6 bool) ([]ModelType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListWithClient", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 	ret0, _ := ret[0].([]ModelType)
@@ -467,44 +467,6 @@ func (m *MockDeleteWithClientModelRepository[ModelType]) DeleteWithClient(arg0 c
 func (mr *MockDeleteWithClientModelRepositoryMockRecorder[ModelType]) DeleteWithClient(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteWithClient", reflect.TypeOf((*MockDeleteWithClientModelRepository[ModelType])(nil).DeleteWithClient), arg0, arg1, arg2)
-}
-
-// MockLoginRepository is a mock of LoginRepository interface.
-type MockLoginRepository[UserType any, WhereInputType any, LoginInputType any] struct {
-	ctrl     *gomock.Controller
-	recorder *MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType]
-}
-
-// MockLoginRepositoryMockRecorder is the mock recorder for MockLoginRepository.
-type MockLoginRepositoryMockRecorder[UserType any, WhereInputType any, LoginInputType any] struct {
-	mock *MockLoginRepository[UserType, WhereInputType, LoginInputType]
-}
-
-// NewMockLoginRepository creates a new mock instance.
-func NewMockLoginRepository[UserType any, WhereInputType any, LoginInputType any](ctrl *gomock.Controller) *MockLoginRepository[UserType, WhereInputType, LoginInputType] {
-	mock := &MockLoginRepository[UserType, WhereInputType, LoginInputType]{ctrl: ctrl}
-	mock.recorder = &MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType]{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) EXPECT() *MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType] {
-	return m.recorder
-}
-
-// Login mocks base method.
-func (m *MockLoginRepository[UserType, WhereInputType, LoginInputType]) Login(arg0 context.Context, arg1 LoginInputType) (UserType, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Login", arg0, arg1)
-	ret0, _ := ret[0].(UserType)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Login indicates an expected call of Login.
-func (mr *MockLoginRepositoryMockRecorder[UserType, WhereInputType, LoginInputType]) Login(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Login", reflect.TypeOf((*MockLoginRepository[UserType, WhereInputType, LoginInputType])(nil).Login), arg0, arg1)
 }
 
 // MockReadFileRepository is a mock of ReadFileRepository interface.

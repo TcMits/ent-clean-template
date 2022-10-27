@@ -45,8 +45,8 @@ type User struct {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*User) scanValues(columns []string) ([]interface{}, error) {
-	values := make([]interface{}, len(columns))
+func (*User) scanValues(columns []string) ([]any, error) {
+	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
 		case user.FieldIsStaff, user.FieldIsSuperuser, user.FieldIsActive:
@@ -66,7 +66,7 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the User fields.
-func (u *User) assignValues(columns []string, values []interface{}) error {
+func (u *User) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -625,9 +625,9 @@ func (r *UserReadRepository) GetWithClient(
 
 // using in Tx
 func (r *UserReadRepository) ListWithClient(
-	ctx context.Context, client *Client, limit int, offset int, o *UserOrderInput, w *UserWhereInput, forUpdate bool,
+	ctx context.Context, client *Client, limit *int, offset *int, o *UserOrderInput, w *UserWhereInput, forUpdate bool,
 ) ([]*User, error) {
-	q, err := r.prepareQuery(client, &limit, &offset, o, w)
+	q, err := r.prepareQuery(client, limit, offset, o, w)
 	if err != nil {
 		return nil, err
 	}
@@ -674,7 +674,7 @@ func (r *UserReadRepository) Get(ctx context.Context, w *UserWhereInput) (*User,
 }
 
 func (r *UserReadRepository) List(
-	ctx context.Context, limit int, offset int, o *UserOrderInput, w *UserWhereInput,
+	ctx context.Context, limit *int, offset *int, o *UserOrderInput, w *UserWhereInput,
 ) ([]*User, error) {
 	return r.ListWithClient(ctx, r.client, limit, offset, o, w, false)
 }

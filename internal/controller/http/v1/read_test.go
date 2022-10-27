@@ -126,6 +126,8 @@ func Test_getListHandler(t *testing.T) {
 	listUseCase := usecase.NewMockListModelUseCase[*struct{}, *struct{}, *MockWhereInput](ctrl)
 	serializeUseCase := usecase.NewMockSerializeModelUseCase[*struct{}, *struct{}](ctrl)
 	countUseCase := usecase.NewMockCountModelUseCase[*MockWhereInput](ctrl)
+	eleven := 11
+	one := 1
 
 	countUseCase.EXPECT().Count(
 		gomock.Eq(ctx),
@@ -143,8 +145,8 @@ func Test_getListHandler(t *testing.T) {
 
 	listUseCase.EXPECT().List(
 		gomock.Eq(ctx),
-		gomock.Eq(11),
-		gomock.Eq(1),
+		gomock.Eq(&eleven),
+		gomock.Eq(&one),
 		gomock.Eq(new(struct{})),
 		gomock.Eq(new(MockWhereInput)),
 	).Return(
@@ -153,8 +155,8 @@ func Test_getListHandler(t *testing.T) {
 
 	listUseCase.EXPECT().List(
 		gomock.Eq(ctx),
-		gomock.Eq(11),
-		gomock.Eq(1),
+		gomock.Eq(&eleven),
+		gomock.Eq(&one),
 		gomock.Eq(new(struct{})),
 		gomock.Eq(&MockWhereInput{WantCountError: &wantErr}),
 	).Return(
@@ -163,8 +165,8 @@ func Test_getListHandler(t *testing.T) {
 
 	listUseCase.EXPECT().List(
 		gomock.Eq(ctx),
-		gomock.Eq(11),
-		gomock.Eq(1),
+		gomock.Eq(&eleven),
+		gomock.Eq(&one),
 		gomock.Eq(new(struct{})),
 		gomock.Eq(&MockWhereInput{WantError: &wantErr}),
 	).Return(

@@ -72,7 +72,7 @@ func (m *MockListModelUseCase[ModelType, OrderInput, WhereInput]) EXPECT() *Mock
 }
 
 // List mocks base method.
-func (m *MockListModelUseCase[ModelType, OrderInput, WhereInput]) List(arg0 context.Context, arg1, arg2 int, arg3 OrderInput, arg4 WhereInput) ([]ModelType, error) {
+func (m *MockListModelUseCase[ModelType, OrderInput, WhereInput]) List(arg0 context.Context, arg1, arg2 *int, arg3 OrderInput, arg4 WhereInput) ([]ModelType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].([]ModelType)

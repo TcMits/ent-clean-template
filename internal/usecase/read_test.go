@@ -222,8 +222,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 	}
 	type args struct {
 		ctx        context.Context
-		limit      int
-		offset     int
+		limit      *int
+		offset     *int
 		orderInput *struct{}
 		whereInput *struct{}
 	}
@@ -231,15 +231,17 @@ func Test_listModelUseCase_List(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	repo := repository.NewMockListModelRepository[*struct{}, *struct{}, *struct{}](ctrl)
+	limit := 10
+	offset := 0
 
 	repo.EXPECT().List(
-		gomock.Eq(ctx), 10, 0, gomock.Eq(new(struct{})), gomock.Eq(new(struct{})),
+		gomock.Eq(ctx), gomock.Eq(&limit), gomock.Eq(&offset), gomock.Eq(new(struct{})), gomock.Eq(new(struct{})),
 	).Return(
 		make([]*struct{}, 10), nil,
 	).AnyTimes()
 
 	repo.EXPECT().List(
-		gomock.Eq(ctx), 10, 0, gomock.Eq(new(struct{})), gomock.Nil(),
+		gomock.Eq(ctx), gomock.Eq(&limit), gomock.Eq(&offset), gomock.Eq(new(struct{})), gomock.Nil(),
 	).Return(
 		nil, errors.New(""),
 	).AnyTimes()
@@ -265,8 +267,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      10,
-				offset:     0,
+				limit:      &limit,
+				offset:     &offset,
 				orderInput: new(struct{}),
 				whereInput: new(struct{}),
 			},
@@ -286,8 +288,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      10,
-				offset:     0,
+				limit:      &limit,
+				offset:     &offset,
 				orderInput: new(struct{}),
 				whereInput: new(struct{}),
 			},
@@ -308,8 +310,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      10,
-				offset:     0,
+				limit:      &limit,
+				offset:     &offset,
 				orderInput: new(struct{}),
 				whereInput: new(struct{}),
 			},
@@ -330,8 +332,8 @@ func Test_listModelUseCase_List(t *testing.T) {
 			},
 			args: args{
 				ctx:        ctx,
-				limit:      10,
-				offset:     0,
+				limit:      &limit,
+				offset:     &offset,
 				orderInput: new(struct{}),
 				whereInput: nil,
 			},

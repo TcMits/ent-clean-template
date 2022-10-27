@@ -109,9 +109,9 @@
 
     // using in Tx
     func (r *{{ $repository }}) ListWithClient(
-        ctx context.Context, client *Client, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }}, forUpdate bool,
+        ctx context.Context, client *Client, limit *int, offset *int, o *{{ $orderInput }}, w *{{ $whereInput }}, forUpdate bool,
     ) ([]*{{ $.Name }}, error) {
-        q, err := r.prepareQuery(client, &limit, &offset, o, w)
+        q, err := r.prepareQuery(client, limit, offset, o, w)
         if err != nil {
             return nil, err
         }
@@ -158,7 +158,7 @@
     }
 
     func (r *{{ $repository }}) List(
-        ctx context.Context, limit int, offset int, o *{{ $orderInput }}, w *{{ $whereInput }},
+        ctx context.Context, limit *int, offset *int, o *{{ $orderInput }}, w *{{ $whereInput }},
     ) ([]*{{ $.Name }}, error) {
         return r.ListWithClient(ctx, r.client, limit, offset, o, w, false)
     }
