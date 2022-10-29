@@ -9,7 +9,6 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/kataras/iris/v12"
 	"github.com/kataras/iris/v12/middleware/cors"
-	"github.com/kataras/iris/v12/middleware/recover"
 )
 
 const _v1SubPath = "/api/v1"
@@ -61,7 +60,7 @@ func RegisterV1HTTPServices(
 	// logger
 	l logger.Interface,
 ) {
-	handler.UseRouter(recover.New())
+	handler.UseRouter(middleware.Recover(handleError, l))
 	RegisterHealthCheckController(handler)
 
 	// HTTP middlewares
