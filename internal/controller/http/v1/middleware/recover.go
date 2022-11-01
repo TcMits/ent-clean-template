@@ -12,10 +12,6 @@ import (
 	"github.com/kataras/iris/v12/context"
 )
 
-func init() {
-	context.SetHandlerName("iris/middleware/recover.*", "iris.recover")
-}
-
 func getRequestLogs(ctx *context.Context) string {
 	rawReq, _ := httputil.DumpRequest(ctx.Request(), false)
 	return string(rawReq)
@@ -30,6 +26,9 @@ func Recover(
 ) context.Handler {
 	if l == nil {
 		panic("l is required")
+	}
+	if handleErrorFunc == nil {
+		panic("handleErrorFunc is required")
 	}
 
 	return func(ctx *context.Context) {
