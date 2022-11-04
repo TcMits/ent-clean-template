@@ -624,7 +624,7 @@ func NewUserSerializer(customColumns map[string]func(context.Context, *User) any
 }
 
 func (s *UserSerializer) Serialize(ctx context.Context, u *User) map[string]any {
-	result := map[string]any{}
+	result := make(map[string]any, len(s.columns))
 	for col, serializeFunc := range s.columns {
 		result[col] = serializeFunc(ctx, u)
 	}

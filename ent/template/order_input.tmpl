@@ -33,11 +33,11 @@
         type {{ $input }} []OrderField
 
         func (i *{{ $input }}) Order(q *{{ $n.QueryName }}) *{{ $n.QueryName }} {
-            orderFucntions := make([]OrderFunc, 0, len(*i))
+            orderFunctions := make([]OrderFunc, 0, len(*i))
             for _, field := range *i {
-              orderFucntions = append(orderFucntions, field.GetOrderFunc())
+              orderFunctions = append(orderFunctions, field.GetOrderFunc())
             }
-            return q.Order(orderFucntions...)
+            return q.Order(orderFunctions...)
         }
     {{- end }}
 

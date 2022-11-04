@@ -37,7 +37,7 @@
     }
 
     func (s *{{ $name }}) Serialize(ctx context.Context, {{ $receiver }} *{{ $.Name }}) map[string]any {
-      result := map[string]any{}
+      result := make(map[string]any, len(s.columns))
       for col, serializeFunc := range s.columns {
         result[col] = serializeFunc(ctx, {{ $receiver }})
       }

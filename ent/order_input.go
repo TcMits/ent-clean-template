@@ -30,11 +30,11 @@ type orderField struct {
 type UserOrderInput []OrderField
 
 func (i *UserOrderInput) Order(q *UserQuery) *UserQuery {
-	orderFucntions := make([]OrderFunc, 0, len(*i))
+	orderFunctions := make([]OrderFunc, 0, len(*i))
 	for _, field := range *i {
-		orderFucntions = append(orderFucntions, field.GetOrderFunc())
+		orderFunctions = append(orderFunctions, field.GetOrderFunc())
 	}
-	return q.Order(orderFucntions...)
+	return q.Order(orderFunctions...)
 }
 
 func (f *orderField) isAsc() bool {
