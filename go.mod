@@ -15,7 +15,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.4.0
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/kataras/iris/v12 v12.2.0-beta5.0.20221020081905-bdceab934246
-	github.com/nicksnyder/go-i18n/v2 v2.2.0
+	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/rs/zerolog v1.27.0
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/swag v1.8.7
