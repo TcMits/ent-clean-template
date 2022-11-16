@@ -3,8 +3,8 @@ module github.com/TcMits/ent-clean-template
 go 1.19
 
 require (
-	entgo.io/contrib v0.3.3
-	entgo.io/ent v0.11.4-0.20221001062602-1029a2d3ba2a
+	entgo.io/contrib v0.3.4
+	entgo.io/ent v0.11.5-0.20221031135557-521f9b57bc3d
 	github.com/Eun/go-hit v0.5.23
 	github.com/bluele/factory-go v0.0.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
@@ -25,7 +25,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.7.2-0.20220927111110-867ee0cca56a // indirect
+	ariga.io/atlas v0.7.3-0.20221011160332-3ca609863edd // indirect
 	github.com/99designs/gqlgen v0.17.5-0.20220428154617-9250f9ac1f90 // indirect
 	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20200109182630-33d98a066a53 // indirect
