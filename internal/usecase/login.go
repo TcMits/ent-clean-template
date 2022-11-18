@@ -26,9 +26,6 @@ const (
 	_idFieldName         = "id"
 	_keyFieldName        = "key"
 	_refreshKeyFieldName = "refresh_key"
-	_typeFieldName       = "type"
-	_accessTokenType     = "access"
-	_refreshTokenType    = "refresh"
 )
 
 var (
@@ -133,7 +130,6 @@ func (l *loginUseCase) getUserFromMapClaims(
 
 func (l *loginUseCase) createAccessToken(user *model.User) (string, error) {
 	payload := l.getUserMapClaims(user)
-	payload[_typeFieldName] = _accessTokenType
 	return jwt.NewToken(payload, l.secret, _defaultAccessTokenTimeOut)
 }
 
@@ -147,10 +143,7 @@ func (l *loginUseCase) createRefreshToken(
 		return nil, err
 	}
 	payload := l.getUserMapClaims(user)
-	payload[_refreshKeyFieldName] = refreshKey
-	payload[_typeFieldName] = _refreshTokenType
-	refreshToken, err := jwt.NewToken(
-		payload, l.secret, _defaultRefreshTokenTimeOut)
+	refreshToken, err := jwt.NewToken(payload, refreshKey+l.secret, _defaultRefreshTokenTimeOut)
 	if err != nil {
 		return nil, err
 	}
@@ -166,11 +159,6 @@ func (l *loginUseCase) parseAccessToken(ctx context.Context, token string) (*mod
 		return nil, err
 	}
 
-	t, ok := payload[_typeFieldName]
-	if !ok || t != _accessTokenType {
-		return nil, errors.New("invalid token")
-	}
-
 	return l.getUserFromMapClaims(ctx, payload)
 }
 
@@ -179,21 +167,12 @@ func (l *loginUseCase) parseRefreshToken(
 ) (*model.User, error) {
 	payload, err := jwt.ParseJWT(
 		refreshTokenInput.RefreshToken,
-		l.secret,
+		refreshTokenInput.RefreshKey+l.secret,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	t, ok := payload[_typeFieldName]
-	if !ok || t != _refreshTokenType {
-		return nil, errors.New("invalid refresh token")
-	}
-
-	key, ok := payload[_refreshKeyFieldName].(string)
-	if !ok || refreshTokenInput.RefreshKey != key {
-		return nil, errors.New("invalid token key")
-	}
 	return l.getUserFromMapClaims(ctx, payload)
 }
 
@@ -205,20 +184,25 @@ func (l *loginUseCase) Login(
 	userWhereInput := &model.UserWhereInput{IsActive: &isActive}
 	copygen.LoginInputToUserWhereInput(userWhereInput, loginInput)
 	user, err := l.getRepository.Get(ctx, userWhereInput)
+
 	if err != nil {
 		return nil, _wrapInvalidUsernameError(err)
 	}
+
 	if err := password.ValidatePassword(user.Password, loginInput.Password); err != nil {
 		return nil, _wrapInvalidPasswordError(err)
 	}
+
 	accessToken, err := l.createAccessToken(user)
 	if err != nil {
 		return nil, _wrapFailedAccessTokenCreation(err)
 	}
+
 	refreshTokenInput, err := l.createRefreshToken(user)
 	if err != nil {
 		return nil, _wrapFailedRefreshTokenCreation(err)
 	}
+
 	return &useCaseModel.JWTAuthenticatedPayload{
 		AccessToken:  accessToken,
 		RefreshToken: refreshTokenInput.RefreshToken,
@@ -230,14 +214,17 @@ func (l *loginUseCase) RefreshToken(
 	ctx context.Context,
 	refreshTokenInput *useCaseModel.RefreshTokenInput,
 ) (string, error) {
+
 	user, err := l.parseRefreshToken(ctx, refreshTokenInput)
 	if err != nil {
 		return "", _wrapInvalidRefreshToken(err)
 	}
+
 	accessToken, err := l.createAccessToken(user)
 	if err != nil {
 		return "", _wrapFailedAccessTokenCreation(err)
 	}
+
 	return accessToken, nil
 }
 
