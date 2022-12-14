@@ -12,7 +12,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
-	github.com/ilyakaznacheev/cleanenv v1.4.1
+	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgx/v4 v4.17.0
 	github.com/kataras/iris/v12 v12.2.0-beta5.0.20221020081905-bdceab934246
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
