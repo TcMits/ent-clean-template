@@ -9,7 +9,7 @@ require (
 	github.com/bluele/factory-go v0.0.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
 	github.com/go-playground/validator/v10 v10.11.2
-	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
