@@ -17,7 +17,7 @@ require (
 	github.com/kataras/iris/v12 v12.2.0-beta7
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/rs/zerolog v1.29.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/swag v1.8.10
 	go.beyondstorage.io/services/memory v0.4.0
 	go.beyondstorage.io/v5 v5.0.0
