@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	entgo.io/contrib v0.3.5
-	entgo.io/ent v0.11.8
+	entgo.io/ent v0.11.9
 	github.com/Eun/go-hit v0.5.23
 	github.com/bluele/factory-go v0.0.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
@@ -17,7 +17,7 @@ require (
 	github.com/kataras/iris/v12 v12.2.0-beta7
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/rs/zerolog v1.29.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/swag v1.8.10
 	go.beyondstorage.io/services/memory v0.4.0
 	go.beyondstorage.io/v5 v5.0.0
@@ -25,7 +25,7 @@ require (
 )
 
 require (
-	ariga.io/atlas v0.9.1-0.20230119145809-92243f7c55cb // indirect
+	ariga.io/atlas v0.9.1 // indirect
 	github.com/99designs/gqlgen v0.17.5-0.20220428154617-9250f9ac1f90 // indirect
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/CloudyKit/fastprinter v0.0.0-20200109182630-33d98a066a53 // indirect
@@ -125,12 +125,12 @@ require (
 	github.com/yudai/gojsondiff v1.0.0 // indirect
 	github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 // indirect
 	github.com/zclconf/go-cty v1.8.0 // indirect
-	golang.org/x/mod v0.7.0 // indirect
+	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.4.0 // indirect
+	golang.org/x/tools v0.6.1-0.20230222164832-25d2519c8696 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
