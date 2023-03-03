@@ -13,7 +13,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/ilyakaznacheev/cleanenv v1.4.2
-	github.com/jackc/pgx/v4 v4.18.0
+	github.com/jackc/pgx/v4 v4.18.1
 	github.com/kataras/iris/v12 v12.2.0-beta7
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/rs/zerolog v1.29.0
