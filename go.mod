@@ -16,7 +16,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/kataras/iris/v12 v12.2.0
 	github.com/nicksnyder/go-i18n/v2 v2.2.1
-	github.com/rs/zerolog v1.29.0
+	github.com/rs/zerolog v1.29.1
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/swag v1.8.12
 	go.beyondstorage.io/services/memory v0.4.0
