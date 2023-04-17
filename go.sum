@@ -1,9 +1,9 @@
 ariga.io/atlas v0.10.0 h1:B1aCP6gSDQET6j8ybn7m6MArjQuoLH5d4DQBT+NP5k8=
 ariga.io/atlas v0.10.0/go.mod h1:+TR129FJZ5Lvzms6dvCeGWh1yR6hMvmXBhug4hrNIGk=
-entgo.io/contrib v0.4.0 h1:5K5B9LQvLdSZUPYwm5uoWBuO2bYoBws4jTwpM8Sx1ak=
-entgo.io/contrib v0.4.0/go.mod h1:pwWMBLYK07JONGJDFwCKAVSdbBF83MFXb/azFsJOX4o=
-entgo.io/ent v0.12.0 h1:DTub/yd0pMK9s0ONfZps2cYkyD2VPIuknVBv10BESc0=
-entgo.io/ent v0.12.0/go.mod h1:OA1Y5bNE8EtlxKv4IyzWwt4jgvGbkoKMcwp668iEKQE=
+entgo.io/contrib v0.4.1 h1:bmXUubfczeXB7y8incqTza/raDiV66LS4yMt6p3FL9A=
+entgo.io/contrib v0.4.1/go.mod h1:APu/jIDPxY/PwwQn7FJVkog5zEbMgjSFCV3U0bVzRD4=
+entgo.io/ent v0.12.1 h1:bqK+WMwfjpTsFiXx9tQSEZMNLyAADSx5Y1xySjT4Tm8=
+entgo.io/ent v0.12.1/go.mod h1:OA1Y5bNE8EtlxKv4IyzWwt4jgvGbkoKMcwp668iEKQE=
 github.com/99designs/gqlgen v0.17.5-0.20220428154617-9250f9ac1f90 h1:nGGP+sUJ6D3guzjVBgoH1PrZxoU4lUdfR/Q8THYrAJI=
 github.com/99designs/gqlgen v0.17.5-0.20220428154617-9250f9ac1f90/go.mod h1:SNpLVzaF37rRLSAXtu8FKVp5I4zycneMmFX6NT4XGSU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
