@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	entgo.io/contrib v0.4.0
-	entgo.io/ent v0.12.0
+	entgo.io/ent v0.12.1
 	github.com/Eun/go-hit v0.5.23
 	github.com/bluele/factory-go v0.0.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
